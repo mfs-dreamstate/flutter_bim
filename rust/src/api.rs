@@ -154,6 +154,26 @@ pub async fn parse_ifc_content(content: String) -> Result<ModelInfo, String> {
 }
 
 // ============================================================================
+// Phase 3 API: 3D Rendering
+// ============================================================================
+
+use crate::renderer::Renderer;
+
+/// Test renderer initialization
+/// This initializes the wgpu graphics backend (headless for now)
+pub async fn test_renderer_init() -> Result<String, String> {
+    tracing::info!("Testing renderer initialization");
+
+    let mut renderer = Renderer::new();
+    renderer
+        .initialize()
+        .await
+        .map_err(|e| format!("Renderer init failed: {}", e))?;
+
+    Ok("Renderer initialized successfully! wgpu backend is working.".to_string())
+}
+
+// ============================================================================
 // Future Phases:
 //
 // Phase 3: 3D Rendering

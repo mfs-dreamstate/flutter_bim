@@ -17,9 +17,9 @@ tokio = { version = "1.35", features = ["full"] }
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Graphics (will be fully configured in Phase 3)
-# wgpu = "0.18"
-# winit = "0.29"
+# Graphics (Phase 3)
+wgpu = "0.19"
+bytemuck = { version = "1.14", features = ["derive"] }
 
 # Math
 nalgebra = "0.32"

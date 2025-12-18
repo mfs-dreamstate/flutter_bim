@@ -43,3 +43,7 @@ void unloadModel() => RustLib.instance.api.crateApiUnloadModel();
 /// Parse IFC file content (for testing - takes content string instead of file path)
 Future<ModelInfo> parseIfcContent({required String content}) =>
     RustLib.instance.api.crateApiParseIfcContent(content: content);
+
+/// Test renderer initialization
+/// This initializes the wgpu graphics backend (headless for now)
+Future<String> testRendererInit() => RustLib.instance.api.crateApiTestRendererInit();

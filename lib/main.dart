@@ -333,7 +333,7 @@ class _HomePageState extends State<HomePage> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       const SizedBox(height: 16),
-                      Text(
+                      SelectableText(
                         _status,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,

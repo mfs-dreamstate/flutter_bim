@@ -25,6 +25,7 @@ pub enum IfcValue {
     Integer(i64),
     Real(f64),
     String(String),
+    Enum(String), // Enumeration values like .ELEMENT., .TRUE., .FALSE.
     Boolean(bool),
     EntityRef(EntityId),
     List(Vec<IfcValue>),

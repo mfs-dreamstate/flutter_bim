@@ -49,7 +49,10 @@ impl IfcFile {
 
     /// Parse IFC file from string
     pub fn parse(input: &str) -> Result<Self, String> {
-        match parse_ifc_file(input) {
+        // Normalize line endings (handle both Windows \r\n and Unix \n)
+        let normalized = input.replace("\r\n", "\n");
+
+        match parse_ifc_file(&normalized) {
             Ok((_, ifc_file)) => Ok(ifc_file),
             Err(e) => Err(format!("Failed to parse IFC file: {:?}", e)),
         }
@@ -201,7 +204,8 @@ fn parse_value(input: &str) -> ParseResult<IfcValue> {
         map(parse_string, IfcValue::String),
         map(parse_float, IfcValue::Real),
         map(parse_integer, IfcValue::Integer),
-        map(parse_boolean, IfcValue::Boolean),
+        map(parse_boolean, IfcValue::Boolean), // Must come before parse_enum
+        map(parse_enum, IfcValue::Enum),
         map(parse_list, IfcValue::List),
     ))(input)?;
     let (input, _) = multispace0(input)?;
@@ -263,6 +267,14 @@ fn parse_float(input: &str) -> ParseResult<f64> {
     }
 
     Ok((input, value))
+}
+
+/// Parse enumeration: .ENUMVALUE.
+fn parse_enum(input: &str) -> ParseResult<String> {
+    let (input, _) = char('.')(input)?;
+    let (input, value) = take_while1(|c: char| c.is_alphanumeric() || c == '_')(input)?;
+    let (input, _) = char('.')(input)?;
+    Ok((input, value.to_uppercase()))
 }
 
 /// Parse boolean: .T. or .F.

@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'core/bridge/api.dart' as rust;
+import 'core/bridge/bim/model.dart';
 import 'core/bridge/frb_generated.dart';
 
 void main() {
@@ -46,6 +51,8 @@ class _HomePageState extends State<HomePage> {
   String _version = '';
   String _systemInfo = '';
   bool _isLoading = false;
+  ModelInfo? _modelInfo;
+  bool _modelLoaded = false;
 
   @override
   void initState() {
@@ -110,11 +117,159 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadSampleIfc() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Loading sample IFC file...';
+    });
+
+    try {
+      // Load the sample IFC file from assets
+      final content = await rootBundle.loadString('test/sample_building.ifc');
+
+      setState(() {
+        _status = 'Parsing IFC file...';
+      });
+
+      // Parse the IFC content
+      final modelInfo = await rust.parseIfcContent(content: content);
+
+      setState(() {
+        _modelInfo = modelInfo;
+        _modelLoaded = true;
+        _status = 'IFC file loaded successfully!';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Error loading IFC: $e';
+        _isLoading = false;
+        _modelLoaded = false;
+      });
+    }
+  }
+
+  Future<void> _pickAndLoadIfc() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Picking IFC file...';
+    });
+
+    try {
+      // Pick IFC file
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['ifc'],
+      );
+
+      if (result == null || result.files.isEmpty) {
+        setState(() {
+          _status = 'No file selected';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final filePath = result.files.first.path;
+      if (filePath == null) {
+        setState(() {
+          _status = 'Invalid file path';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _status = 'Loading IFC file...';
+      });
+
+      // Load the IFC file
+      final modelInfo = await rust.loadIfcFile(filePath: filePath);
+
+      setState(() {
+        _modelInfo = modelInfo;
+        _modelLoaded = true;
+        _status = 'IFC file loaded successfully!';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Error loading IFC: $e';
+        _isLoading = false;
+        _modelLoaded = false;
+      });
+    }
+  }
+
+  Future<void> _unloadModel() async {
+    try {
+      rust.unloadModel();
+      setState(() {
+        _modelInfo = null;
+        _modelLoaded = false;
+        _status = 'Model unloaded';
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Error unloading model: $e';
+      });
+    }
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatRow(BuildContext context, String label, int value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              value.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BIM Viewer - Phase 1 Test'),
+        title: Text(_modelLoaded ? 'BIM Viewer - Model Loaded' : 'BIM Viewer'),
         elevation: 2,
       ),
       body: Center(
@@ -218,12 +373,90 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 32),
 
+              // Model Info Card (Phase 2)
+              if (_modelLoaded && _modelInfo != null)
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.account_balance,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Model Information',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        _buildInfoRow(context, 'Project', _modelInfo!.projectName),
+                        _buildInfoRow(context, 'Building', _modelInfo!.buildingName),
+                        _buildInfoRow(context, 'Site', _modelInfo!.siteName),
+                        const Divider(height: 24),
+                        Text(
+                          'Element Statistics',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildStatRow(context, 'Total Elements', _modelInfo!.stats.totalEntities.toInt()),
+                        _buildStatRow(context, 'Walls', _modelInfo!.stats.walls.toInt()),
+                        _buildStatRow(context, 'Slabs', _modelInfo!.stats.slabs.toInt()),
+                        _buildStatRow(context, 'Columns', _modelInfo!.stats.columns.toInt()),
+                        _buildStatRow(context, 'Beams', _modelInfo!.stats.beams.toInt()),
+                        _buildStatRow(context, 'Doors', _modelInfo!.stats.doors.toInt()),
+                        _buildStatRow(context, 'Windows', _modelInfo!.stats.windows.toInt()),
+                        _buildStatRow(context, 'Storeys', _modelInfo!.stats.storeys.toInt()),
+                      ],
+                    ),
+                  ),
+                ),
+
+              if (_modelLoaded) const SizedBox(height: 24),
+
               // Action Buttons
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
+                  // Phase 2: IFC Loading Buttons
+                  if (!_modelLoaded) ...[
+                    FilledButton.icon(
+                      onPressed: _isLoading ? null : _loadSampleIfc,
+                      icon: const Icon(Icons.file_open),
+                      label: const Text('Load Sample'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _pickAndLoadIfc,
+                      icon: const Icon(Icons.folder_open),
+                      label: const Text('Pick IFC File'),
+                    ),
+                  ],
+                  if (_modelLoaded)
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _unloadModel,
+                      icon: const Icon(Icons.close),
+                      label: const Text('Unload Model'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                        foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                    ),
+
+                  // Phase 1: Test Buttons
                   ElevatedButton.icon(
                     onPressed: _isLoading ? null : _testAsync,
                     icon: const Icon(Icons.play_arrow),
@@ -233,11 +466,6 @@ class _HomePageState extends State<HomePage> {
                     onPressed: _isLoading ? null : _testErrorHandling,
                     icon: const Icon(Icons.error_outline),
                     label: const Text('Test Error'),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _initialize,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reinitialize'),
                   ),
                 ],
               ),
@@ -256,15 +484,20 @@ class _HomePageState extends State<HomePage> {
                     const Icon(Icons.info_outline, size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      'Phase 1: Foundation - Complete!',
+                      _modelLoaded
+                          ? 'Phase 2: IFC Parsing - Working!'
+                          : 'Phase 2: IFC Parser Ready',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Flutter ↔ Rust FFI bridge is working!\n'
-                      'Test the buttons above to see async and error handling.',
+                      _modelLoaded
+                          ? 'IFC file loaded and parsed successfully!\n'
+                              'Element counts and properties extracted.'
+                          : 'Load a sample IFC file or pick your own .ifc file\n'
+                              'to test the custom Rust IFC parser.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),

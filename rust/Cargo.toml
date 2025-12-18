@@ -1,0 +1,57 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+# Flutter Rust Bridge
+flutter_rust_bridge = "=2.11.1"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Graphics (will be fully configured in Phase 3)
+# wgpu = "0.18"
+# winit = "0.29"
+
+# Math
+nalgebra = "0.32"
+glam = "0.25"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# File parsing (for IFC - Phase 2)
+# nom = "7.1"
+
+# Spatial indexing (Phase 2)
+# rstar = "0.11"
+
+[dev-dependencies]
+# Benchmarks will be added in Phase 8
+# criterion = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
+
+# Benchmarks will be added in Phase 8
+# [[bench]]
+# name = "rendering"
+# harness = false

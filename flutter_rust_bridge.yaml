@@ -1,0 +1,17 @@
+# Flutter Rust Bridge Configuration
+# This file configures automatic code generation for FFI bindings
+
+# Rust crate root
+rust_root: rust/
+
+# Rust module to process (using new syntax)
+rust_input: crate::api
+
+# Dart output location
+dart_output: lib/core/bridge/
+
+# C header output for iOS/macOS
+c_output: ios/Runner/bridge_generated.h
+
+# Code generation options
+dart_format_line_length: 120

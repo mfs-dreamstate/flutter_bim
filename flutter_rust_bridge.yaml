@@ -10,8 +10,11 @@ rust_input: crate::api
 # Dart output location
 dart_output: lib/core/bridge/
 
-# C header output for iOS/macOS
+# C header output for iOS
 c_output: ios/Runner/bridge_generated.h
+
+# Disable web platform (we only target Android & iOS)
+web: false
 
 # Code generation options
 dart_format_line_length: 120

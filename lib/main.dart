@@ -117,6 +117,26 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _testRenderer() async {
+    setState(() {
+      _isLoading = true;
+      _status = 'Testing wgpu renderer...';
+    });
+
+    try {
+      final result = await rust.testRendererInit();
+      setState(() {
+        _status = result;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Renderer error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _loadSampleIfc() async {
     setState(() {
       _isLoading = true;
@@ -466,6 +486,13 @@ class _HomePageState extends State<HomePage> {
                     onPressed: _isLoading ? null : _testErrorHandling,
                     icon: const Icon(Icons.error_outline),
                     label: const Text('Test Error'),
+                  ),
+
+                  // Phase 3: Renderer Test
+                  ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _testRenderer,
+                    icon: const Icon(Icons.threed_rotation),
+                    label: const Text('Test Renderer'),
                   ),
                 ],
               ),

@@ -55,13 +55,106 @@ pub fn test_error_handling(should_fail: bool) -> Result<String, String> {
 }
 
 // ============================================================================
-// Phase 1 API is now complete
-// Additional API functions will be added in subsequent phases:
-//
-// Phase 2: BIM File Parsing
-// - load_model(path: String) -> Result<ModelInfo>
-// - get_element_count() -> u32
-// - get_element_info(id: String) -> Option<ElementInfo>
+// Phase 2 API: BIM File Parsing
+// ============================================================================
+
+use crate::bim::{BimModel, IfcFile, ModelInfo};
+use std::sync::Mutex;
+
+// Global model storage (simple approach for Phase 2)
+static CURRENT_MODEL: Mutex<Option<BimModel>> = Mutex::new(None);
+
+/// Load an IFC file and parse it
+/// This is async because file I/O can be slow
+pub async fn load_ifc_file(file_path: String) -> Result<ModelInfo, String> {
+    tracing::info!("Loading IFC file: {}", file_path);
+
+    // Read file contents
+    let content = tokio::fs::read_to_string(&file_path)
+        .await
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+
+    // Parse IFC file
+    let ifc_file = IfcFile::parse(&content)?;
+
+    tracing::info!(
+        "Parsed IFC file: {} entities",
+        ifc_file.entity_count()
+    );
+
+    // Build BIM model from IFC
+    let model = BimModel::from_ifc_file(&ifc_file)?;
+
+    // Get model info before storing
+    let model_info = model.get_info();
+
+    // Store the model
+    let mut current = CURRENT_MODEL.lock().unwrap();
+    *current = Some(model);
+
+    tracing::info!("Model loaded successfully");
+    Ok(model_info)
+}
+
+/// Get information about the currently loaded model
+#[frb(sync)]
+pub fn get_model_info() -> Result<ModelInfo, String> {
+    let model = CURRENT_MODEL.lock().unwrap();
+
+    match model.as_ref() {
+        Some(m) => Ok(m.get_info()),
+        None => Err("No model loaded".to_string()),
+    }
+}
+
+/// Check if a model is currently loaded
+#[frb(sync)]
+pub fn is_model_loaded() -> bool {
+    let model = CURRENT_MODEL.lock().unwrap();
+    model.is_some()
+}
+
+/// Unload the current model and free memory
+#[frb(sync)]
+pub fn unload_model() -> Result<(), String> {
+    let mut model = CURRENT_MODEL.lock().unwrap();
+
+    if model.is_none() {
+        return Err("No model loaded".to_string());
+    }
+
+    *model = None;
+    tracing::info!("Model unloaded");
+    Ok(())
+}
+
+/// Parse IFC file content (for testing - takes content string instead of file path)
+pub async fn parse_ifc_content(content: String) -> Result<ModelInfo, String> {
+    tracing::info!("Parsing IFC content ({} bytes)", content.len());
+
+    // Parse IFC file
+    let ifc_file = IfcFile::parse(&content)?;
+
+    tracing::info!(
+        "Parsed IFC file: {} entities",
+        ifc_file.entity_count()
+    );
+
+    // Build BIM model from IFC
+    let model = BimModel::from_ifc_file(&ifc_file)?;
+
+    // Get model info before storing
+    let model_info = model.get_info();
+
+    // Store the model
+    let mut current = CURRENT_MODEL.lock().unwrap();
+    *current = Some(model);
+
+    Ok(model_info)
+}
+
+// ============================================================================
+// Future Phases:
 //
 // Phase 3: 3D Rendering
 // - create_renderer(config: RendererConfig) -> Result<()>

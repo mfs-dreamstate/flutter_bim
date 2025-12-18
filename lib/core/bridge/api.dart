@@ -3,6 +3,7 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import 'bim/model.dart';
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -24,3 +25,21 @@ Future<String> testAsync() => RustLib.instance.api.crateApiTestAsync();
 /// Returns a Result to demonstrate error propagation
 String testErrorHandling({required bool shouldFail}) =>
     RustLib.instance.api.crateApiTestErrorHandling(shouldFail: shouldFail);
+
+/// Load an IFC file and parse it
+/// This is async because file I/O can be slow
+Future<ModelInfo> loadIfcFile({required String filePath}) =>
+    RustLib.instance.api.crateApiLoadIfcFile(filePath: filePath);
+
+/// Get information about the currently loaded model
+ModelInfo getModelInfo() => RustLib.instance.api.crateApiGetModelInfo();
+
+/// Check if a model is currently loaded
+bool isModelLoaded() => RustLib.instance.api.crateApiIsModelLoaded();
+
+/// Unload the current model and free memory
+void unloadModel() => RustLib.instance.api.crateApiUnloadModel();
+
+/// Parse IFC file content (for testing - takes content string instead of file path)
+Future<ModelInfo> parseIfcContent({required String content}) =>
+    RustLib.instance.api.crateApiParseIfcContent(content: content);

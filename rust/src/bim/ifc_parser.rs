@@ -208,7 +208,7 @@ fn parse_value(input: &str) -> ParseResult<IfcValue> {
         map(parse_enum, IfcValue::Enum),
         map(parse_list, IfcValue::List),
     ))(input)?;
-    let (input, _) = multispace0(input)?;
+    let (_input, _) = multispace0(input)?;
     Ok(result)
 }
 

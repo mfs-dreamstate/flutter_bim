@@ -46,12 +46,24 @@ impl GpuContext {
             adapter.get_info()
         );
 
+        // Check which optional features are supported
+        let adapter_features = adapter.features();
+        let mut required_features = wgpu::Features::empty();
+
+        // Request POLYGON_MODE_LINE if available (for wireframe rendering)
+        if adapter_features.contains(wgpu::Features::POLYGON_MODE_LINE) {
+            required_features |= wgpu::Features::POLYGON_MODE_LINE;
+            tracing::info!("POLYGON_MODE_LINE feature enabled (wireframe supported)");
+        } else {
+            tracing::warn!("POLYGON_MODE_LINE not supported - wireframe mode unavailable");
+        }
+
         // Request device and queue
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("BIM Viewer Device"),
-                    required_features: wgpu::Features::empty(),
+                    required_features,
                     required_limits: wgpu::Limits::downlevel_webgl2_defaults()
                         .using_resolution(adapter.limits()),
                 },
@@ -83,5 +95,13 @@ impl GpuContext {
     /// Get queue reference
     pub fn queue(&self) -> Option<&wgpu::Queue> {
         self.queue.as_ref()
+    }
+
+    /// Check if wireframe rendering is supported
+    pub fn wireframe_supported(&self) -> bool {
+        self.device
+            .as_ref()
+            .map(|d| d.features().contains(wgpu::Features::POLYGON_MODE_LINE))
+            .unwrap_or(false)
     }
 }

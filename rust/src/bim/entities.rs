@@ -86,6 +86,90 @@ pub struct IfcWindow {
     pub overall_width: Option<f64>,
 }
 
+/// IFC Roof
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcRoof {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Stair
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcStair {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Pipe Segment (MEP)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcPipeSegment {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Duct Segment (MEP)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcDuctSegment {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Cable Carrier Segment (Electrical)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcCableCarrierSegment {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Flow Terminal (MEP - outlets, fixtures)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcFlowTerminal {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Building Element Proxy (generic elements)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcBuildingElementProxy {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Footing (foundation)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcFooting {
+    pub product: IfcProduct,
+    pub predefined_type: Option<String>,
+}
+
+/// IFC Grid - Structural grid system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcGrid {
+    pub id: EntityId,
+    pub global_id: String,
+    pub name: Option<String>,
+    pub u_axes: Vec<EntityId>, // References to IfcGridAxis entities
+    pub v_axes: Vec<EntityId>, // References to IfcGridAxis entities
+}
+
+/// IFC Grid Axis - Individual axis line in a grid
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IfcGridAxis {
+    pub id: EntityId,
+    pub axis_tag: String,          // Label like "A", "B", "1", "2"
+    pub axis_curve: Option<EntityId>, // Reference to curve geometry
+    pub same_sense: bool,          // Direction of axis
+}
+
+/// Represents a parsed grid line for rendering
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GridLine {
+    pub tag: String,              // Label ("A", "1", etc.)
+    pub start: [f32; 3],          // Start point
+    pub end: [f32; 3],            // End point
+    pub is_u_axis: bool,          // True for U axis, false for V axis
+}
+
 /// IFC Building Storey (floor level)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IfcBuildingStorey {

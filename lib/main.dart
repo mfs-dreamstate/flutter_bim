@@ -1,11 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'core/bridge/api.dart' as rust;
 import 'core/bridge/bim/model.dart';
 import 'core/bridge/frb_generated.dart';
+import 'model_manager.dart';
+import 'home_screen.dart';
 
 void main() {
   runApp(const BimViewerApp());
@@ -53,6 +53,8 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   ModelInfo? _modelInfo;
   bool _modelLoaded = false;
+  int _modelCount = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -61,18 +63,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initialize() async {
-    // Initialize Rust bridge
-    await RustLib.init();
-
-    setState(() {
-      _isLoading = true;
-      _status = 'Initializing Rust engine...';
-    });
-
     try {
+      // Initialize Rust bridge
+      debugPrint('[BIM] Initializing Rust bridge...');
+      await RustLib.init();
+      debugPrint('[BIM] Rust bridge initialized successfully');
+
+      setState(() {
+        _isLoading = true;
+        _status = 'Initializing Rust engine...';
+      });
+
       final initMessage = rust.initialize();
       final version = rust.getVersion();
       final systemInfo = rust.getSystemInfo();
+
+      debugPrint('[BIM] Rust engine initialized: $initMessage');
+      debugPrint('[BIM] Version: $version');
 
       setState(() {
         _status = initMessage;
@@ -80,11 +87,36 @@ class _HomePageState extends State<HomePage> {
         _systemInfo = systemInfo;
         _isLoading = false;
       });
-    } catch (e) {
+
+      // Refresh model state
+      _refreshModelState();
+    } catch (e, stackTrace) {
+      debugPrint('[BIM ERROR] Initialization failed: $e');
+      debugPrint('[BIM ERROR] Stack trace: $stackTrace');
       setState(() {
         _status = 'Error: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  void _refreshModelState() {
+    try {
+      final count = rust.getModelCount().toInt();
+      final loaded = rust.isModelLoaded();
+      ModelInfo? info;
+      if (loaded) {
+        try {
+          info = rust.getModelInfo();
+        } catch (_) {}
+      }
+      setState(() {
+        _modelCount = count;
+        _modelLoaded = loaded;
+        _modelInfo = info;
+      });
+    } catch (e) {
+      debugPrint('[BIM] Error refreshing model state: $e');
     }
   }
 
@@ -144,28 +176,33 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
+      debugPrint('[BIM] Loading sample IFC from assets...');
       // Load the sample IFC file from assets
       final content = await rootBundle.loadString('test/sample_building.ifc');
+      debugPrint('[BIM] Asset loaded, ${content.length} bytes');
 
       setState(() {
         _status = 'Parsing IFC file...';
       });
 
       // Parse the IFC content
+      debugPrint('[BIM] Parsing IFC content...');
       final modelInfo = await rust.parseIfcContent(content: content);
+      debugPrint('[BIM] IFC parsed successfully: ${modelInfo.projectName}');
 
       setState(() {
-        _modelInfo = modelInfo;
-        _modelLoaded = true;
         _status = 'IFC file loaded successfully!';
         _isLoading = false;
       });
-    } catch (e) {
+      _refreshModelState();
+    } catch (e, stackTrace) {
+      debugPrint('[BIM ERROR] Failed to load IFC: $e');
+      debugPrint('[BIM ERROR] Stack trace: $stackTrace');
       setState(() {
         _status = 'Error loading IFC: $e';
         _isLoading = false;
-        _modelLoaded = false;
       });
+      _refreshModelState();
     }
   }
 
@@ -207,17 +244,16 @@ class _HomePageState extends State<HomePage> {
       final modelInfo = await rust.loadIfcFile(filePath: filePath);
 
       setState(() {
-        _modelInfo = modelInfo;
-        _modelLoaded = true;
         _status = 'IFC file loaded successfully!';
         _isLoading = false;
       });
+      _refreshModelState();
     } catch (e) {
       setState(() {
         _status = 'Error loading IFC: $e';
         _isLoading = false;
-        _modelLoaded = false;
       });
+      _refreshModelState();
     }
   }
 
@@ -225,10 +261,9 @@ class _HomePageState extends State<HomePage> {
     try {
       rust.unloadModel();
       setState(() {
-        _modelInfo = null;
-        _modelLoaded = false;
         _status = 'Model unloaded';
       });
+      _refreshModelState();
     } catch (e) {
       setState(() {
         _status = 'Error unloading model: $e';
@@ -288,9 +323,28 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
-        title: Text(_modelLoaded ? 'BIM Viewer - Model Loaded' : 'BIM Viewer'),
+        title: Text(_modelCount > 0
+            ? 'BIM Viewer - $_modelCount Model${_modelCount == 1 ? '' : 's'}'
+            : 'BIM Viewer'),
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: _modelCount > 0,
+              label: Text('$_modelCount'),
+              child: const Icon(Icons.layers),
+            ),
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
+            tooltip: 'Model Manager',
+          ),
+        ],
+      ),
+      endDrawer: ModelManagerDrawer(
+        onModelsChanged: _refreshModelState,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -494,6 +548,38 @@ class _HomePageState extends State<HomePage> {
                     icon: const Icon(Icons.threed_rotation),
                     label: const Text('Test Renderer'),
                   ),
+
+                  // Phase 3: 3D Viewer - more prominent if model is loaded
+                  if (_modelLoaded)
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.view_in_ar),
+                      label: const Text('View Model'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.view_in_ar),
+                      label: const Text('Open Viewer'),
+                    ),
                 ],
               ),
 
@@ -508,12 +594,16 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.info_outline, size: 32),
+                    Icon(
+                      _modelLoaded ? Icons.check_circle : Icons.info_outline,
+                      size: 32,
+                      color: _modelLoaded ? Theme.of(context).colorScheme.primary : null,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       _modelLoaded
-                          ? 'Phase 2: IFC Parsing - Working!'
-                          : 'Phase 2: IFC Parser Ready',
+                          ? 'Phase 3: 3D Rendering Ready!'
+                          : 'BIM Viewer',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -521,10 +611,10 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 8),
                     Text(
                       _modelLoaded
-                          ? 'IFC file loaded and parsed successfully!\n'
-                              'Element counts and properties extracted.'
+                          ? 'IFC file loaded! Tap "View Model in 3D" to see\n'
+                              'the building rendered with wgpu.'
                           : 'Load a sample IFC file or pick your own .ifc file\n'
-                              'to test the custom Rust IFC parser.',
+                              'to parse and view in 3D.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),

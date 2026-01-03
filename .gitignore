@@ -1,63 +1,64 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# Claude Code IDE
-.claude/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter/Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
-/build/
+build/
+*.lock
 
-# Symbolication related
-app.*.symbols
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# Obfuscation related
-app.*.map.json
+# OS
+.DS_Store
+Thumbs.db
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Local development
+*.iml
+*.ipr
+*.iws
 
-# Rust build artifacts
-rust/target/
-rust/Cargo.lock
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
 
-# Flutter Rust Bridge generated files
-lib/core/bridge/frb_generated.dart
-lib/core/bridge/frb_generated.io.dart
-lib/core/bridge/frb_generated.web.dart
-rust/src/frb_generated.rs
-ios/Runner/bridge_generated.h
-macos/Runner/bridge_generated.h
+# Android
+*.jks
+*.keystore
+local.properties
+android/.gradle/
+android/captures/
+android/gradle.properties
+android/key.properties
 
-# Metadata (generated)
-.metadata
+# iOS
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+**/*sync/
+.sconsign.dblite
+.tags*
+ios/.generated/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/.symlinks/
+
+# Old/backup files
+*_OLD.*
+*_old.*
+*.bak
+*.backup

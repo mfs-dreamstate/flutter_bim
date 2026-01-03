@@ -57,6 +57,11 @@ impl Camera {
         self.target = Vec3::from_array(target);
     }
 
+    /// Get camera position as array
+    pub fn position(&self) -> [f32; 3] {
+        self.position.to_array()
+    }
+
     /// Set aspect ratio
     pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) {
         self.aspect_ratio = aspect_ratio;
@@ -125,5 +130,67 @@ impl Camera {
 
         self.target = center;
         self.position = center + Vec3::new(1.0, 1.0, 1.0).normalize() * size * 1.5;
+    }
+
+    /// Set camera distance from target (preserving direction)
+    pub fn set_distance(&mut self, distance: f32) {
+        let direction = (self.position - self.target).normalize_or_zero();
+        if direction.length_squared() < 0.001 {
+            // If camera is at target, use a default direction
+            self.position = self.target + Vec3::new(1.0, 1.0, 1.0).normalize() * distance;
+        } else {
+            self.position = self.target + direction * distance;
+        }
+    }
+
+    /// Convert screen coordinates (0-1 range) to a world-space ray
+    /// Returns (origin, direction)
+    pub fn screen_to_ray(&self, screen_x: f32, screen_y: f32) -> (Vec3, Vec3) {
+        // Convert to NDC (-1 to 1)
+        let ndc_x = screen_x * 2.0 - 1.0;
+        let ndc_y = 1.0 - screen_y * 2.0; // Flip Y
+
+        // Get inverse view-projection matrix
+        let inv_view_proj = self.view_projection_matrix().inverse();
+
+        // Create ray in clip space and transform to world
+        let near_point = inv_view_proj.project_point3(Vec3::new(ndc_x, ndc_y, 0.0));
+        let far_point = inv_view_proj.project_point3(Vec3::new(ndc_x, ndc_y, 1.0));
+
+        let origin = self.position;
+        let direction = (far_point - near_point).normalize();
+
+        (origin, direction)
+    }
+}
+
+/// Ray-AABB intersection test
+/// Returns the distance to intersection, or None if no hit
+pub fn ray_aabb_intersect(
+    ray_origin: Vec3,
+    ray_dir: Vec3,
+    box_min: Vec3,
+    box_max: Vec3,
+) -> Option<f32> {
+    let inv_dir = Vec3::new(
+        1.0 / ray_dir.x,
+        1.0 / ray_dir.y,
+        1.0 / ray_dir.z,
+    );
+
+    let t1 = (box_min.x - ray_origin.x) * inv_dir.x;
+    let t2 = (box_max.x - ray_origin.x) * inv_dir.x;
+    let t3 = (box_min.y - ray_origin.y) * inv_dir.y;
+    let t4 = (box_max.y - ray_origin.y) * inv_dir.y;
+    let t5 = (box_min.z - ray_origin.z) * inv_dir.z;
+    let t6 = (box_max.z - ray_origin.z) * inv_dir.z;
+
+    let tmin = t1.min(t2).max(t3.min(t4)).max(t5.min(t6));
+    let tmax = t1.max(t2).min(t3.max(t4)).min(t5.max(t6));
+
+    if tmax < 0.0 || tmin > tmax {
+        None
+    } else {
+        Some(if tmin < 0.0 { tmax } else { tmin })
     }
 }

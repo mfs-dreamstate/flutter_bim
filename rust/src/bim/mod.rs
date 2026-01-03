@@ -7,8 +7,10 @@ pub mod entities;
 pub mod geometry;
 pub mod ifc_parser;
 pub mod model;
+pub mod model_registry;
 
 pub use entities::*;
 pub use geometry::*;
 pub use ifc_parser::*;
 pub use model::*;
+pub use model_registry::*;

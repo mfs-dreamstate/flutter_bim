@@ -134,6 +134,197 @@ impl BoundingBox {
             self.max[2] - self.min[2],
         ]
     }
+
+    /// Compute union of two bounding boxes
+    pub fn union(&self, other: &BoundingBox) -> BoundingBox {
+        BoundingBox {
+            min: [
+                self.min[0].min(other.min[0]),
+                self.min[1].min(other.min[1]),
+                self.min[2].min(other.min[2]),
+            ],
+            max: [
+                self.max[0].max(other.max[0]),
+                self.max[1].max(other.max[1]),
+                self.max[2].max(other.max[2]),
+            ],
+        }
+    }
+
+    /// Create a bounding box from min/max arrays
+    pub fn from_min_max(min: [f32; 3], max: [f32; 3]) -> BoundingBox {
+        BoundingBox { min, max }
+    }
+}
+
+/// Get color for IFC element type
+pub fn color_for_element_type(element_type: &str) -> [f32; 4] {
+    match element_type.to_uppercase().as_str() {
+        // === ARCHITECTURAL ===
+        // Walls - light gray/beige
+        s if s.contains("WALL") => [0.85, 0.82, 0.75, 1.0],
+        // Slabs/floors - darker gray
+        s if s.contains("SLAB") || s.contains("FLOOR") => [0.6, 0.6, 0.65, 1.0],
+        // Doors - brown
+        s if s.contains("DOOR") => [0.6, 0.45, 0.3, 1.0],
+        // Windows - light blue (glass)
+        s if s.contains("WINDOW") => [0.7, 0.85, 0.95, 0.7],
+        // Roofs - terracotta
+        s if s.contains("ROOF") => [0.75, 0.5, 0.4, 1.0],
+        // Stairs - concrete gray
+        s if s.contains("STAIR") => [0.65, 0.65, 0.65, 1.0],
+        // Railings - dark gray
+        s if s.contains("RAILING") => [0.4, 0.4, 0.4, 1.0],
+        // Furniture - wood tone
+        s if s.contains("FURNITURE") => [0.65, 0.5, 0.35, 1.0],
+
+        // === STRUCTURAL ===
+        // Columns - steel blue
+        s if s.contains("COLUMN") => [0.5, 0.55, 0.7, 1.0],
+        // Beams - steel gray
+        s if s.contains("BEAM") => [0.55, 0.55, 0.6, 1.0],
+        // Footings - concrete
+        s if s.contains("FOOTING") || s.contains("FOUNDATION") => [0.5, 0.5, 0.5, 1.0],
+
+        // === MEP (Mechanical/Electrical/Plumbing) ===
+        // Pipes - copper/green for water
+        s if s.contains("PIPE") => [0.2, 0.7, 0.5, 1.0],
+        // Ducts - silver/metal
+        s if s.contains("DUCT") => [0.7, 0.75, 0.8, 1.0],
+        // Flow terminals (vents, outlets) - light metal
+        s if s.contains("FLOWTERMINAL") || s.contains("TERMINAL") => [0.6, 0.65, 0.7, 1.0],
+
+        // === ELECTRICAL ===
+        // Cable carriers/trays - orange
+        s if s.contains("CABLE") || s.contains("CONDUIT") => [0.9, 0.5, 0.2, 1.0],
+        // Electrical equipment - yellow
+        s if s.contains("ELECTRIC") => [0.9, 0.8, 0.2, 1.0],
+
+        // === GENERIC ===
+        // Building element proxy - purple tint
+        s if s.contains("PROXY") => [0.6, 0.5, 0.7, 1.0],
+
+        // Default - neutral gray
+        _ => [0.7, 0.7, 0.7, 1.0],
+    }
+}
+
+/// Generate a box mesh with proper normals per face
+pub fn generate_box_with_normals(
+    center: [f32; 3],
+    size: [f32; 3],
+    color: [f32; 4],
+) -> Mesh {
+    let mut mesh = Mesh::new();
+
+    let hx = size[0] / 2.0;
+    let hy = size[1] / 2.0;
+    let hz = size[2] / 2.0;
+    let cx = center[0];
+    let cy = center[1];
+    let cz = center[2];
+
+    // Each face has 4 vertices with proper normals
+    // Front face (+Z)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx - hx, cy - hy, cz + hz);
+    mesh.add_vertex(cx + hx, cy - hy, cz + hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz + hz);
+    mesh.add_vertex(cx - hx, cy + hy, cz + hz);
+    for _ in 0..4 {
+        mesh.add_normal(0.0, 0.0, 1.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    // Back face (-Z)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx + hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx - hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx - hx, cy + hy, cz - hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz - hz);
+    for _ in 0..4 {
+        mesh.add_normal(0.0, 0.0, -1.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    // Top face (+Y)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx - hx, cy + hy, cz + hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz + hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz - hz);
+    mesh.add_vertex(cx - hx, cy + hy, cz - hz);
+    for _ in 0..4 {
+        mesh.add_normal(0.0, 1.0, 0.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    // Bottom face (-Y)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx - hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx + hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx + hx, cy - hy, cz + hz);
+    mesh.add_vertex(cx - hx, cy - hy, cz + hz);
+    for _ in 0..4 {
+        mesh.add_normal(0.0, -1.0, 0.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    // Right face (+X)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx + hx, cy - hy, cz + hz);
+    mesh.add_vertex(cx + hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz - hz);
+    mesh.add_vertex(cx + hx, cy + hy, cz + hz);
+    for _ in 0..4 {
+        mesh.add_normal(1.0, 0.0, 0.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    // Left face (-X)
+    let base = mesh.vertex_count() as u32;
+    mesh.add_vertex(cx - hx, cy - hy, cz - hz);
+    mesh.add_vertex(cx - hx, cy - hy, cz + hz);
+    mesh.add_vertex(cx - hx, cy + hy, cz + hz);
+    mesh.add_vertex(cx - hx, cy + hy, cz - hz);
+    for _ in 0..4 {
+        mesh.add_normal(-1.0, 0.0, 0.0);
+        mesh.add_color(color[0], color[1], color[2], color[3]);
+    }
+    mesh.add_triangle(base, base + 1, base + 2);
+    mesh.add_triangle(base + 2, base + 3, base);
+
+    mesh
+}
+
+/// Merge multiple meshes into one
+pub fn merge_meshes(meshes: Vec<Mesh>) -> Mesh {
+    let mut result = Mesh::new();
+
+    for mesh in meshes {
+        let base = result.vertex_count() as u32;
+
+        // Add vertices
+        result.vertices.extend(&mesh.vertices);
+        result.normals.extend(&mesh.normals);
+        result.colors.extend(&mesh.colors);
+
+        // Add indices with offset
+        for idx in &mesh.indices {
+            result.indices.push(idx + base);
+        }
+    }
+
+    result
 }
 
 /// Generate a simple box mesh (for testing)

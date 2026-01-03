@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo --version:*)",
+      "Bash(rustup:*)",
+      "Bash(git mv:*)",
+      "Bash(git lfs migrate:*)"
+    ]
+  }
+}

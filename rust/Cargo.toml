@@ -36,6 +36,9 @@ tracing-subscriber = "0.3"
 # File parsing (for IFC - Phase 2)
 nom = "7.1"
 
+# Image export (Phase 8)
+image = "0.24"
+
 # Spatial indexing (Phase 2)
 # rstar = "0.11"
 

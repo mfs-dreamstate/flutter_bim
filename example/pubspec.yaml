@@ -1,0 +1,34 @@
+name: flutter_bim_example
+description: Example app demonstrating flutter_bim package usage
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Use the parent package
+  flutter_bim:
+    path: ../
+
+  # Direct dependencies needed by example
+  file_picker: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/sample_building.ifc
+    - assets/sample_architectural.ifc
+    - assets/sample_structural.ifc
+    - assets/sample_mep.ifc
+    - assets/sample_electrical.ifc

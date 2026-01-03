@@ -4,7 +4,53 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import '../lib.dart';
+import 'geometry.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+/// Element information for selection/properties
+class ElementInfo {
+  final int id;
+  final String elementType;
+  final String name;
+  final String globalId;
+  final BoundingBox bounds;
+  final int triangleStart;
+  final int triangleCount;
+
+  const ElementInfo({
+    required this.id,
+    required this.elementType,
+    required this.name,
+    required this.globalId,
+    required this.bounds,
+    required this.triangleStart,
+    required this.triangleCount,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      elementType.hashCode ^
+      name.hashCode ^
+      globalId.hashCode ^
+      bounds.hashCode ^
+      triangleStart.hashCode ^
+      triangleCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ElementInfo &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          elementType == other.elementType &&
+          name == other.name &&
+          globalId == other.globalId &&
+          bounds == other.bounds &&
+          triangleStart == other.triangleStart &&
+          triangleCount == other.triangleCount;
+}
 
 /// Model information (for Flutter)
 class ModelInfo {

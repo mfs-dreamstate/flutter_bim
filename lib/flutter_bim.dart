@@ -30,16 +30,15 @@ export 'src/widgets/properties_panel.dart' show showPropertiesPanel;
 export 'src/widgets/model_manager.dart' show ModelManagerDrawer;
 
 // Optional widgets - Additional features
-export 'src/widgets/map_view.dart' show MapViewScreen, GeoReference;
+export 'src/widgets/map_view.dart' show MapViewScreen;
 export 'src/widgets/measurement_tools.dart' show showMeasurementTools;
 export 'src/widgets/section_plane_tools.dart' show showSectionPlaneTools;
 export 'src/widgets/grid_overlay.dart' show GridOverlay;
 export 'src/widgets/drawing_overlay_manager.dart' show showDrawingOverlayManager;
 
 // Data models - User-facing data structures
-export 'src/core/bridge/bim/model.dart' show ModelInfo, ModelStats, RegisteredModelInfo;
-export 'src/core/bridge/bim/entities.dart' show ElementInfo;
-export 'src/core/bridge/bim/geometry.dart' show Mesh, GeometryData;
+export 'src/core/bridge/bim/model.dart' show ModelInfo, ModelStats, ElementInfo;
+export 'src/core/bridge/bim/model_registry.dart' show RegisteredModelInfo;
 
 // Core API - For advanced users who want direct access
 export 'src/core/bridge/api.dart';

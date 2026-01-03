@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as img;
-import 'core/bridge/api.dart' as rust;
+import '../core/bridge/api.dart' as rust;
 
 /// Drawing Overlay Manager Widget
 /// Allows users to upload floor plans/drawings and overlay them on the 3D model

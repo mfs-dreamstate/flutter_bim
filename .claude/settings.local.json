@@ -4,7 +4,9 @@
       "Bash(cargo --version:*)",
       "Bash(rustup:*)",
       "Bash(git mv:*)",
-      "Bash(git lfs migrate:*)"
+      "Bash(git lfs migrate:*)",
+      "Bash(git lfs status:*)",
+      "Bash(git add:*)"
     ]
   }
 }

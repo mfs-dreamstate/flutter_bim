@@ -15,9 +15,6 @@ dependencies:
   flutter_bim:
     path: ../
 
-  # Direct dependencies needed by example
-  file_picker: ^6.2.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -27,8 +24,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sample_building.ifc
-    - assets/sample_architectural.ifc
-    - assets/sample_structural.ifc
-    - assets/sample_mep.ifc
-    - assets/sample_electrical.ifc
+    - assets/test/sample_building.ifc
+    - assets/test/sample_architectural.ifc
+    - assets/test/sample_structural.ifc
+    - assets/test/sample_mep.ifc
+    - assets/test/sample_electrical.ifc

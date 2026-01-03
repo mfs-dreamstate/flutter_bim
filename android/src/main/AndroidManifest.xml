@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.flutter_bim">
+    <!-- Minimal manifest for FFI plugin -->
+    <!-- Native libraries are loaded via flutter_rust_bridge -->
+</manifest>

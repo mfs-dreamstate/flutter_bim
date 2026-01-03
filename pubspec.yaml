@@ -17,9 +17,10 @@ dependencies:
   # Flutter Rust Bridge - FFI communication
   flutter_rust_bridge: ^2.11.1
   ffi: ^2.1.0
+  collection: ^1.18.0
 
   # File handling
-  file_picker: ^6.2.1
+  file_picker: ^10.3.0
   path_provider: ^2.1.1
 
   # Map integration (optional - for GIS features)

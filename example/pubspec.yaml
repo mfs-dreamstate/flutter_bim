@@ -25,7 +25,15 @@ flutter:
 
   assets:
     - assets/test/sample_building.ifc
-    - assets/test/sample_architectural.ifc
     - assets/test/sample_structural.ifc
     - assets/test/sample_mep.ifc
     - assets/test/sample_electrical.ifc
+    # NordicLCA project - Structural + Electrical layers
+    - assets/nordic/STRUC_NordicLCA_Housing_Concrete_BuildingPermit.ifc
+    - assets/nordic/STRUC_NordicLCA_Housing_Timber_BuildingPermit.ifc
+    - assets/nordic/STRUC_NordicLCA_Office_Concrete_BuildingPermit.ifc
+    - assets/nordic/STRUC_NordicLCA_Office_Timber_BuildingPermit.ifc
+    - assets/nordic/ELE_NordicLCA_Housing_Concrete_BuildingPermit.ifc
+    - assets/nordic/ELE_NordicLCA_Housing_Timber_BuildingPermit.ifc
+    - assets/nordic/ELE_NordicLCA_Office_Concrete_BuildingPermit.ifc
+    - assets/nordic/ELE_NordicLCA_Office_Timber_BuildingPermit.ifc

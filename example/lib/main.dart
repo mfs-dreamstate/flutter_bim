@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bim/flutter_bim.dart' as bim;
 import 'package:flutter_bim/src/core/bridge/api.dart' as rust;
 import 'home_screen.dart';
+import 'project_loader.dart';
 
 void main() {
   runApp(const BimViewerApp());
@@ -167,6 +168,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadBimProject() async {
+    final loaded = await showProjectLoader(context);
+    if (loaded && mounted) {
+      _refreshModelState();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
   Future<void> _loadSampleIfc() async {
     setState(() {
       _isLoading = true;
@@ -176,7 +188,7 @@ class _HomePageState extends State<HomePage> {
     try {
       debugPrint('[BIM] Loading sample IFC from assets...');
       // Load the sample IFC file from assets
-      final content = await rootBundle.loadString('test/sample_building.ifc');
+      final content = await rootBundle.loadString('assets/test/sample_building.ifc');
       debugPrint('[BIM] Asset loaded, ${content.length} bytes');
 
       setState(() {
@@ -498,6 +510,26 @@ class _HomePageState extends State<HomePage> {
 
               if (_modelLoaded) const SizedBox(height: 24),
 
+              // Load BIM Project button
+              if (!_modelLoaded)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _isLoading ? null : _loadBimProject,
+                      icon: const Icon(Icons.apartment),
+                      label: const Text('Load BIM Project'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 16),
+                        textStyle: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+
               // Action Buttons
               Wrap(
                 spacing: 12,
@@ -506,7 +538,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   // Phase 2: IFC Loading Buttons
                   if (!_modelLoaded) ...[
-                    FilledButton.icon(
+                    FilledButton.tonalIcon(
                       onPressed: _isLoading ? null : _loadSampleIfc,
                       icon: const Icon(Icons.file_open),
                       label: const Text('Load Sample'),

@@ -10,7 +10,19 @@
       "Bash(flutter pub get:*)",
       "Bash(flutter build:*)",
       "Bash(flutter analyze:*)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(adb shell:*)",
+      "Bash(adb uninstall:*)",
+      "Bash(flutter run:*)",
+      "Bash(du:*)",
+      "Bash(jar xf:*)",
+      "Bash(python:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(find:*)",
+      "Bash(while read:*)",
+      "Bash(do echo \"$f\")",
+      "Bash(done)",
+      "Bash(adb logcat:*)"
     ]
   }
 }

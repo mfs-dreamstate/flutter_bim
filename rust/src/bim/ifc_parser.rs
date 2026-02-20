@@ -200,8 +200,10 @@ fn parse_value(input: &str) -> ParseResult<IfcValue> {
     let (input, _) = multispace0(input)?;
     let result = alt((
         map(tag("$"), |_| IfcValue::Null),
+        map(tag("*"), |_| IfcValue::Null), // Derived/inherited marker
         map(parse_entity_ref, IfcValue::EntityRef),
         map(parse_string, IfcValue::String),
+        parse_typed_value, // TYPENAME(value) - must come before float/int
         map(parse_float, IfcValue::Real),
         map(parse_integer, IfcValue::Integer),
         map(parse_boolean, IfcValue::Boolean), // Must come before parse_enum
@@ -212,17 +214,51 @@ fn parse_value(input: &str) -> ParseResult<IfcValue> {
     Ok(result)
 }
 
+/// Parse typed value: IFCMASSMEASURE(1826.69), IFCLABEL('text'), etc.
+/// These are IFC STEP "typed values" where a type name wraps a value.
+fn parse_typed_value(input: &str) -> ParseResult<IfcValue> {
+    // Must start with uppercase letter (IFC type names are always uppercase)
+    if !input.starts_with(|c: char| c.is_ascii_uppercase()) {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::Tag,
+        )));
+    }
+    let (input, _type_name) = take_while1(|c: char| c.is_alphanumeric() || c == '_')(input)?;
+    let (input, _) = char('(')(input)?;
+    let (input, values) = separated_list0(char(','), parse_value)(input)?;
+    let (input, _) = char(')')(input)?;
+    // Unwrap single-value typed values, keep multi-value as list
+    let value = if values.len() == 1 {
+        values.into_iter().next().unwrap()
+    } else {
+        IfcValue::List(values)
+    };
+    Ok((input, value))
+}
+
 /// Parse entity reference: #123
 fn parse_entity_ref(input: &str) -> ParseResult<EntityId> {
     parse_entity_id(input)
 }
 
-/// Parse string: 'hello'
+/// Parse string: 'hello' or 'it''s' ('' is escaped single quote in STEP)
 fn parse_string(input: &str) -> ParseResult<String> {
     let (input, _) = char('\'')(input)?;
-    let (input, content) = take_while(|c| c != '\'')(input)?;
-    let (input, _) = char('\'')(input)?;
-    Ok((input, content.to_string()))
+    let mut result = std::string::String::new();
+    let mut remaining = input;
+    loop {
+        let (input, content) = take_while(|c| c != '\'')(remaining)?;
+        result.push_str(content);
+        let (input, _) = char('\'')(input)?;
+        // Check for escaped quote ('')
+        if input.starts_with('\'') {
+            result.push('\'');
+            remaining = &input[1..]; // skip the second quote
+        } else {
+            return Ok((input, result));
+        }
+    }
 }
 
 /// Parse integer: 123 or -456
@@ -249,16 +285,24 @@ fn parse_integer(input: &str) -> ParseResult<i64> {
     Ok((input, value))
 }
 
-/// Parse float: 123.456 or -0.5 or 1.5E-3
+/// Parse float: 123.456 or -0.5 or 1.5E-3 or 1200. (trailing dot)
 fn parse_float(input: &str) -> ParseResult<f64> {
     let (input, sign) = opt(one_of("+-"))(input)?;
     let (input, num_str) = recognize(tuple((
         digit1,
-        opt(tuple((char('.'), digit1))),
+        // Allow trailing dot with optional digits (e.g. "1200." or "123.456")
+        opt(tuple((char('.'), opt(digit1)))),
         opt(tuple((one_of("eE"), opt(one_of("+-")), digit1))),
     )))(input)?;
 
-    let mut value = num_str.parse::<f64>().map_err(|_| {
+    // Trailing dot like "1200." needs to parse as float
+    let num_clean = if num_str.ends_with('.') {
+        format!("{}0", num_str)
+    } else {
+        num_str.to_string()
+    };
+
+    let mut value = num_clean.parse::<f64>().map_err(|_| {
         nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Float))
     })?;
 

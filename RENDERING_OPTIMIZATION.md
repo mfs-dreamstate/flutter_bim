@@ -23,7 +23,41 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer to handle large-
 ---
 
 ## Phase 0 — RAM Crisis (Fix First)
-> These are the root cause of excessive memory usage. Must fix before anything else.
+> These are the root cause of the crash during loading. Must fix before anything else.
+
+### Root Cause: Loading Crash Sequence
+
+When the user loads a real BIM file (e.g. STRUC_NordicLCA), this exact sequence runs:
+
+```
+Flutter                                    Rust                              Peak RAM
+───────                                    ────                              ────────
+loadIfcFile(path)                    →     read_to_string()                  1x file
+                                           .replace("\r\n", "\n")            2x file
+                                           IfcFile::parse() - many0          2x file + entities
+                                           BimModel::from_ifc_file()         2x file + entities + model
+                                           model.get_info()                  (trivial)
+                                           registry.add_model()              model stored
+                                    ←      content + ifc_file dropped        model only
+
+onModelsChanged() fires immediately
+  → loadAllModelsIntoRenderer()      →     generate_meshes()                 model + mesh (~22 MB/10K)
+    (SYNC FFI - blocks Dart)               upload_mesh_from_arrays()         model + mesh + Vertex copy
+                                           create GPU buffers                model + GPU buffers
+                                    ←      mesh + Vertex copy dropped
+
+ElementTree.initState() fires
+  → getAllElementsFromAllModels()     →     generate_meshes() AGAIN          model + ANOTHER mesh copy
+    (SYNC FFI - blocks Dart)         ←      elements returned, mesh dropped
+```
+
+**Why it crashes:** For a 30 MB IFC file with 20K elements:
+- Step 1-2: ~120 MB peak (4x file during parse)
+- Step 3: +44 MB (mesh generation)
+- Step 4: +44 MB (mesh generated AGAIN for element list)
+- **Total peak: ~200+ MB** before the user sees anything
+
+On mobile or memory-constrained environments, this kills the app.
 
 ### 0.1 Cache Mesh Data on Model Load
 - [ ] **Status: Not Started**
@@ -101,7 +135,17 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer to handle large-
   registry.add_model(model, name, Some(file_path));
   ```
 
-### 0.5 Remove Empty HashMap Allocations
+### 0.5 Fix Flutter Loading Sequence (Dart side)
+- [ ] **Status: Not Started**
+- **Files:** `lib/src/core/providers/model_state.dart`, `lib/src/widgets/element_tree.dart`
+- **Problem:** After `loadIfcFile()` returns, `onModelsChanged()` fires immediately and calls `loadAllModelsIntoRenderer()` as a **synchronous FFI call** that blocks Dart. Simultaneously, `ElementTree.initState()` calls `getAllElementsFromAllModels()` which regenerates meshes a second time. Two massive allocations overlap.
+- **Solution:**
+  1. Make the post-load sequence **sequential and async** — don't let element tree trigger while renderer is loading
+  2. Don't call `getAllElementsFromAllModels()` in `initState()` — read from cached data instead (after 0.1 is done)
+  3. Add a loading gate: block UI interaction until initial load + render is complete
+- **Expected impact:** Prevents overlapping allocations during load. Combined with 0.1 (caching), eliminates the crash entirely.
+
+### 0.6 Remove Empty HashMap Allocations
 - [ ] **Status: Not Started**
 - **Files:** `rust/src/bim/model.rs`, `rust/src/bim/entities.rs`
 - **Problem:** Every `IfcProduct` has `properties: HashMap::new()` which is never populated. `HashMap::new()` doesn't allocate until first insert in Rust, so this is minor — but if the struct is ever serialized/cloned it adds overhead.
@@ -352,7 +396,8 @@ For a model with N elements (each a box = 24 vertices, 12 triangles):
 | **0.2** | **Reuse frame buffer across FFI** | **Not Started** | **Fixes RAM — 8.3 MB/frame saved** | **Low** |
 | **0.3** | **Eliminate redundant data copies** | **Not Started** | **Fixes RAM — 1 fewer full copy** | **Low** |
 | **0.4** | **Drop IFC parse data early** | **Not Started** | **Fixes RAM — 2x peak load reduction** | **Low** |
-| **0.5** | **Remove empty HashMap allocs** | **Not Started** | **Minor RAM cleanup** | **Trivial** |
+| **0.5** | **Fix Flutter loading sequence** | **Not Started** | **Prevents overlapping allocs** | **Low** |
+| **0.6** | **Remove empty HashMap allocs** | **Not Started** | **Minor RAM cleanup** | **Trivial** |
 | 1.1 | Async readback | Not Started | ~2x FPS | Low |
 | 1.2 | Cache ElementInfo | Not Started | Merged into 0.1 | — |
 | 1.3 | Vertex compression | Not Started | 50% bandwidth | Low |

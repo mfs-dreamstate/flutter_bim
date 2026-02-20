@@ -22,7 +22,11 @@
       "Bash(while read:*)",
       "Bash(do echo \"$f\")",
       "Bash(done)",
-      "Bash(adb logcat:*)"
+      "Bash(adb logcat:*)",
+      "Bash(ls:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo ndk:*)",
+      "Bash(flutter clean:*)"
     ]
   }
 }

@@ -14,6 +14,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # State management
+  flutter_riverpod: ^2.5.0
+
   # Flutter Rust Bridge - FFI communication
   flutter_rust_bridge: ^2.11.1
   ffi: ^2.1.0

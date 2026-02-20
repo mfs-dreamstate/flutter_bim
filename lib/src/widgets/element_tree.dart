@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/bridge/api.dart' as rust;
 import '../core/bridge/bim/model.dart';
+import '../core/constants/bim_element_types.dart';
 import 'properties_panel.dart';
 
 /// Element Tree View showing hierarchical list of model elements
@@ -321,7 +322,7 @@ class _ElementTypeSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final typeColor = _getTypeColor(type);
+    final typeColor = BimElementVisuals.colorFor(type);
 
     return Column(
       children: [
@@ -346,7 +347,7 @@ class _ElementTypeSection extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(_getTypeIcon(type), size: 16, color: typeColor),
+                      Icon(BimElementVisuals.iconFor(type), size: 16, color: typeColor),
                       const SizedBox(width: 4),
                       Text(
                         type,
@@ -390,77 +391,6 @@ class _ElementTypeSection extends StatelessWidget {
     );
   }
 
-  IconData _getTypeIcon(String type) {
-    switch (type.toUpperCase()) {
-      case 'WALL':
-        return Icons.view_agenda;
-      case 'SLAB':
-        return Icons.layers;
-      case 'COLUMN':
-        return Icons.view_column;
-      case 'BEAM':
-        return Icons.horizontal_rule;
-      case 'DOOR':
-        return Icons.door_front_door;
-      case 'WINDOW':
-        return Icons.window;
-      case 'ROOF':
-        return Icons.roofing;
-      case 'STAIR':
-        return Icons.stairs;
-      case 'PIPE':
-      case 'PIPESEGMENT':
-        return Icons.plumbing;
-      case 'DUCT':
-      case 'DUCTSEGMENT':
-        return Icons.air;
-      case 'FLOWTERMINAL':
-        return Icons.hvac;
-      case 'CABLECARRIERSEGMENT':
-        return Icons.electrical_services;
-      case 'FOOTING':
-        return Icons.foundation;
-      case 'BUILDINGELEMENTPROXY':
-        return Icons.category;
-      default:
-        return Icons.architecture;
-    }
-  }
-
-  Color _getTypeColor(String type) {
-    switch (type.toUpperCase()) {
-      case 'WALL':
-        return Colors.brown;
-      case 'SLAB':
-        return Colors.grey;
-      case 'COLUMN':
-        return Colors.blueGrey;
-      case 'BEAM':
-        return Colors.indigo;
-      case 'DOOR':
-        return Colors.amber;
-      case 'WINDOW':
-        return Colors.lightBlue;
-      case 'ROOF':
-        return Colors.deepOrange;
-      case 'STAIR':
-        return Colors.purple;
-      case 'PIPE':
-      case 'PIPESEGMENT':
-        return Colors.teal;
-      case 'DUCT':
-      case 'DUCTSEGMENT':
-        return Colors.cyan;
-      case 'FLOWTERMINAL':
-        return Colors.green;
-      case 'CABLECARRIERSEGMENT':
-        return Colors.orange;
-      case 'FOOTING':
-        return Colors.blueGrey;
-      default:
-        return Colors.grey;
-    }
-  }
 }
 
 class _ElementListTile extends StatelessWidget {

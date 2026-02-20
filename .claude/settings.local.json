@@ -8,7 +8,9 @@
       "Bash(git lfs status:*)",
       "Bash(git add:*)",
       "Bash(flutter pub get:*)",
-      "Bash(flutter build:*)"
+      "Bash(flutter build:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)"
     ]
   }
 }

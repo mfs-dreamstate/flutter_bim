@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../core/bridge/bim/model.dart';
 import '../core/bridge/bim/geometry.dart';
 import '../core/bridge/lib.dart';
+import '../core/constants/bim_element_types.dart';
 
 /// Properties panel that displays detailed element information
 class PropertiesPanel extends StatelessWidget {
@@ -61,26 +62,26 @@ class PropertiesPanel extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getElementColor(element.elementType).withValues(alpha: 0.15),
+                    color: BimElementVisuals.colorFor(element.elementType).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _getElementColor(element.elementType).withValues(alpha: 0.3),
+                      color: BimElementVisuals.colorFor(element.elementType).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _getElementIcon(element.elementType),
+                        BimElementVisuals.iconFor(element.elementType),
                         size: 18,
-                        color: _getElementColor(element.elementType),
+                        color: BimElementVisuals.colorFor(element.elementType),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         element.elementType,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: _getElementColor(element.elementType),
+                          color: BimElementVisuals.colorFor(element.elementType),
                         ),
                       ),
                     ],
@@ -217,77 +218,6 @@ class PropertiesPanel extends StatelessWidget {
     return '(${cx.toStringAsFixed(2)}, ${cy.toStringAsFixed(2)}, ${cz.toStringAsFixed(2)})';
   }
 
-  IconData _getElementIcon(String elementType) {
-    switch (elementType.toUpperCase()) {
-      case 'WALL':
-        return Icons.view_agenda;
-      case 'SLAB':
-        return Icons.layers;
-      case 'COLUMN':
-        return Icons.view_column;
-      case 'BEAM':
-        return Icons.horizontal_rule;
-      case 'DOOR':
-        return Icons.door_front_door;
-      case 'WINDOW':
-        return Icons.window;
-      case 'ROOF':
-        return Icons.roofing;
-      case 'STAIR':
-        return Icons.stairs;
-      case 'PIPE':
-      case 'PIPESEGMENT':
-        return Icons.plumbing;
-      case 'DUCT':
-      case 'DUCTSEGMENT':
-        return Icons.air;
-      case 'FLOWTERMINAL':
-        return Icons.hvac;
-      case 'CABLECARRIERSEGMENT':
-        return Icons.electrical_services;
-      case 'FOOTING':
-        return Icons.foundation;
-      case 'BUILDINGELEMENTPROXY':
-        return Icons.category;
-      default:
-        return Icons.architecture;
-    }
-  }
-
-  Color _getElementColor(String elementType) {
-    switch (elementType.toUpperCase()) {
-      case 'WALL':
-        return Colors.brown;
-      case 'SLAB':
-        return Colors.grey;
-      case 'COLUMN':
-        return Colors.blueGrey;
-      case 'BEAM':
-        return Colors.indigo;
-      case 'DOOR':
-        return Colors.amber;
-      case 'WINDOW':
-        return Colors.lightBlue;
-      case 'ROOF':
-        return Colors.deepOrange;
-      case 'STAIR':
-        return Colors.purple;
-      case 'PIPE':
-      case 'PIPESEGMENT':
-        return Colors.teal;
-      case 'DUCT':
-      case 'DUCTSEGMENT':
-        return Colors.cyan;
-      case 'FLOWTERMINAL':
-        return Colors.green;
-      case 'CABLECARRIERSEGMENT':
-        return Colors.orange;
-      case 'FOOTING':
-        return Colors.blueGrey;
-      default:
-        return Colors.grey;
-    }
-  }
 }
 
 class _SectionHeader extends StatelessWidget {

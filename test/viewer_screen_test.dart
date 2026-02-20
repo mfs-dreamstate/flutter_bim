@@ -1,52 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_bim/flutter_bim.dart';
+import 'package:flutter_bim/src/widgets/viewer/bim_viewer_shell.dart';
+import 'helpers/test_app.dart';
 
 void main() {
   group('ViewerScreen Widget Tests', () {
-    testWidgets('ViewerScreen renders without crashing', (WidgetTester tester) async {
-      // Build the ViewerScreen widget
+    testWidgets('BimViewerShell renders without crashing', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ViewerScreen(),
+        createFullyMockedTestApp(
+          child: const BimViewerShell(),
         ),
       );
 
-      // Verify that the screen renders
-      expect(find.byType(ViewerScreen), findsOneWidget);
+      expect(find.byType(BimViewerShell), findsOneWidget);
     });
 
-    testWidgets('ViewerScreen shows status text initially', (WidgetTester tester) async {
+    testWidgets('BimViewerShell shows status text initially', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ViewerScreen(),
+        createFullyMockedTestApp(
+          child: const BimViewerShell(),
         ),
       );
 
-      // Should show some status or initialization text
-      // (This may vary based on your implementation)
       expect(find.byType(Text), findsWidgets);
     });
 
-    testWidgets('ViewerScreen has app bar', (WidgetTester tester) async {
+    testWidgets('BimViewerShell has app bar', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ViewerScreen(),
+        createFullyMockedTestApp(
+          child: const BimViewerShell(),
         ),
       );
 
-      // Check for AppBar
       expect(find.byType(AppBar), findsOneWidget);
     });
 
-    testWidgets('Camera controls are present', (WidgetTester tester) async {
+    testWidgets('Camera controls are present after init', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ViewerScreen(),
+        createFullyMockedTestApp(
+          child: const BimViewerShell(),
         ),
       );
 
-      // Should have gesture detector for camera controls
+      await tester.pumpAndSettle();
+
       expect(find.byType(GestureDetector), findsWidgets);
     });
   });

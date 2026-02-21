@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/bridge/api.dart' as rust;
 import '../../core/constants/render_config.dart';
 import '../../core/providers/model_state.dart';
 import '../../core/providers/renderer_state.dart';
@@ -45,6 +46,16 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
   double _lastScale = 1.0;
   int _pointerCount = 0;
 
+  // FastNav: track interaction state
+  bool _interacting = false;
+  Timer? _interactionEndTimer;
+
+  // Level cut slider
+  bool _levelCutEnabled = false;
+  double _levelCutValue = 1.0; // 0.0 = bottom, 1.0 = top (no cut)
+  double _boundsMinY = -50.0;
+  double _boundsMaxY = 50.0;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +74,7 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
   void dispose() {
     _renderTimer?.cancel();
     _fpsTimer?.cancel();
+    _interactionEndTimer?.cancel();
     super.dispose();
   }
 
@@ -76,6 +88,46 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
       const Duration(milliseconds: RenderConfig.renderIntervalMs),
       (_) => _renderFrame(),
     );
+  }
+
+  /// Signal interaction start (FastNav: skip expensive post-processing)
+  void _beginInteraction() {
+    _interactionEndTimer?.cancel();
+    if (!_interacting) {
+      _interacting = true;
+      try {
+        rust.setInteractionActive(active: true);
+      } catch (_) {}
+    }
+  }
+
+  /// Signal interaction end after a short delay (let GPU pipeline settle)
+  void _endInteraction() {
+    _interactionEndTimer?.cancel();
+    _interactionEndTimer = Timer(const Duration(milliseconds: 150), () {
+      if (_interacting) {
+        _interacting = false;
+        try {
+          rust.setInteractionActive(active: false);
+        } catch (_) {}
+        _markDirty(); // Re-render at full quality
+      }
+    });
+  }
+
+  /// Fetch scene bounds and update level cut range
+  void _updateSceneBounds() {
+    try {
+      final bounds = rust.getSceneBounds();
+      if (bounds.length >= 6) {
+        setState(() {
+          _boundsMinY = bounds[1].toDouble();
+          _boundsMaxY = bounds[4].toDouble();
+        });
+      }
+    } catch (_) {
+      // No geometry loaded yet
+    }
   }
 
   Future<void> _renderFrame() async {
@@ -138,6 +190,7 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
   void _onScaleStart(ScaleStartDetails details) {
     _lastScale = 1.0;
     _pointerCount = details.pointerCount;
+    _beginInteraction();
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
@@ -177,13 +230,19 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     _markDirty();
   }
 
+  void _onScaleEnd(ScaleEndDetails details) {
+    _endInteraction();
+  }
+
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
+      _beginInteraction();
       final renderer = ref.read(rendererServiceProvider);
       renderer.zoomCamera(
         delta: event.scrollDelta.dy * RenderConfig.scrollZoomSensitivity,
       );
       _markDirty();
+      _endInteraction();
     }
   }
 
@@ -201,10 +260,53 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     _markDirty();
   }
 
+  void _toggleLevelCut() {
+    setState(() {
+      _levelCutEnabled = !_levelCutEnabled;
+      if (_levelCutEnabled) {
+        _updateSceneBounds();
+        _levelCutValue = 1.0; // Start fully open (no cut)
+      } else {
+        // Clear section plane when disabling
+        try {
+          rust.clearSectionPlane();
+        } catch (_) {}
+        _markDirty();
+      }
+    });
+  }
+
+  void _onLevelCutChanged(double value) {
+    setState(() {
+      _levelCutValue = value;
+    });
+    // Map slider value to Y position
+    final yPos = _boundsMinY + (_boundsMaxY - _boundsMinY) * value;
+    try {
+      if (value >= 0.99) {
+        // At the top: clear section plane
+        rust.clearSectionPlane();
+      } else {
+        // Set horizontal section plane cutting from above
+        // Normal pointing DOWN (-Y) so everything above the plane is clipped
+        rust.setSectionPlane(
+          originX: 0,
+          originY: yPos,
+          originZ: 0,
+          normalX: 0,
+          normalY: -1,
+          normalZ: 0,
+        );
+      }
+    } catch (_) {}
+    _markDirty();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch interaction mode so FAB rebuilds
     final mode = ref.watch(interactionModeProvider);
+    final modelState = ref.watch(modelStateProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -217,6 +319,7 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
                 child: GestureDetector(
                   onScaleStart: _onScaleStart,
                   onScaleUpdate: _onScaleUpdate,
+                  onScaleEnd: _onScaleEnd,
                   onTapUp: (details) => _onTapUp(details, constraints),
                   child: Container(
                     color: const Color(RenderConfig.viewportBackgroundColor),
@@ -237,6 +340,17 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
                 ),
               ),
             ),
+            // Level cut slider (vertical, right side)
+            if (_levelCutEnabled && modelState.modelLoaded)
+              Positioned(
+                right: 64,
+                top: 16,
+                bottom: 72,
+                child: _LevelCutSlider(
+                  value: _levelCutValue,
+                  onChanged: _onLevelCutChanged,
+                ),
+              ),
             // FPS counter
             Positioned(
               left: 8,
@@ -259,13 +373,21 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
                 ),
               ),
             ),
-            // Mode toggle FAB
+            // Mode toggle FABs + level cut toggle
             Positioned(
               right: 12,
               bottom: 12,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (modelState.modelLoaded)
+                    _ModeButton(
+                      icon: Icons.content_cut,
+                      label: 'Level Cut',
+                      active: _levelCutEnabled,
+                      onPressed: _toggleLevelCut,
+                    ),
+                  if (modelState.modelLoaded) const SizedBox(height: 8),
                   _ModeButton(
                     icon: Icons.open_with,
                     label: 'Pan',
@@ -287,6 +409,70 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Vertical slider for level cuts - clips the model from top to bottom.
+class _LevelCutSlider extends StatelessWidget {
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  const _LevelCutSlider({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 40,
+      child: Column(
+        children: [
+          // Top label
+          const Icon(Icons.arrow_drop_up, color: Colors.white54, size: 20),
+          // Vertical slider
+          Expanded(
+            child: RotatedBox(
+              quarterTurns: -1,
+              child: SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                  activeTrackColor: Colors.blue.shade300,
+                  inactiveTrackColor: Colors.white24,
+                  thumbColor: Colors.blue.shade400,
+                  overlayColor: Colors.blue.withAlpha(40),
+                ),
+                child: Slider(
+                  value: value,
+                  min: 0.0,
+                  max: 1.0,
+                  onChanged: onChanged,
+                ),
+              ),
+            ),
+          ),
+          // Bottom label
+          const Icon(Icons.arrow_drop_down, color: Colors.white54, size: 20),
+          // Percentage label
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              '${(value * 100).round()}%',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

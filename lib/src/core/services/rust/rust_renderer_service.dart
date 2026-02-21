@@ -105,4 +105,24 @@ class RustRendererService implements IRendererService {
 
   @override
   bool isWireframeSupported() => rust.isWireframeSupported();
+
+  @override
+  void setInteractionActive({required bool active}) {
+    try {
+      rust.setInteractionActive(active: active);
+    } catch (e) {
+      debugPrint('[RustRendererService] setInteractionActive failed: $e');
+    }
+  }
+
+  @override
+  List<double> getSceneBounds() {
+    try {
+      final bounds = rust.getSceneBounds();
+      return bounds.map((e) => e.toDouble()).toList();
+    } catch (e) {
+      debugPrint('[RustRendererService] getSceneBounds failed: $e');
+      return [-50, -50, -50, 50, 50, 50];
+    }
+  }
 }

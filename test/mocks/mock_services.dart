@@ -44,6 +44,12 @@ class MockRendererService implements IRendererService {
 
   @override
   bool isWireframeSupported() => true;
+
+  @override
+  void setInteractionActive({required bool active}) {}
+
+  @override
+  List<double> getSceneBounds() => [-50, -50, -50, 50, 50, 50];
 }
 
 /// Mock model service with in-memory model tracking.

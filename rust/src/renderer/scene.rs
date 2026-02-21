@@ -332,6 +332,17 @@ pub struct SceneRenderer {
     // Compute shader frustum culling
     pub compute_cull_resources: Option<ComputeCullResources>,
     pub compute_cull_state: Option<ComputeCullState>,
+    // FastNav: adaptive quality during camera interaction
+    pub interaction_active: bool,
+    pub fastnav_min_screen_pixels: f32, // higher threshold during interaction
+    // Cached compute cull visibility from previous frame (one-frame latency)
+    pub compute_cull_visibility: Vec<bool>,
+    pub compute_cull_auto: bool, // auto-enable when element_count > threshold
+    // Double-buffered readback
+    pub read_buffer_b: Option<wgpu::Buffer>,
+    pub pixel_buffer_b: Vec<u8>,
+    pub use_buffer_a: bool, // toggle between A/B each frame
+    pub has_previous_frame: bool, // false for the very first frame
 }
 
 impl SceneRenderer {
@@ -410,6 +421,17 @@ impl SceneRenderer {
             // Compute culling
             compute_cull_resources: None,
             compute_cull_state: None,
+            // FastNav
+            interaction_active: false,
+            fastnav_min_screen_pixels: 8.0, // skip more small elements during interaction
+            // Compute culling
+            compute_cull_visibility: Vec::new(),
+            compute_cull_auto: true, // auto-enable for large models
+            // Double-buffered readback
+            read_buffer_b: None,
+            pixel_buffer_b: Vec::new(),
+            use_buffer_a: true,
+            has_previous_frame: false,
         }
     }
 
@@ -578,7 +600,13 @@ impl SceneRenderer {
         let buffer_size = (padded_bytes_per_row * self.height) as u64;
 
         let read_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Persistent Read Buffer"),
+            label: Some("Persistent Read Buffer A"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        let read_buffer_b = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Persistent Read Buffer B"),
             size: buffer_size,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
@@ -879,6 +907,9 @@ impl SceneRenderer {
         self.depth_view = Some(depth_view);
         self.msaa_view = msaa_view;
         self.read_buffer = Some(read_buffer);
+        self.read_buffer_b = Some(read_buffer_b);
+        self.has_previous_frame = false;
+        self.use_buffer_a = true;
         self.padded_bytes_per_row = padded_bytes_per_row;
         self.unit_box_vertex_buffer = Some(unit_box_vertex_buffer);
         self.unit_box_index_buffer = Some(unit_box_index_buffer);
@@ -1302,6 +1333,26 @@ impl SceneRenderer {
         // Compute frustum once for the frame (reused for both instance culling and draw ranges)
         let frustum = Frustum::from_view_projection(&camera.view_projection_matrix());
 
+        // GPU compute culling: read previous frame's results, then update frustum for next frame
+        if let Some(state) = &self.compute_cull_state {
+            if state.enabled && state.element_count > 0 {
+                // Read previous frame's visibility results from staging buffer
+                if let Some(staging) = &state.result_staging_buffer {
+                    let slice = staging.slice(..);
+                    slice.map_async(wgpu::MapMode::Read, |_| {});
+                    device.poll(wgpu::Maintain::Wait);
+                    let mapped = slice.get_mapped_range();
+                    let data: &[u32] = bytemuck::cast_slice(&mapped);
+                    self.compute_cull_visibility = data.iter().map(|&v| v != 0).collect();
+                    drop(mapped);
+                    staging.unmap();
+                }
+                // Update frustum planes for this frame's compute cull dispatch
+                let planes = frustum.planes();
+                self.update_frustum_planes(queue, &planes);
+            }
+        }
+
         // Prepare instanced rendering: frustum cull and write visible instances
         let visible_instance_count = if !self.instances.is_empty() {
             self.visible_instances.clear();
@@ -1412,14 +1463,29 @@ impl SceneRenderer {
                     render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
                 } else {
                     // Screen-space size threshold culling for non-instanced elements
+                    // FastNav: use higher threshold during interaction to skip more small elements
+                    let effective_min_pixels = if self.interaction_active {
+                        self.fastnav_min_screen_pixels
+                    } else {
+                        self.min_screen_pixels
+                    };
                     let cam_pos = camera.position();
                     let screen_height = self.height as f32;
-                    for range in &self.element_draw_ranges {
-                        if !frustum.intersects_aabb(range.aabb_min, range.aabb_max) {
+                    let use_gpu_cull = self.use_compute_culling();
+                    for (idx, range) in self.element_draw_ranges.iter().enumerate() {
+                        // Use GPU compute culling results when available (previous frame),
+                        // fall back to CPU frustum test otherwise
+                        if use_gpu_cull {
+                            if idx < self.compute_cull_visibility.len()
+                                && !self.compute_cull_visibility[idx]
+                            {
+                                continue;
+                            }
+                        } else if !frustum.intersects_aabb(range.aabb_min, range.aabb_max) {
                             continue;
                         }
                         // Estimate screen-space size and skip tiny elements
-                        if self.min_screen_pixels > 0.0 {
+                        if effective_min_pixels > 0.0 {
                             let cx = (range.aabb_min[0] + range.aabb_max[0]) * 0.5;
                             let cy = (range.aabb_min[1] + range.aabb_max[1]) * 0.5;
                             let cz = (range.aabb_min[2] + range.aabb_max[2]) * 0.5;
@@ -1434,7 +1500,7 @@ impl SceneRenderer {
                                 let sz = range.aabb_max[2] - range.aabb_min[2];
                                 let world_size = sx.max(sy).max(sz);
                                 let screen_size = world_size / dist * screen_height;
-                                if screen_size < self.min_screen_pixels {
+                                if screen_size < effective_min_pixels {
                                     continue;
                                 }
                             }
@@ -1448,7 +1514,8 @@ impl SceneRenderer {
 
             // Edge rendering pass (wireframe overlay on top of solid geometry).
             // Only in Shaded mode — skip for Wireframe (already wireframe) and XRay (looks wrong).
-            if self.edge_rendering_enabled && self.render_mode == RenderMode::Shaded {
+            // FastNav: skip edge rendering during camera interaction for 2-4x speedup
+            if self.edge_rendering_enabled && self.render_mode == RenderMode::Shaded && !self.interaction_active {
                 if visible_instance_count > 0 {
                     // Instanced edge pass
                     if let (Some(pipeline), Some(unit_vb), Some(unit_ib), Some(inst_buf), Some(bg)) = (
@@ -1700,10 +1767,15 @@ impl SceneRenderer {
             }
         }
 
+        // Dispatch GPU compute culling for next frame (runs asynchronously on GPU)
+        // Results will be read back at the start of the next render_frame call
+        self.run_compute_cull(&mut encoder);
+
         // SSAO passes: generate occlusion, blur, and composite with color
         // This runs after all geometry passes (main, edges, section fill, shadow)
         // but before FXAA post-processing.
-        let ssao_active = self.ssao_enabled && self.ssao.is_some();
+        // FastNav: skip SSAO during camera interaction for faster frames
+        let ssao_active = self.ssao_enabled && self.ssao.is_some() && !self.interaction_active;
         if ssao_active {
             // Update SSAO params with current camera projection matrices
             if let Some(ssao_res) = &self.ssao {
@@ -1911,10 +1983,12 @@ impl SceneRenderer {
             }
         }
 
-        // Use persistent read buffer
-        let read_buffer = self.read_buffer.as_ref().unwrap();
+        // Double-buffered readback: copy current frame to one buffer while
+        // reading the previous frame from the other buffer.
         let padded_bytes_per_row = self.padded_bytes_per_row;
         let bytes_per_pixel = 4u32;
+        let unpadded_row = (self.width * bytes_per_pixel) as usize;
+        let expected_size = unpadded_row * self.height as usize;
 
         // Choose the source texture for readback:
         // Priority: FXAA output > SSAO composite output > color/resolve
@@ -1926,7 +2000,14 @@ impl SceneRenderer {
             self.color_texture.as_ref().unwrap()
         };
 
-        // Copy texture to buffer
+        // Select which buffer to write to this frame (alternating A/B)
+        let write_buffer = if self.use_buffer_a {
+            self.read_buffer.as_ref().unwrap()
+        } else {
+            self.read_buffer_b.as_ref().unwrap()
+        };
+
+        // Copy current frame's texture to the write buffer
         encoder.copy_texture_to_buffer(
             wgpu::ImageCopyTexture {
                 texture: readback_texture,
@@ -1935,7 +2016,7 @@ impl SceneRenderer {
                 aspect: wgpu::TextureAspect::All,
             },
             wgpu::ImageCopyBuffer {
-                buffer: read_buffer,
+                buffer: write_buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
                     bytes_per_row: Some(padded_bytes_per_row),
@@ -1949,36 +2030,92 @@ impl SceneRenderer {
             },
         );
 
-        // Submit and wait
+        // Submit GPU work (render + copy)
         queue.submit(std::iter::once(encoder.finish()));
 
-        // Map read buffer — no channel needed, poll(Wait) guarantees completion
-        let buffer_slice = read_buffer.slice(..);
-        buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
-        device.poll(wgpu::Maintain::Wait);
+        if !self.has_previous_frame {
+            // First frame: must wait synchronously since there's no previous frame to return
+            let buffer_slice = write_buffer.slice(..);
+            buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
+            device.poll(wgpu::Maintain::Wait);
 
-        let data = buffer_slice.get_mapped_range();
+            let data = buffer_slice.get_mapped_range();
+            self.pixel_buffer.resize(expected_size, 0);
+            for y in 0..self.height as usize {
+                let src_start = y * padded_bytes_per_row as usize;
+                let dst_start = y * unpadded_row;
+                self.pixel_buffer[dst_start..dst_start + unpadded_row]
+                    .copy_from_slice(&data[src_start..src_start + unpadded_row]);
+            }
+            drop(data);
+            write_buffer.unmap();
 
-        // Reuse persistent pixel buffer — avoids allocation each frame
-        let unpadded_row = (self.width * bytes_per_pixel) as usize;
-        let expected_size = unpadded_row * self.height as usize;
-        self.pixel_buffer.resize(expected_size, 0);
+            self.has_previous_frame = true;
+            self.use_buffer_a = !self.use_buffer_a;
 
-        for y in 0..self.height as usize {
-            let src_start = y * padded_bytes_per_row as usize;
-            let dst_start = y * unpadded_row;
-            self.pixel_buffer[dst_start..dst_start + unpadded_row]
-                .copy_from_slice(&data[src_start..src_start + unpadded_row]);
+            let result = std::mem::take(&mut self.pixel_buffer);
+            self.pixel_buffer = Vec::with_capacity(expected_size);
+            result
+        } else {
+            // Read from the OTHER buffer (previous frame's data) while GPU
+            // processes the copy into the write buffer
+            let read_buffer = if self.use_buffer_a {
+                // We're writing to A, so read from B (previous frame)
+                self.read_buffer_b.as_ref().unwrap()
+            } else {
+                // We're writing to B, so read from A (previous frame)
+                self.read_buffer.as_ref().unwrap()
+            };
+
+            // Wait for GPU to finish (ensures the previous frame's copy is done)
+            let buffer_slice = read_buffer.slice(..);
+            buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
+            device.poll(wgpu::Maintain::Wait);
+
+            let data = buffer_slice.get_mapped_range();
+            // Use the alternate pixel buffer for double-buffering
+            let pixel_buf = if self.use_buffer_a {
+                &mut self.pixel_buffer_b
+            } else {
+                &mut self.pixel_buffer
+            };
+            pixel_buf.resize(expected_size, 0);
+            for y in 0..self.height as usize {
+                let src_start = y * padded_bytes_per_row as usize;
+                let dst_start = y * unpadded_row;
+                pixel_buf[dst_start..dst_start + unpadded_row]
+                    .copy_from_slice(&data[src_start..src_start + unpadded_row]);
+            }
+            drop(data);
+            read_buffer.unmap();
+
+            self.use_buffer_a = !self.use_buffer_a;
+
+            // Return the previous frame's pixels
+            let result = if !self.use_buffer_a {
+                // We just flipped, so the data we read is in pixel_buffer_b
+                let r = std::mem::take(&mut self.pixel_buffer_b);
+                self.pixel_buffer_b = Vec::with_capacity(expected_size);
+                r
+            } else {
+                let r = std::mem::take(&mut self.pixel_buffer);
+                self.pixel_buffer = Vec::with_capacity(expected_size);
+                r
+            };
+            result
         }
+    }
 
-        // Must drop the mapped range before unmapping
-        drop(data);
-        read_buffer.unmap();
+    /// Set interaction active state for FastNav adaptive quality
+    pub fn set_interaction_active(&mut self, active: bool) {
+        self.interaction_active = active;
+    }
 
-        // Zero-copy swap: take the filled buffer and pre-allocate for next frame
-        let result = std::mem::take(&mut self.pixel_buffer);
-        self.pixel_buffer = Vec::with_capacity(expected_size);
-        result
+    /// Check if compute culling is ready and should be used
+    fn use_compute_culling(&self) -> bool {
+        self.compute_cull_auto
+            && self.compute_cull_state.as_ref().map_or(false, |s| s.enabled && s.element_count > 0)
+            && !self.compute_cull_visibility.is_empty()
     }
 }
 

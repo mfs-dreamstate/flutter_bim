@@ -34,4 +34,10 @@ abstract interface class IRendererService {
 
   /// Check if wireframe rendering is supported.
   bool isWireframeSupported();
+
+  /// Set interaction active state for FastNav quality adaptation.
+  void setInteractionActive({required bool active});
+
+  /// Get scene bounding box in world coordinates [minX, minY, minZ, maxX, maxY, maxZ].
+  List<double> getSceneBounds();
 }

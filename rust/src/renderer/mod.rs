@@ -97,6 +97,30 @@ impl Renderer {
         self.camera.zoom(delta);
     }
 
+    /// Set interaction active state (FastNav: skip expensive post-processing during interaction)
+    pub fn set_interaction_active(&mut self, active: bool) {
+        if let Some(scene) = &mut self.scene {
+            scene.set_interaction_active(active);
+        }
+    }
+
+    /// Get scene bounds (min, max) in world coordinates, or None if no geometry loaded
+    pub fn get_scene_bounds(&self) -> Option<([f32; 3], [f32; 3])> {
+        let scene = self.scene.as_ref()?;
+        if scene.element_draw_ranges.is_empty() {
+            return None;
+        }
+        let mut min = [f32::MAX; 3];
+        let mut max = [f32::MIN; 3];
+        for range in &scene.element_draw_ranges {
+            for i in 0..3 {
+                min[i] = min[i].min(range.aabb_min[i]);
+                max[i] = max[i].max(range.aabb_max[i]);
+            }
+        }
+        Some((min, max))
+    }
+
     /// Get frame dimensions
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         self.scene.as_ref().map(|s| (s.width, s.height))
@@ -119,7 +143,26 @@ impl Renderer {
 
     /// Set per-element draw ranges for frustum culling (non-instanced fallback)
     pub fn set_element_draw_ranges(&mut self, ranges: Vec<ElementDrawRange>) -> Result<(), String> {
+        let device = self.gpu.device().ok_or("GPU not initialized")?;
         let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+
+        // Auto-initialize compute culling for models with many elements
+        let element_count = ranges.len();
+        if element_count > 0 && scene.compute_cull_auto {
+            if scene.compute_cull_resources.is_none() {
+                scene.init_compute_culling(device);
+            }
+            // Upload AABBs for compute culling
+            let aabbs: Vec<[f32; 6]> = ranges
+                .iter()
+                .map(|r| [
+                    r.aabb_min[0], r.aabb_min[1], r.aabb_min[2],
+                    r.aabb_max[0], r.aabb_max[1], r.aabb_max[2],
+                ])
+                .collect();
+            scene.upload_aabbs_for_compute(device, &aabbs);
+        }
+
         scene.set_element_draw_ranges(ranges);
         Ok(())
     }

@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `palette_color`
+// These functions are ignored because they are not marked as `pub`: `ifc_to_yup_bounds`, `ifc_to_yup_point`, `ifc_to_yup_vertices`, `palette_color`
 
 /// Test renderer initialization
 Future<String> testRendererInit() => RustLib.instance.api.crateApiRenderingTestRendererInit();
@@ -20,6 +20,16 @@ Uint8List renderFrame() => RustLib.instance.api.crateApiRenderingRenderFrame();
 
 /// Check if renderer is initialized
 bool isRendererInitialized() => RustLib.instance.api.crateApiRenderingIsRendererInitialized();
+
+/// Set interaction active state for FastNav adaptive quality.
+/// Call with true when camera interaction starts, false when it ends.
+/// During interaction, expensive post-processing (SSAO, edge rendering) is skipped.
+void setInteractionActive({required bool active}) =>
+    RustLib.instance.api.crateApiRenderingSetInteractionActive(active: active);
+
+/// Get the scene bounding box in world coordinates (Y-up).
+/// Returns (min_x, min_y, min_z, max_x, max_y, max_z) or error if no geometry.
+Float32List getSceneBounds() => RustLib.instance.api.crateApiRenderingGetSceneBounds();
 
 /// Load the currently loaded BIM model into the renderer (primary model)
 String loadModelIntoRenderer() => RustLib.instance.api.crateApiRenderingLoadModelIntoRenderer();

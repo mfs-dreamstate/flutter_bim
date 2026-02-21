@@ -97,6 +97,29 @@ pub fn is_renderer_initialized() -> bool {
     with_state(|s| s.renderer.as_ref().map_or(false, |r| r.initialized))
 }
 
+/// Set interaction active state for FastNav adaptive quality.
+/// Call with true when camera interaction starts, false when it ends.
+/// During interaction, expensive post-processing (SSAO, edge rendering) is skipped.
+#[frb(sync)]
+pub fn set_interaction_active(active: bool) -> Result<(), String> {
+    with_state(|s| {
+        let r = s.renderer()?;
+        r.set_interaction_active(active);
+        Ok(())
+    })
+}
+
+/// Get the scene bounding box in world coordinates (Y-up).
+/// Returns (min_x, min_y, min_z, max_x, max_y, max_z) or error if no geometry.
+#[frb(sync)]
+pub fn get_scene_bounds() -> Result<Vec<f32>, String> {
+    with_state(|s| {
+        let r = s.renderer.as_ref().ok_or("Renderer not initialized")?;
+        let (min, max) = r.get_scene_bounds().ok_or("No geometry loaded")?;
+        Ok(vec![min[0], min[1], min[2], max[0], max[1], max[2]])
+    })
+}
+
 /// Load the currently loaded BIM model into the renderer (primary model)
 #[frb(sync)]
 pub fn load_model_into_renderer() -> Result<String, String> {

@@ -26,7 +26,8 @@
       "Bash(ls:*)",
       "Bash(cargo test:*)",
       "Bash(cargo ndk:*)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(git lfs:*)"
     ]
   }
 }

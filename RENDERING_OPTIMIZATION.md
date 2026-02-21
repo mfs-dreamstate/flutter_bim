@@ -10,18 +10,20 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer. Goal: **best-in
 |---|---|---|---|
 | Draw calls per frame | N per element | **1 instanced** (frustum-culled) | 1 indirect draw per material batch |
 | Vertex format | 40 bytes | **20 bytes** (packed normals+colors) | **8-12 bytes** (quantized pos + octahedral normal) |
-| Culling | None | **Frustum + screen-space size** | Frustum + HZB occlusion + compute shader |
+| Culling | None | **Frustum + screen-space + GPU compute** | Frustum + HZB occlusion + compute shader |
 | Picking | O(n) linear | **O(log n) BVH** | O(log n) BVH + ID buffer GPU pick |
 | Mesh rebuild on toggle | Full rebuild | **Near-instant filter** | Zero-copy GPU flag flip |
 | Selection highlight | Vertex color re-upload | Vertex color re-upload | **Post-process outline** (no re-upload) |
 | Coordinate system | Z-up (IFC raw) | **Y-up transform on upload** | Y-up transform on upload |
 | Camera orbit | Fixed speed | **Distance-scaled turntable** | Distance-scaled turntable |
 | Render-when-idle | Every frame | **Dirty-flag skip** | Dirty-flag skip |
-| Anti-aliasing | FXAA | **FXAA + SSAO** | MSAA 4x + FXAA fallback during interaction |
+| Anti-aliasing | FXAA | **MSAA 4x + FXAA + SSAO** | MSAA 4x + FXAA fallback during interaction |
 | Shadows | Shadow map | Shadow map | **Cascaded shadow maps (2-3 cascades)** |
 | LOD | Screen-space cull only | Screen-space cull only | **Hierarchical LOD + mesh simplification** |
 | Transparency | Alpha blend | Alpha blend | **Order-independent transparency (OIT)** |
-| Back-face culling | Off for main geo | Off for main geo | **On for solid geometry** |
+| Back-face culling | Off for main geo | **On for solid geometry** | On for solid geometry |
+| Interaction quality | Full quality always | **FastNav (skip SSAO/edges)** | FastNav + resolution reduction |
+| GPU readback | Single-buffered sync | **Double-buffered async** | Double-buffered async |
 | Loading | Full model at once | Full model at once | **Progressive/streaming** |
 | Memory budget | Unbounded | ~2x file size peak | **Configurable cap** |
 
@@ -86,48 +88,35 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer. Goal: **best-in
 
 ---
 
-## Phase 7 — Quick Wins (Next)
+## Phase 7 — Quick Wins (DONE)
 
-### 7.1 Enable Back-Face Culling for Solid Geometry
-- **Status:** Not started
-- **Technique:** Set `cull_mode: Some(wgpu::Face::Back)` on the main render pipeline
-- **Why:** Currently `cull_mode: None` renders both sides of every triangle — doubling fragment work for no visual benefit on solid BIM geometry
-- **Caveat:** Must keep `cull_mode: None` for transparent/X-ray mode and section plane stencil passes
+### 7.1 Enable Back-Face Culling for Solid Geometry (DONE)
+- **Technique:** `cull_mode: Some(wgpu::Face::Back)` on main + instanced pipelines
+- **Caveat:** `cull_mode: None` kept for X-ray, wireframe, and section stencil passes
 - **Impact:** ~40-50% fragment shader reduction
-- **Effort:** Trivial
-- **Reference:** Standard practice in all commercial viewers
 
-### 7.2 Adaptive Quality During Interaction (FastNav)
-- **Status:** Not started
-- **Technique:** During camera interaction (orbit/pan/zoom): disable SSAO, disable edge rendering, reduce render resolution by 50%. Restore full quality after 150ms idle.
-- **Why:** xeokit's FastNavPlugin uses this exact approach — renders 75% fewer pixels during interaction while maintaining full quality on idle
+### 7.2 Adaptive Quality During Interaction / FastNav (DONE)
+- **Technique:** `interaction_active` flag on SceneRenderer. During interaction: skip SSAO, skip edge rendering, increase min_screen_pixels threshold (2px → 8px). Restore full quality 150ms after last gesture.
+- **Dart integration:** `setInteractionActive(true)` on gesture start, `false` after 150ms idle timer
 - **Impact:** 2-4x faster interaction rendering
-- **Effort:** Low
 - **Reference:** [xeokit FastNavPlugin](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/FastNavPlugin/FastNavPlugin.js~FastNavPlugin.html)
 
-### 7.3 Double-Buffered Async GPU Readback
-- **Status:** Not started
-- **Technique:** Ping-pong between two staging buffers — while one is being read by the CPU, the other receives the next frame from the GPU. Eliminates GPU stall waiting for readback.
-- **Impact:** Overlaps GPU work with CPU readback, ~30% throughput improvement
-- **Effort:** Low
+### 7.3 Double-Buffered Async GPU Readback (DONE)
+- **Technique:** Two read buffers (A/B) alternate each frame. Current frame copies to one buffer while CPU reads from the other (previous frame's data). First frame falls back to synchronous readback.
+- **Impact:** Overlaps GPU copy with CPU readback, ~30% throughput improvement
 
-### 7.4 MSAA 4x (Native Quality)
-- **Status:** Partially implemented (MSAA textures created but may not be active for main pass)
-- **Technique:** 4x multisampling on the main color+depth render target. Resolve before post-processing. Fall back to FXAA-only during interaction (Phase 7.2).
-- **Why:** MSAA is the gold standard for architectural scenes with many hard edges. All native BIM viewers use 4x MSAA.
-- **Impact:** Significantly sharper edges, especially on thin geometry (rebar, pipes, railings)
-- **Effort:** Low (wgpu has built-in MSAA support)
+### 7.4 MSAA 4x (DONE)
+- **Technique:** 4x multisampling on main color+depth render targets. MSAA resolve target feeds into FXAA post-process.
+- **Impact:** Significantly sharper edges, especially on thin geometry
 
 ---
 
 ## Phase 8 — GPU-Driven Rendering
 
-### 8.1 Compute Shader Frustum Culling
-- **Status:** Code exists (`run_compute_cull()` in scene.rs) but NOT wired into render_frame
-- **Technique:** Dispatch a compute shader where each invocation reads an element's AABB from a storage buffer, tests against 6 frustum planes, and writes a visibility flag to an output buffer. Surviving elements populate an indirect draw argument buffer.
-- **Why:** Moves culling entirely to GPU — culling 1M objects takes <0.5ms on GPU vs 5-10ms on CPU
-- **Impact:** 10-20x faster culling for large models
-- **Effort:** Medium (code exists, needs integration)
+### 8.1 Compute Shader Frustum Culling (DONE)
+- **Technique:** Compute shader dispatched each frame after geometry pass. Each invocation reads an element's AABB from storage buffer, tests against 6 frustum planes, writes visibility flag. Results read back from staging buffer using previous-frame approach (1 frame latency, no extra submit).
+- **Auto-init:** AABBs uploaded automatically when `set_element_draw_ranges()` is called. Compute pipeline initialized on first model load.
+- **Impact:** 10-20x faster culling for large models (100K+ elements)
 - **Reference:** [vkguide.dev GPU-Driven Rendering](https://vkguide.dev/docs/gpudriven/compute_culling/)
 
 ### 8.2 Indirect Draw Calls
@@ -326,26 +315,26 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer. Goal: **best-in
 
 ## Priority Roadmap
 
-| Priority | Phase | Technique | Impact | Effort |
-|----------|-------|-----------|--------|--------|
-| **1** | **7.1** | **Back-face culling** | **~40% fragment reduction** | **Trivial** |
-| **2** | **7.2** | **Adaptive quality (FastNav)** | **2-4x interaction FPS** | **Low** |
-| **3** | **7.3** | **Double-buffered readback** | **~30% throughput** | **Low** |
-| **4** | **7.4** | **MSAA 4x** | **Sharp edges** | **Low** |
-| **5** | **8.1** | **Compute shader culling** | **10-20x cull speed** | **Medium** |
-| **6** | **9.1** | **ID buffer (GPU pick + outline)** | **Instant pick, no re-upload** | **Medium** |
-| **7** | **8.2** | **Indirect draws** | **100K+ elements @ 60fps** | **High** |
-| **8** | **11.1** | **Material batching** | **N → ~20 draw calls** | **Medium** |
-| **9** | **11.2** | **Parametric geometry reuse** | **65% memory reduction** | **Medium** |
-| **10** | **9.2** | **Per-element flag texture** | **Zero-cost selection** | **Medium** |
-| **11** | **8.3** | **HZB occlusion culling** | **50-80% interior reduction** | **High** |
-| **12** | **12.1** | **Vertex quantization (8 bytes)** | **60% vertex memory** | **Medium** |
-| **13** | **10.2** | **BIM-aware LOD** | **50-90% distant triangles** | **High** |
-| **14** | **13.1** | **Cascaded shadow maps** | **Quality shadows** | **Medium** |
-| **15** | **15.1** | **Order-independent transparency** | **Correct glass/X-ray** | **Medium** |
-| **16** | **14.1** | **Chunk-based streaming** | **1GB+ models on mobile** | **Very High** |
-| **17** | **12.3** | **Memory budget** | **Prevents OOM** | **Medium** |
-| **18** | **10.3** | **Hierarchical LOD** | **City-scale models** | **Very High** |
+| Priority | Phase | Technique | Impact | Effort | Status |
+|----------|-------|-----------|--------|--------|--------|
+| ~~1~~ | ~~7.1~~ | ~~Back-face culling~~ | ~~~40% fragment reduction~~ | ~~Trivial~~ | **DONE** |
+| ~~2~~ | ~~7.2~~ | ~~Adaptive quality (FastNav)~~ | ~~2-4x interaction FPS~~ | ~~Low~~ | **DONE** |
+| ~~3~~ | ~~7.3~~ | ~~Double-buffered readback~~ | ~~~30% throughput~~ | ~~Low~~ | **DONE** |
+| ~~4~~ | ~~7.4~~ | ~~MSAA 4x~~ | ~~Sharp edges~~ | ~~Low~~ | **DONE** |
+| ~~5~~ | ~~8.1~~ | ~~Compute shader culling~~ | ~~10-20x cull speed~~ | ~~Medium~~ | **DONE** |
+| **6** | **9.1** | **ID buffer (GPU pick + outline)** | **Instant pick, no re-upload** | **Medium** | Next |
+| **7** | **8.2** | **Indirect draws** | **100K+ elements @ 60fps** | **High** | |
+| **8** | **11.1** | **Material batching** | **N → ~20 draw calls** | **Medium** | |
+| **9** | **11.2** | **Parametric geometry reuse** | **65% memory reduction** | **Medium** | |
+| **10** | **9.2** | **Per-element flag texture** | **Zero-cost selection** | **Medium** | |
+| **11** | **8.3** | **HZB occlusion culling** | **50-80% interior reduction** | **High** | |
+| **12** | **12.1** | **Vertex quantization (8 bytes)** | **60% vertex memory** | **Medium** | |
+| **13** | **10.2** | **BIM-aware LOD** | **50-90% distant triangles** | **High** | |
+| **14** | **13.1** | **Cascaded shadow maps** | **Quality shadows** | **Medium** | |
+| **15** | **15.1** | **Order-independent transparency** | **Correct glass/X-ray** | **Medium** | |
+| **16** | **14.1** | **Chunk-based streaming** | **1GB+ models on mobile** | **Very High** | |
+| **17** | **12.3** | **Memory budget** | **Prevents OOM** | **Medium** | |
+| **18** | **10.3** | **Hierarchical LOD** | **City-scale models** | **Very High** | |
 
 ---
 
@@ -365,6 +354,11 @@ Performance optimization roadmap for the Rust/wgpu BIM renderer. Goal: **best-in
 | **4** | GPU instancing | **DONE** | 12x GPU memory, 1 draw call |
 | **5** | Fast visibility/color toggles | **DONE** | Near-instant toggle |
 | **6** | Camera & interaction polish | **DONE** | Y-up, turntable, distance-scaled |
+| **7.1** | Back-face culling | **DONE** | ~40% fragment reduction |
+| **7.2** | FastNav (adaptive quality) | **DONE** | 2-4x interaction FPS |
+| **7.3** | Double-buffered readback | **DONE** | ~30% throughput |
+| **7.4** | MSAA 4x | **DONE** | Sharp edges on geometry |
+| **8.1** | Compute shader frustum culling | **DONE** | GPU culling for 100K+ elements |
 
 ---
 

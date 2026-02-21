@@ -502,6 +502,11 @@ impl Frustum {
         Frustum { planes }
     }
 
+    /// Get the 6 frustum planes as [a, b, c, d] equations (ax + by + cz + d = 0).
+    pub fn planes(&self) -> [[f32; 4]; 6] {
+        self.planes
+    }
+
     /// Test if an AABB is at least partially inside the frustum.
     /// Uses the p-vertex (positive vertex) optimization for fast rejection.
     pub fn intersects_aabb(&self, min: [f32; 3], max: [f32; 3]) -> bool {

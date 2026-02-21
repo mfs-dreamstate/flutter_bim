@@ -59,13 +59,23 @@ impl GpuContext {
         }
 
         // Request device and queue
+        // Use default limits and then resolve against adapter limits.
+        // This gives us proper Metal/Vulkan capabilities on iOS/Android
+        // while still working on WebGL2 (which will just have lower limits).
+        let adapter_limits = adapter.limits();
+        let required_limits = wgpu::Limits::default().using_resolution(adapter_limits);
+
+        tracing::info!(
+            "Requesting device with storage buffers limit: {}",
+            required_limits.max_storage_buffers_per_shader_stage
+        );
+
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("BIM Viewer Device"),
                     required_features,
-                    required_limits: wgpu::Limits::downlevel_webgl2_defaults()
-                        .using_resolution(adapter.limits()),
+                    required_limits,
                 },
                 None,
             )

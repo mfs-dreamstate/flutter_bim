@@ -15,6 +15,9 @@ dependencies:
   flutter_bim:
     path: ../
 
+  # Required for iOS static library loading
+  flutter_rust_bridge: ^2.11.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

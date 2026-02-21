@@ -691,7 +691,8 @@ pub fn create_section_fill_pipeline(
 /// Shadow map depth shader (WGSL) — renders scene from light's perspective
 ///
 /// Depth-only pass: transforms vertices into light space for shadow depth values.
-/// No color output is produced.
+/// No color output is produced. Includes section plane clipping to avoid
+/// shadows from cut geometry.
 const SHADOW_SHADER: &str = r#"
 struct ShadowUniform {
     light_view_proj: mat4x4<f32>,
@@ -701,8 +702,36 @@ struct ShadowUniform {
     _pad1: f32,
 };
 
+struct SectionPlaneData {
+    origin: vec3<f32>,
+    enabled: f32,
+    normal: vec3<f32>,
+    _padding: f32,
+};
+
+struct SectionPlanesUniform {
+    planes: array<SectionPlaneData, 6>,
+    count: u32,
+    _pad1: u32,
+    _pad2: u32,
+    _pad3: u32,
+};
+
+struct SectionBoxUniform {
+    box_min: vec3<f32>,
+    enabled: f32,
+    box_max: vec3<f32>,
+    _padding: f32,
+};
+
 @group(0) @binding(0)
 var<uniform> shadow: ShadowUniform;
+
+@group(0) @binding(1)
+var<uniform> section_planes: SectionPlanesUniform;
+
+@group(0) @binding(2)
+var<uniform> section_box: SectionBoxUniform;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -712,17 +741,40 @@ struct VertexInput {
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
+    @location(0) world_pos: vec3<f32>,
 };
 
 @vertex
 fn vs_shadow(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.clip_position = shadow.light_view_proj * vec4<f32>(model.position, 1.0);
+    out.world_pos = model.position;
     return out;
 }
 
 @fragment
-fn fs_shadow() {
+fn fs_shadow(in: VertexOutput) {
+    // Section planes clipping (up to 6 planes)
+    for (var i = 0u; i < section_planes.count; i = i + 1u) {
+        let plane = section_planes.planes[i];
+        if (plane.enabled > 0.5) {
+            let to_point = in.world_pos - plane.origin;
+            let distance = dot(to_point, plane.normal);
+            if (distance < 0.0) {
+                discard;
+            }
+        }
+    }
+
+    // Section box clipping (6 planes)
+    if (section_box.enabled > 0.5) {
+        if (in.world_pos.x < section_box.box_min.x || in.world_pos.x > section_box.box_max.x ||
+            in.world_pos.y < section_box.box_min.y || in.world_pos.y > section_box.box_max.y ||
+            in.world_pos.z < section_box.box_min.z || in.world_pos.z > section_box.box_max.z) {
+            discard;
+        }
+    }
+
     // Depth-only pass: no color output needed
 }
 "#;
@@ -779,13 +831,35 @@ pub fn create_shadow_pipeline(
         source: wgpu::ShaderSource::Wgsl(SHADOW_SHADER.into()),
     });
 
-    // Bind group layout: shadow uniform only
+    // Bind group layout: shadow uniform + section planes + section box
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("Shadow Bind Group Layout"),
         entries: &[
             wgpu::BindGroupLayoutEntry {
                 binding: 0,
                 visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            // Section planes uniform (binding 1)
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            // Section box uniform (binding 2)
+            wgpu::BindGroupLayoutEntry {
+                binding: 2,
+                visibility: wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,

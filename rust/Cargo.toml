@@ -39,22 +39,40 @@ nom = "7.1"
 # Image export (Phase 8)
 image = "0.24"
 
+# BCF collaboration support (Phase 5)
+quick-xml = "0.36"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+uuid = { version = "1.10", features = ["v4"] }
+
+# Parallel computation (Phase 8)
+rayon = "1.10"
+
+# Point cloud support (Phase 6)
+las = "0.8"
+
+# Memory-mapped files (Phase 6)
+memmap2 = "0.9"
+
 # Spatial indexing (Phase 2)
 # rstar = "0.11"
 
 [dev-dependencies]
-# Benchmarks will be added in Phase 8
-# criterion = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [profile.release]
 opt-level = 3
 lto = true
 codegen-units = 1
+strip = true          # Strip debug symbols for smaller binary
+panic = "abort"       # Smaller binary size (no unwinding)
 
 [profile.dev]
 opt-level = 0
 
-# Benchmarks will be added in Phase 8
-# [[bench]]
-# name = "rendering"
-# harness = false
+[[bench]]
+name = "parsing"
+harness = false
+
+[[bench]]
+name = "tessellation"
+harness = false

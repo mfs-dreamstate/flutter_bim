@@ -6,6 +6,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// IFC Schema Version detected from FILE_SCHEMA header.
+#[derive(Debug, Clone, PartialEq)]
+pub enum IfcSchemaVersion {
+    Ifc2x3,
+    Ifc4,
+    Ifc4x3,
+    Unknown(String),
+}
+
 /// Unique identifier for IFC entities (e.g., #123)
 pub type EntityId = i32;
 

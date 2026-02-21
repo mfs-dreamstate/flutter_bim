@@ -9,6 +9,7 @@ pub mod gpu;
 pub mod overlay;
 pub mod pipeline;
 pub mod scene;
+pub mod texture_atlas;
 pub mod vertex;
 
 pub use bvh::BvhNode;
@@ -25,6 +26,8 @@ pub struct Renderer {
     pub scene: Option<SceneRenderer>,
     pub camera: Camera,
     pub initialized: bool,
+    /// Cached geometry centroid (average vertex position) for robust orbit targeting
+    pub geometry_centroid: Option<[f32; 3]>,
 }
 
 impl Renderer {
@@ -35,6 +38,7 @@ impl Renderer {
             scene: None,
             camera: Camera::default(),
             initialized: false,
+            geometry_centroid: None,
         }
     }
 
@@ -128,14 +132,37 @@ impl Renderer {
         Ok(())
     }
 
-    /// Fit camera to bounding box
+    /// Fit camera to bounding box, using cached centroid if available.
     pub fn fit_camera_to_bounds(&mut self, min: [f32; 3], max: [f32; 3]) {
-        // Calculate center and size
-        let center = [
+        let centroid = self.geometry_centroid;
+        self.fit_camera_impl(min, max, centroid);
+    }
+
+    /// Fit camera with an explicit centroid as orbit target (also caches it).
+    pub fn fit_camera_to_bounds_with_centroid(
+        &mut self,
+        min: [f32; 3],
+        max: [f32; 3],
+        centroid: Option<[f32; 3]>,
+    ) {
+        if centroid.is_some() {
+            self.geometry_centroid = centroid;
+        }
+        self.fit_camera_impl(min, max, centroid);
+    }
+
+    fn fit_camera_impl(
+        &mut self,
+        min: [f32; 3],
+        max: [f32; 3],
+        centroid: Option<[f32; 3]>,
+    ) {
+        // Use centroid as orbit target if provided, otherwise bounding box center
+        let center = centroid.unwrap_or([
             (min[0] + max[0]) / 2.0,
             (min[1] + max[1]) / 2.0,
             (min[2] + max[2]) / 2.0,
-        ];
+        ]);
 
         let size = [
             max[0] - min[0],
@@ -152,8 +179,20 @@ impl Renderer {
         // Set camera target to center
         self.camera.set_target(center);
 
-        // Set camera distance
-        self.camera.set_distance(distance);
+        // Position camera from a sensible angle:
+        // ~30 degree elevation, looking from front-right (positive X and Z)
+        let elevation: f32 = 30.0_f32.to_radians();
+        let azimuth: f32 = 45.0_f32.to_radians();
+        let cam_x = center[0] + distance * elevation.cos() * azimuth.cos();
+        let cam_y = center[1] + distance * elevation.sin();
+        let cam_z = center[2] + distance * elevation.cos() * azimuth.sin();
+        self.camera.set_position([cam_x, cam_y, cam_z]);
+
+        // Adjust near/far planes to fit the model scale
+        self.camera.set_clip_planes(
+            (distance * 0.001).max(0.1),
+            distance * 4.0,
+        );
     }
 
     /// Set directional light direction (will be normalized)
@@ -209,7 +248,7 @@ impl Renderer {
         Ok(scene.get_render_mode())
     }
 
-    /// Set the section plane for clipping geometry
+    /// Set the section plane for clipping geometry (backward compatible, sets plane index 0)
     /// plane: Option<(origin: [f32; 3], normal: [f32; 3])>
     /// None to disable clipping
     pub fn set_section_plane(&mut self, plane: Option<([f32; 3], [f32; 3])>) -> Result<(), String> {
@@ -219,6 +258,83 @@ impl Renderer {
             scene.update_section_plane(queue);
         }
         Ok(())
+    }
+
+    /// Add a section plane, returns the plane index (0-5)
+    pub fn add_section_plane(&mut self, origin: [f32; 3], normal: [f32; 3]) -> Result<usize, String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        let index = scene.add_section_plane(origin, normal)
+            .ok_or("Maximum of 6 section planes reached")?;
+        if let Some(queue) = self.gpu.queue() {
+            scene.update_section_plane(queue);
+        }
+        Ok(index)
+    }
+
+    /// Remove a section plane at the given index
+    pub fn remove_section_plane(&mut self, index: usize) -> Result<(), String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        if !scene.remove_section_plane(index) {
+            return Err(format!("Invalid section plane index: {}", index));
+        }
+        if let Some(queue) = self.gpu.queue() {
+            scene.update_section_plane(queue);
+        }
+        Ok(())
+    }
+
+    /// Set multiple section planes at once
+    pub fn set_section_planes(&mut self, planes: Vec<([f32; 3], [f32; 3])>) -> Result<(), String> {
+        if planes.len() > 6 {
+            return Err("Maximum of 6 section planes supported".to_string());
+        }
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.set_section_planes(&planes);
+        if let Some(queue) = self.gpu.queue() {
+            scene.update_section_plane(queue);
+        }
+        Ok(())
+    }
+
+    /// Get the current number of active section planes
+    pub fn get_section_plane_count(&self) -> Result<usize, String> {
+        let scene = self.scene.as_ref().ok_or("Scene not initialized")?;
+        Ok(scene.get_section_plane_count())
+    }
+
+    /// Clear all section planes
+    pub fn clear_section_planes(&mut self) -> Result<(), String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.clear_section_planes();
+        if let Some(queue) = self.gpu.queue() {
+            scene.update_section_plane(queue);
+        }
+        Ok(())
+    }
+
+    /// Set section box for 6-plane clipping
+    /// bounds: Option<(min: [f32; 3], max: [f32; 3])>
+    /// None to disable section box
+    pub fn set_section_box(&mut self, bounds: Option<([f32; 3], [f32; 3])>) -> Result<(), String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.set_section_box(bounds);
+        if let Some(queue) = self.gpu.queue() {
+            scene.update_section_box(queue);
+        }
+        Ok(())
+    }
+
+    /// Enable or disable edge rendering (wireframe overlay on solid geometry)
+    pub fn set_edge_rendering(&mut self, enabled: bool) -> Result<(), String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.set_edge_rendering(enabled);
+        Ok(())
+    }
+
+    /// Check if edge rendering is currently enabled
+    pub fn is_edge_rendering(&self) -> Result<bool, String> {
+        let scene = self.scene.as_ref().ok_or("Scene not initialized")?;
+        Ok(scene.is_edge_rendering_enabled())
     }
 
     /// Set the color of a specific element by index

@@ -6,6 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `base64_encode`, `csv_escape`, `html_escape`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 /// Save current frame as PNG to the given path
@@ -17,6 +18,53 @@ Uint8List getCurrentFrameRgba() => RustLib.instance.api.crateApiExportGetCurrent
 
 /// Get renderer statistics
 RenderStats getRenderStats() => RustLib.instance.api.crateApiExportGetRenderStats();
+
+/// Export all element properties as CSV string.
+/// Format: ElementID, GlobalID, Name, Type, Storey, PropertySet, PropertyName, PropertyValue
+String exportPropertiesCsv() => RustLib.instance.api.crateApiExportExportPropertiesCsv();
+
+/// Export element summary as CSV (one row per element with basic info + bounds).
+/// Format: ID, GlobalID, Name, Type, Storey, BoundsMinX, BoundsMinY, BoundsMinZ, BoundsMaxX, BoundsMaxY, BoundsMaxZ
+String exportElementSummaryCsv() => RustLib.instance.api.crateApiExportExportElementSummaryCsv();
+
+/// Export all visible models as glTF 2.0 JSON string.
+/// This produces a complete self-contained glTF with embedded base64 buffers.
+/// Can be saved as .gltf file and opened in any 3D viewer.
+String exportGltfJson() => RustLib.instance.api.crateApiExportExportGltfJson();
+
+/// Get screenshot as PNG bytes with model info metadata.
+/// Returns (png_bytes, metadata_json).
+(Uint8List, String) getScreenshotWithInfo() => RustLib.instance.api.crateApiExportGetScreenshotWithInfo();
+
+/// Get current viewpoint as a shareable JSON string.
+/// Contains camera state, selection, visibility -- can be used as a deep link payload.
+String getViewpointShareData() => RustLib.instance.api.crateApiExportGetViewpointShareData();
+
+/// Apply a viewpoint from shared JSON data.
+void applyViewpointShareData({required String json}) =>
+    RustLib.instance.api.crateApiExportApplyViewpointShareData(json: json);
+
+/// Export a professional HTML report for the loaded BIM model.
+///
+/// Generates a standalone HTML document with:
+/// - Model summary (project name, site, building, storey count, element count)
+/// - Element counts by type (table)
+/// - Storey summary (table with name, elevation, element count)
+/// - Quantity takeoffs summary (total area, volume per type)
+/// - Material summary (material names and element counts)
+///
+/// Uses embedded CSS styling with professional layout, headers, tables,
+/// and alternating row colors.
+String exportHtmlReport() => RustLib.instance.api.crateApiExportExportHtmlReport();
+
+/// Export a detailed quantity report as CSV.
+///
+/// One row per element type with columns:
+/// Type, Count, Total Area, Total Volume, Total Length, Total Weight
+String exportQuantityReportCsv() => RustLib.instance.api.crateApiExportExportQuantityReportCsv();
+
+/// Export comprehensive model information as JSON.
+String exportModelInfoJson() => RustLib.instance.api.crateApiExportExportModelInfoJson();
 
 /// Renderer statistics
 class RenderStats {

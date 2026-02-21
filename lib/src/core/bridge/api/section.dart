@@ -6,10 +6,10 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SectionPlane`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SectionAnimation`, `SectionPlane`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
 
-/// Set the section plane
+/// Set the section plane (backward compatible - sets plane index 0)
 void setSectionPlane(
         {required double originX,
         required double originY,
@@ -33,3 +33,63 @@ bool isSectionPlaneActive() => RustLib.instance.api.crateApiSectionIsSectionPlan
 /// Set section plane from axis (X=0, Y=1, Z=2) and position
 void setSectionPlaneFromAxis({required int axis, required double position}) =>
     RustLib.instance.api.crateApiSectionSetSectionPlaneFromAxis(axis: axis, position: position);
+
+/// Add a new section plane, returns its index (0-5)
+int addSectionPlane(
+        {required double originX,
+        required double originY,
+        required double originZ,
+        required double normalX,
+        required double normalY,
+        required double normalZ}) =>
+    RustLib.instance.api.crateApiSectionAddSectionPlane(
+        originX: originX, originY: originY, originZ: originZ, normalX: normalX, normalY: normalY, normalZ: normalZ);
+
+/// Remove the section plane at the given index
+void removeSectionPlaneAt({required int index}) =>
+    RustLib.instance.api.crateApiSectionRemoveSectionPlaneAt(index: index);
+
+/// Get the number of active section planes
+int getSectionPlaneCount() => RustLib.instance.api.crateApiSectionGetSectionPlaneCount();
+
+/// Clear all section planes
+void clearAllSectionPlanes() => RustLib.instance.api.crateApiSectionClearAllSectionPlanes();
+
+/// Set multiple section planes from a JSON array of {origin: [x,y,z], normal: [x,y,z]}
+void setMultipleSectionPlanes({required String planesJson}) =>
+    RustLib.instance.api.crateApiSectionSetMultipleSectionPlanes(planesJson: planesJson);
+
+/// Start a section plane animation along an axis
+void animateSectionPlane(
+        {required int axis, required double startPos, required double endPos, required double durationSecs}) =>
+    RustLib.instance.api
+        .crateApiSectionAnimateSectionPlane(axis: axis, startPos: startPos, endPos: endPos, durationSecs: durationSecs);
+
+/// Advance the section animation by delta_time seconds.
+/// Returns true if the animation is still running, false if finished.
+bool tickSectionAnimation({required double deltaTime}) =>
+    RustLib.instance.api.crateApiSectionTickSectionAnimation(deltaTime: deltaTime);
+
+/// Check if a section animation is currently running
+bool isSectionAnimating() => RustLib.instance.api.crateApiSectionIsSectionAnimating();
+
+/// Set section box (min/max corners for 6-plane clipping)
+void setSectionBox(
+        {required double minX,
+        required double minY,
+        required double minZ,
+        required double maxX,
+        required double maxY,
+        required double maxZ}) =>
+    RustLib.instance.api
+        .crateApiSectionSetSectionBox(minX: minX, minY: minY, minZ: minZ, maxX: maxX, maxY: maxY, maxZ: maxZ);
+
+/// Clear the section box
+void clearSectionBox() => RustLib.instance.api.crateApiSectionClearSectionBox();
+
+/// Check if section box is active
+bool isSectionBoxActive() => RustLib.instance.api.crateApiSectionIsSectionBoxActive();
+
+/// Set section box from model bounds with padding
+void setSectionBoxFromModel({required double padding}) =>
+    RustLib.instance.api.crateApiSectionSetSectionBoxFromModel(padding: padding);

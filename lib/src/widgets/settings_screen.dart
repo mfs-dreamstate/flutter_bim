@@ -1,17 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/bridge/api.dart' as rust;
+import '../core/providers/accessibility_state.dart';
 
 /// Settings and tools screen
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   rust.RenderStats? _stats;
   bool _loadingStats = false;
   bool _exportingScreenshot = false;
@@ -208,6 +210,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const Divider(),
 
+          // Accessibility Section
+          _buildAccessibilitySection(theme),
+
+          const Divider(),
+
           // About Section
           _buildSection(
             title: 'About',
@@ -277,6 +284,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAccessibilitySection(ThemeData theme) {
+    final accessibilityState = ref.watch(accessibilityStateProvider);
+    final accessibilityNotifier = ref.read(accessibilityStateProvider.notifier);
+
+    return _buildSection(
+      title: 'Accessibility',
+      icon: Icons.accessibility_new,
+      children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.text_fields),
+          title: const Text('Use System Text Size'),
+          subtitle: const Text('Follow the device text size setting'),
+          value: accessibilityState.useSystemTextScale,
+          onChanged: (value) {
+            accessibilityNotifier.setUseSystemTextScale(value);
+          },
+        ),
+        if (!accessibilityState.useSystemTextScale) ...[
+          ListTile(
+            leading: const Icon(Icons.format_size),
+            title: const Text('Custom Text Size'),
+            subtitle: Slider(
+              min: 0.8,
+              max: 2.0,
+              divisions: 12,
+              value: accessibilityState.customTextScaleFactor,
+              onChanged: (value) {
+                accessibilityNotifier.setCustomTextScaleFactor(value);
+              },
+              label:
+                  '${(accessibilityState.customTextScaleFactor * 100).round()}%',
+            ),
+            trailing: Text(
+              '${(accessibilityState.customTextScaleFactor * 100).round()}%',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

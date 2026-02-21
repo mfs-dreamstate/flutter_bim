@@ -10,8 +10,9 @@ import '../frb_generated.dart';
 import '../lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `dms_to_decimal`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `apply_operator`, `criterion_matches`, `dms_to_decimal`, `evaluate_smart_group_on_state`, `resolve_field_value`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `FilterCriterion`, `SmartGroup`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 /// Pick element at screen coordinates (searches all visible models)
 ElementInfo? pickElement({required double screenX, required double screenY}) =>
@@ -50,17 +51,85 @@ void showAllStoreys() => RustLib.instance.api.crateApiSelectionShowAllStoreys();
 String? getIsolatedStorey() => RustLib.instance.api.crateApiSelectionGetIsolatedStorey();
 
 /// Set the color visualization mode.
-/// 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material
+/// 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material, 4 = By Property, 5 = Grayscale
 /// Call reload_all_models_mesh() after this to apply.
 void setColorMode({required int mode}) => RustLib.instance.api.crateApiSelectionSetColorMode(mode: mode);
 
 /// Get the current color mode.
-/// Returns: 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material
+/// Returns: 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material, 4 = By Property, 5 = Grayscale
 int getColorMode() => RustLib.instance.api.crateApiSelectionGetColorMode();
+
+/// Set the property name for color-by-property mode.
+/// Also sets the color mode to ByProperty.
+void setColorProperty({required String propertyName}) =>
+    RustLib.instance.api.crateApiSelectionSetColorProperty(propertyName: propertyName);
 
 /// Set the selected element for highlighting
 void setSelectedElement({int? elementId}) =>
     RustLib.instance.api.crateApiSelectionSetSelectedElement(elementId: elementId);
+
+/// Select an element (add to selection)
+void selectElement({required int elementId}) =>
+    RustLib.instance.api.crateApiSelectionSelectElement(elementId: elementId);
+
+/// Deselect an element (remove from selection)
+void deselectElement({required int elementId}) =>
+    RustLib.instance.api.crateApiSelectionDeselectElement(elementId: elementId);
+
+/// Clear all selection
+void clearSelection() => RustLib.instance.api.crateApiSelectionClearSelection();
+
+/// Get all selected element IDs
+Int32List getSelectedElements() => RustLib.instance.api.crateApiSelectionGetSelectedElements();
+
+/// Get selected element count
+BigInt getSelectionCount() => RustLib.instance.api.crateApiSelectionGetSelectionCount();
+
+/// Toggle element selection
+bool toggleElementSelection({required int elementId}) =>
+    RustLib.instance.api.crateApiSelectionToggleElementSelection(elementId: elementId);
+
+/// Hide all currently selected elements
+int hideSelected() => RustLib.instance.api.crateApiSelectionHideSelected();
+
+/// Show all hidden elements (clear hidden set)
+void showAllElements() => RustLib.instance.api.crateApiSelectionShowAllElements();
+
+/// Isolate selected elements (hide everything except selection)
+int isolateSelected() => RustLib.instance.api.crateApiSelectionIsolateSelected();
+
+/// Hide a specific element by ID
+void hideElement({required int elementId}) => RustLib.instance.api.crateApiSelectionHideElement(elementId: elementId);
+
+/// Show a specific hidden element
+void showElement({required int elementId}) => RustLib.instance.api.crateApiSelectionShowElement(elementId: elementId);
+
+/// Get count of hidden elements
+BigInt getHiddenElementCount() => RustLib.instance.api.crateApiSelectionGetHiddenElementCount();
+
+/// Save current selection as a named set
+BigInt saveSelectionSet({required String name}) => RustLib.instance.api.crateApiSelectionSaveSelectionSet(name: name);
+
+/// Restore a named selection set
+BigInt restoreSelectionSet({required String name}) =>
+    RustLib.instance.api.crateApiSelectionRestoreSelectionSet(name: name);
+
+/// Get all selection set names
+List<String> getSelectionSetNames() => RustLib.instance.api.crateApiSelectionGetSelectionSetNames();
+
+/// Delete a selection set
+void deleteSelectionSet({required String name}) => RustLib.instance.api.crateApiSelectionDeleteSelectionSet(name: name);
+
+/// Search elements by name (case-insensitive substring match)
+List<ElementInfo> searchElements({required String query}) =>
+    RustLib.instance.api.crateApiSelectionSearchElements(query: query);
+
+/// Filter elements by type
+List<ElementInfo> filterElementsByType({required String elementType}) =>
+    RustLib.instance.api.crateApiSelectionFilterElementsByType(elementType: elementType);
+
+/// Select all elements matching a search query
+BigInt selectBySearch({required String query}) => RustLib.instance.api.crateApiSelectionSelectBySearch(query: query);
 
 /// Get all grid lines from all visible models
 List<GridLine> getGridLines() => RustLib.instance.api.crateApiSelectionGetGridLines();
@@ -79,6 +148,47 @@ BigInt getGridLineCount() => RustLib.instance.api.crateApiSelectionGetGridLineCo
 
 /// Get georeferencing data from the primary model's site
 GeoReference? getGeoReference() => RustLib.instance.api.crateApiSelectionGetGeoReference();
+
+/// Create a smart group with filter criteria parsed from JSON.
+///
+/// `criteria_json` format: `[{"field": "type", "operator": "equals", "value": "IfcWall"}, ...]`
+void createSmartGroup({required String name, required String criteriaJson, required bool matchAll}) =>
+    RustLib.instance.api.crateApiSelectionCreateSmartGroup(name: name, criteriaJson: criteriaJson, matchAll: matchAll);
+
+/// Apply a smart group: find matching elements across all visible models and select them.
+/// Returns count of matched elements.
+BigInt applySmartGroup({required String name}) => RustLib.instance.api.crateApiSelectionApplySmartGroup(name: name);
+
+/// Get all smart group names.
+List<String> getSmartGroupNames() => RustLib.instance.api.crateApiSelectionGetSmartGroupNames();
+
+/// Delete a smart group by name.
+void deleteSmartGroup({required String name}) => RustLib.instance.api.crateApiSelectionDeleteSmartGroup(name: name);
+
+/// Preview the element count for a smart group without selecting.
+BigInt getSmartGroupElementCount({required String name}) =>
+    RustLib.instance.api.crateApiSelectionGetSmartGroupElementCount(name: name);
+
+/// Get the criteria JSON for a smart group.
+String getSmartGroupCriteriaJson({required String name}) =>
+    RustLib.instance.api.crateApiSelectionGetSmartGroupCriteriaJson(name: name);
+
+/// Search across all visible models and select matches.
+/// Searches name, type, and global_id with case-insensitive substring matching.
+/// Marks BVH as dirty so mesh can be reloaded with highlights.
+/// Returns the count of matched elements.
+BigInt searchAndSelect({required String query}) => RustLib.instance.api.crateApiSelectionSearchAndSelect(query: query);
+
+/// Search for elements where a specific property matches (case-insensitive substring).
+/// Returns matching ElementInfo objects.
+List<ElementInfo> searchElementsByProperty({required String propertyName, required String propertyValue}) =>
+    RustLib.instance.api
+        .crateApiSelectionSearchElementsByProperty(propertyName: propertyName, propertyValue: propertyValue);
+
+/// Select all elements matching a property value (case-insensitive substring).
+/// Returns the count of selected elements.
+BigInt selectByProperty({required String propertyName, required String propertyValue}) =>
+    RustLib.instance.api.crateApiSelectionSelectByProperty(propertyName: propertyName, propertyValue: propertyValue);
 
 /// Georeferencing data from IFC site
 class GeoReference {

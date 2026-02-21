@@ -53,6 +53,15 @@ class RustRendererService implements IRendererService {
   }
 
   @override
+  void panCamera({required double deltaX, required double deltaY}) {
+    try {
+      rust.panCamera(deltaX: deltaX, deltaY: deltaY);
+    } catch (e) {
+      debugPrint('[RustRendererService] panCamera failed: $e');
+    }
+  }
+
+  @override
   void fitCameraToAllModels() {
     try {
       rust.fitCameraToAllModels();

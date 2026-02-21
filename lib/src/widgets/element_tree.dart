@@ -258,11 +258,8 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
                         }
                       });
                     },
-                    style: ButtonStyle(
+                    style: const ButtonStyle(
                       visualDensity: VisualDensity.compact,
-                      textStyle: WidgetStateProperty.all(
-                        const TextStyle(fontSize: 13),
-                      ),
                     ),
                   ),
                 ),
@@ -613,78 +610,83 @@ class _ElementListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final displayName = element.name.isEmpty ? 'Unnamed' : element.name;
 
-    return InkWell(
-      onTap: onTap,
-      onLongPress: () {
-        showPropertiesPanel(
-          context,
-          element: element,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        margin: const EdgeInsets.only(left: 40),
-        decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primaryContainer : null,
-          border: Border(
-            left: BorderSide(
-              color: isSelected ? colorScheme.primary : Colors.transparent,
-              width: 3,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    element.name.isEmpty ? 'Unnamed' : element.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        '#${element.id}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                      if (showType) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: BimElementVisuals.colorFor(element.elementType).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            element.elementType,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: BimElementVisuals.colorFor(element.elementType),
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+    return Semantics(
+      label: 'Element: $displayName, Type: ${element.elementType}',
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: () {
+          showPropertiesPanel(
+            context,
+            element: element,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          margin: const EdgeInsets.only(left: 40),
+          decoration: BoxDecoration(
+            color: isSelected ? colorScheme.primaryContainer : null,
+            border: Border(
+              left: BorderSide(
+                color: isSelected ? colorScheme.primary : Colors.transparent,
+                width: 3,
               ),
             ),
-            Icon(
-              Icons.info_outline,
-              size: 18,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          '#${element.id}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        if (showType) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: BimElementVisuals.colorFor(element.elementType).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              element.elementType,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: BimElementVisuals.colorFor(element.elementType),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.info_outline,
+                size: 18,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
         ),
       ),
     );

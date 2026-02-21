@@ -4,7 +4,11 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import '../lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+// These functions are ignored because they are not marked as `pub`: `compute_combined_bounds_for_ids`, `find_element_bounds`, `pad_bounds`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 /// Orbit the camera around the target
 void orbitCamera({required double deltaX, required double deltaY}) =>
@@ -18,3 +22,131 @@ void fitCameraToModel() => RustLib.instance.api.crateApiCameraFitCameraToModel()
 
 /// Fit camera to all visible models
 void fitCameraToAllModels() => RustLib.instance.api.crateApiCameraFitCameraToAllModels();
+
+/// Pan the camera (translate position and target together)
+void panCamera({required double deltaX, required double deltaY}) =>
+    RustLib.instance.api.crateApiCameraPanCamera(deltaX: deltaX, deltaY: deltaY);
+
+/// Get the current camera position
+(double, double, double) getCameraPosition() => RustLib.instance.api.crateApiCameraGetCameraPosition();
+
+/// Get the current camera target
+(double, double, double) getCameraTarget() => RustLib.instance.api.crateApiCameraGetCameraTarget();
+
+/// Set the camera position
+void setCameraPosition({required double x, required double y, required double z}) =>
+    RustLib.instance.api.crateApiCameraSetCameraPosition(x: x, y: y, z: z);
+
+/// Set the camera target
+void setCameraTarget({required double x, required double y, required double z}) =>
+    RustLib.instance.api.crateApiCameraSetCameraTarget(x: x, y: y, z: z);
+
+/// Enable or disable orthographic projection
+void setOrthographic({required bool enabled}) => RustLib.instance.api.crateApiCameraSetOrthographic(enabled: enabled);
+
+/// Check if orthographic projection is currently active
+bool isOrthographic() => RustLib.instance.api.crateApiCameraIsOrthographic();
+
+/// Enable or disable turntable orbit mode (constrained Y-up rotation)
+void setTurntableMode({required bool enabled}) => RustLib.instance.api.crateApiCameraSetTurntableMode(enabled: enabled);
+
+/// Check if turntable orbit mode is active
+bool isTurntableMode() => RustLib.instance.api.crateApiCameraIsTurntableMode();
+
+/// Enable or disable first-person walkthrough mode
+void setWalkthroughMode({required bool enabled}) =>
+    RustLib.instance.api.crateApiCameraSetWalkthroughMode(enabled: enabled);
+
+/// Move the camera in walkthrough mode (forward/right/up)
+void walkCamera({required double forward, required double right, required double up}) =>
+    RustLib.instance.api.crateApiCameraWalkCamera(forward: forward, right: right, up: up);
+
+/// Rotate the camera view direction in walkthrough mode (yaw/pitch)
+void lookCamera({required double deltaX, required double deltaY}) =>
+    RustLib.instance.api.crateApiCameraLookCamera(deltaX: deltaX, deltaY: deltaY);
+
+/// Check if walkthrough mode is active
+bool isWalkthroughMode() => RustLib.instance.api.crateApiCameraIsWalkthroughMode();
+
+/// Save the current camera state as a named viewpoint
+ViewpointData saveViewpoint({required String name}) => RustLib.instance.api.crateApiCameraSaveViewpoint(name: name);
+
+/// Restore a named viewpoint by name
+void restoreViewpoint({required String name}) => RustLib.instance.api.crateApiCameraRestoreViewpoint(name: name);
+
+/// Get all saved viewpoints
+List<ViewpointData> getViewpoints() => RustLib.instance.api.crateApiCameraGetViewpoints();
+
+/// Delete a named viewpoint
+void deleteViewpoint({required String name}) => RustLib.instance.api.crateApiCameraDeleteViewpoint(name: name);
+
+/// Start a smooth animated transition to a new camera position and target
+void animateCameraTo(
+        {required double posX,
+        required double posY,
+        required double posZ,
+        required double targetX,
+        required double targetY,
+        required double targetZ,
+        required double duration}) =>
+    RustLib.instance.api.crateApiCameraAnimateCameraTo(
+        posX: posX, posY: posY, posZ: posZ, targetX: targetX, targetY: targetY, targetZ: targetZ, duration: duration);
+
+/// Advance the camera animation by delta_time seconds.
+/// Returns true if the animation is still active.
+bool tickCameraAnimation({required double deltaTime}) =>
+    RustLib.instance.api.crateApiCameraTickCameraAnimation(deltaTime: deltaTime);
+
+/// Check if a camera animation is currently in progress
+bool isCameraAnimating() => RustLib.instance.api.crateApiCameraIsCameraAnimating();
+
+/// Fit the camera to a single element's bounding box (with 10% padding).
+/// Searches for the element across all visible models.
+void fitCameraToElement({required int elementId}) =>
+    RustLib.instance.api.crateApiCameraFitCameraToElement(elementId: elementId);
+
+/// Fit the camera to the combined bounding box of multiple elements (with 10% padding).
+void fitCameraToElements({required List<int> elementIds}) =>
+    RustLib.instance.api.crateApiCameraFitCameraToElements(elementIds: elementIds);
+
+/// Fit the camera to all elements in a given storey (with 10% padding).
+void fitCameraToStorey({required String storeyName}) =>
+    RustLib.instance.api.crateApiCameraFitCameraToStorey(storeyName: storeyName);
+
+/// Fit the camera to the combined bounding box of all currently selected elements.
+void fitCameraToSelected() => RustLib.instance.api.crateApiCameraFitCameraToSelected();
+
+/// Fit the camera to all elements of a given type (with 10% padding).
+void fitCameraToElementType({required String elementType}) =>
+    RustLib.instance.api.crateApiCameraFitCameraToElementType(elementType: elementType);
+
+/// Named camera viewpoint data for the Flutter bridge
+class ViewpointData {
+  final String name;
+  final F32Array3 position;
+  final F32Array3 target;
+  final double fov;
+  final bool orthographic;
+
+  const ViewpointData({
+    required this.name,
+    required this.position,
+    required this.target,
+    required this.fov,
+    required this.orthographic,
+  });
+
+  @override
+  int get hashCode => name.hashCode ^ position.hashCode ^ target.hashCode ^ fov.hashCode ^ orthographic.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ViewpointData &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          position == other.position &&
+          target == other.target &&
+          fov == other.fov &&
+          orthographic == other.orthographic;
+}

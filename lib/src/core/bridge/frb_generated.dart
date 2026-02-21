@@ -3,7 +3,10 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/bcf.dart';
 import 'api/camera.dart';
+import 'api/clash.dart';
+import 'api/comparison.dart';
 import 'api/export.dart';
 import 'api/lighting.dart';
 import 'api/measurement.dart';
@@ -80,7 +83,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1514695416;
+  int get rustContentHash => -1043958863;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'rust',
@@ -90,31 +93,250 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  String crateApiBcfAddBcfComment({required String topicGuid, required String author, required String text});
+
+  void crateApiOverlayAddCalloutAnnotation(
+      {required String id, required double x, required double y, required double z, required String text});
+
+  void crateApiOverlayAddDimensionLine(
+      {required String id,
+      required double x1,
+      required double y1,
+      required double z1,
+      required double x2,
+      required double y2,
+      required double z2,
+      required double offset});
+
+  void crateApiOverlayAddLeaderLine(
+      {required String id,
+      required double anchorX,
+      required double anchorY,
+      required double anchorZ,
+      required double labelX,
+      required double labelY,
+      required double labelZ,
+      required String text});
+
   int crateApiMeasurementAddMeasurementPoint({required double x, required double y, required double z});
+
+  void crateApiOverlayAddPinAnnotation(
+      {required String id,
+      required double x,
+      required double y,
+      required double z,
+      required String label,
+      required double r,
+      required double g,
+      required double b,
+      required double a});
+
+  void crateApiOverlayAddRedlineAnnotation(
+      {required String id,
+      required String pointsJson,
+      required double r,
+      required double g,
+      required double b,
+      required double width});
+
+  int crateApiSectionAddSectionPlane(
+      {required double originX,
+      required double originY,
+      required double originZ,
+      required double normalX,
+      required double normalY,
+      required double normalZ});
+
+  void crateApiCameraAnimateCameraTo(
+      {required double posX,
+      required double posY,
+      required double posZ,
+      required double targetX,
+      required double targetY,
+      required double targetZ,
+      required double duration});
+
+  void crateApiSectionAnimateSectionPlane(
+      {required int axis, required double startPos, required double endPos, required double durationSecs});
+
+  BigInt crateApiSelectionApplySmartGroup({required String name});
+
+  void crateApiExportApplyViewpointShareData({required String json});
+
+  String crateApiBcfBuildCreateCommentRequest({required String topicGuid, required String comment});
+
+  String crateApiBcfBuildCreateTopicRequest(
+      {required String title,
+      required String description,
+      required String topicType,
+      required String priority,
+      required String status});
+
+  String crateApiBcfBuildCreateViewpointRequest({required String topicGuid, required String viewpointJson});
+
+  String crateApiBcfBuildGetTopicRequest({required String topicGuid});
+
+  String crateApiBcfBuildListCommentsRequest({required String topicGuid});
+
+  String crateApiBcfBuildListTopicsRequest();
+
+  String crateApiBcfBuildListViewpointsRequest({required String topicGuid});
+
+  String crateApiBcfBuildUpdateTopicRequest({required String topicGuid, required String updatesJson});
+
+  void crateApiModelsCancelLoading({required String loadingId});
 
   void crateApiModelsClearAllModels();
 
+  void crateApiSectionClearAllSectionPlanes();
+
+  void crateApiBcfClearBcfAuthToken();
+
+  void crateApiBcfClearBcfProject();
+
+  void crateApiClashClearClashResults();
+
+  void crateApiComparisonClearComparisonOverlay();
+
   void crateApiMeasurementClearMeasurement();
 
+  void crateApiSectionClearSectionBox();
+
   void crateApiSectionClearSectionPlane();
+
+  void crateApiSelectionClearSelection();
 
   void crateApiLightingColorByType();
 
   Future<ColorMode> crateApiStateColorModeDefault();
 
+  String crateApiSystemCompactMemory();
+
+  ComparisonResult crateApiComparisonCompareModels({required String modelAId, required String modelBId});
+
+  double crateApiOverlayComputeAreaFromPoints({required String pointsJson});
+
+  double crateApiOverlayComputeDistance(
+      {required double x1,
+      required double y1,
+      required double z1,
+      required double x2,
+      required double y2,
+      required double z2});
+
+  void crateApiBcfConfigureBcfServer({required String serverUrl, required String apiVersion});
+
+  double crateApiPropertiesConvertArea({required double value});
+
+  double crateApiPropertiesConvertLength({required double value});
+
+  double crateApiPropertiesConvertVolume({required double value});
+
+  String crateApiOverlayCreateAnnotationSet({required String name});
+
+  String crateApiBcfCreateBcfProject({required String name});
+
+  String crateApiBcfCreateBcfTopic({required String title, required String description, required String topicType});
+
+  void crateApiSelectionCreateSmartGroup({required String name, required String criteriaJson, required bool matchAll});
+
+  String crateApiBcfCreateViewpointFromCurrent({required String topicGuid});
+
+  void crateApiOverlayDeleteAnnotationSet({required String setId});
+
+  void crateApiSelectionDeleteSelectionSet({required String name});
+
+  void crateApiSelectionDeleteSmartGroup({required String name});
+
+  void crateApiBcfDeleteTopic({required String topicGuid});
+
+  void crateApiCameraDeleteViewpoint({required String name});
+
+  void crateApiSelectionDeselectElement({required int elementId});
+
+  String crateApiModelsDetectFileSchema({required String fileContent});
+
+  String crateApiPropertiesDetectIfcUnits();
+
+  String crateApiBcfExportBcfJsonString();
+
+  Uint8List crateApiBcfExportBcfToBytes();
+
+  String crateApiClashExportClashCsv();
+
+  String crateApiClashExportClashHtml();
+
+  String crateApiComparisonExportComparisonCsv({required String modelAId, required String modelBId});
+
+  String crateApiExportExportElementSummaryCsv();
+
+  String crateApiExportExportGltfJson();
+
+  String crateApiExportExportHtmlReport();
+
+  String crateApiOverlayExportMarkupJson();
+
+  String crateApiExportExportModelInfoJson();
+
+  String crateApiExportExportPropertiesCsv();
+
+  String crateApiExportExportQuantityReportCsv();
+
   Future<void> crateApiExportExportScreenshot({required String path});
+
+  List<ElementInfo> crateApiSelectionFilterElementsByType({required String elementType});
 
   void crateApiCameraFitCameraToAllModels();
 
+  void crateApiCameraFitCameraToElement({required int elementId});
+
+  void crateApiCameraFitCameraToElementType({required String elementType});
+
+  void crateApiCameraFitCameraToElements({required List<int> elementIds});
+
   void crateApiCameraFitCameraToModel();
+
+  void crateApiCameraFitCameraToSelected();
+
+  void crateApiCameraFitCameraToStorey({required String storeyName});
+
+  String? crateApiOverlayGetActiveAnnotationSet();
+
+  Int32List crateApiComparisonGetAddedElementIds({required String modelAId, required String modelBId});
 
   List<ElementInfo> crateApiSelectionGetAllElements();
 
   List<ElementInfo> crateApiSelectionGetAllElementsFromAllModels();
 
+  List<BcfTopicSummary> crateApiBcfGetAllTopics();
+
+  String crateApiOverlayGetAnnotationsJson();
+
+  String crateApiPropertiesGetAreaUnitLabel();
+
+  String crateApiBcfGetBcfConfig();
+
+  (double, double, double) crateApiCameraGetCameraPosition();
+
+  (double, double, double) crateApiCameraGetCameraTarget();
+
+  int crateApiClashGetClashCount();
+
+  List<ClashInfo> crateApiClashGetClashResults();
+
+  List<ClashInfo> crateApiClashGetClashesByGroup({required String groupName});
+
   int crateApiSelectionGetColorMode();
 
+  String crateApiComparisonGetComparisonElementStatus({required int elementId});
+
+  String crateApiComparisonGetComparisonOverlayColors();
+
+  BigInt crateApiSystemGetCpuMemoryBytes();
+
   Uint8List crateApiExportGetCurrentFrameRgba();
+
+  String crateApiSystemGetDiagnosticReport();
 
   Map<String, BigInt> crateApiSelectionGetElementCounts();
 
@@ -130,83 +352,253 @@ abstract class RustLibApi extends BaseApi {
 
   Map<String, Int32List> crateApiPropertiesGetElementsByStorey();
 
+  Map<String, Int32List> crateApiPropertiesGetElementsGroupedByType();
+
+  BigInt crateApiSystemGetFrameCount();
+
   GeoReference? crateApiSelectionGetGeoReference();
+
+  BigInt crateApiSystemGetGpuMemoryBytes();
 
   BigInt crateApiSelectionGetGridLineCount();
 
   List<GridLine> crateApiSelectionGetGridLines();
 
+  BigInt crateApiSelectionGetHiddenElementCount();
+
   List<String> crateApiSelectionGetHiddenElementTypes();
 
   String? crateApiSelectionGetIsolatedStorey();
+
+  String crateApiPropertiesGetLengthUnitLabel();
+
+  String crateApiSystemGetLoadingProgress();
+
+  String crateApiModelsGetLoadingState({required String loadingId});
+
+  String? crateApiPropertiesGetMapConversion();
 
   int crateApiMeasurementGetMeasurementPointCount();
 
   MeasurementResult crateApiMeasurementGetMeasurementResult();
 
+  String crateApiSystemGetMemoryStats();
+
+  String crateApiSystemGetMemorySummary();
+
   BigInt crateApiModelsGetModelCount();
 
   ModelInfo crateApiModelsGetModelInfo();
+
+  Int32List crateApiComparisonGetModifiedElementIds({required String modelAId, required String modelBId});
+
+  List<QuantitySummary> crateApiPropertiesGetQuantitySummaryByStorey();
+
+  List<QuantitySummary> crateApiPropertiesGetQuantitySummaryByType();
+
+  Int32List crateApiComparisonGetRemovedElementIds({required String modelAId, required String modelBId});
 
   int crateApiLightingGetRenderMode();
 
   RenderStats crateApiExportGetRenderStats();
 
+  String crateApiSystemGetRendererCapabilities();
+
+  (Uint8List, String) crateApiExportGetScreenshotWithInfo();
+
+  int crateApiSectionGetSectionPlaneCount();
+
+  Int32List crateApiSelectionGetSelectedElements();
+
+  BigInt crateApiSelectionGetSelectionCount();
+
+  List<String> crateApiSelectionGetSelectionSetNames();
+
+  String crateApiSelectionGetSmartGroupCriteriaJson({required String name});
+
+  BigInt crateApiSelectionGetSmartGroupElementCount({required String name});
+
+  List<String> crateApiSelectionGetSmartGroupNames();
+
   List<SpatialNode> crateApiPropertiesGetSpatialTree();
 
   String crateApiSystemGetSystemInfo();
+
+  int crateApiBcfGetTopicCount();
+
+  BcfTopicDetail crateApiBcfGetTopicDetail({required String topicGuid});
+
+  int crateApiPropertiesGetUnitSystem();
 
   String crateApiSystemGetVersion();
 
   String crateApiOverlayGetViewMode();
 
+  String crateApiExportGetViewpointShareData();
+
+  List<ViewpointData> crateApiCameraGetViewpoints();
+
+  String crateApiPropertiesGetVolumeUnitLabel();
+
+  void crateApiSelectionHideElement({required int elementId});
+
+  int crateApiSelectionHideSelected();
+
+  int crateApiBcfImportBcfFromBytes({required List<int> data});
+
+  int crateApiBcfImportBcfJsonString({required String json});
+
+  Future<ModelInfo> crateApiModelsImportGlbFile({required String filePath});
+
+  Future<ModelInfo> crateApiModelsImportGltfFile({required String filePath});
+
+  void crateApiOverlayImportMarkupJson({required String json});
+
+  Future<ModelInfo> crateApiModelsImportObjFile({required String filePath});
+
   Future<String> crateApiRenderingInitRenderer({required int width, required int height});
 
   String crateApiSystemInitialize();
+
+  bool crateApiCameraIsCameraAnimating();
+
+  bool crateApiComparisonIsComparisonOverlayActive();
 
   bool crateApiSelectionIsElementTypeVisible({required String elementType});
 
   bool crateApiSelectionIsGridVisible();
 
+  bool crateApiSystemIsLoading();
+
   bool crateApiModelsIsModelLoaded();
+
+  bool crateApiCameraIsOrthographic();
 
   bool crateApiRenderingIsRendererInitialized();
 
+  bool crateApiSectionIsSectionAnimating();
+
+  bool crateApiSectionIsSectionBoxActive();
+
   bool crateApiSectionIsSectionPlaneActive();
+
+  bool crateApiCameraIsTurntableMode();
+
+  bool crateApiCameraIsWalkthroughMode();
 
   bool crateApiLightingIsWireframeSupported();
 
+  int crateApiSelectionIsolateSelected();
+
   int crateApiSelectionIsolateStorey({required String storeyName});
 
+  String crateApiOverlayListAnnotationSets();
+
   List<RegisteredModelInfo> crateApiModelsListLoadedModels();
+
+  String crateApiModelsListLoadingTasks();
 
   String crateApiRenderingLoadAllModelsIntoRenderer();
 
   Future<ModelInfo> crateApiModelsLoadIfcFile({required String filePath});
 
+  Future<String> crateApiModelsLoadIfcFileAsync({required String filePath});
+
   Future<ModelInfo> crateApiModelsLoadModel({required String modelId, required String filePath});
 
   String crateApiRenderingLoadModelIntoRenderer();
 
+  void crateApiCameraLookCamera({required double deltaX, required double deltaY});
+
+  Future<MemoryStats> crateApiSystemMemoryStatsDefault();
+
+  void crateApiClashNavigateToClash({required int clashId});
+
+  BigInt crateApiComparisonNavigateToComparisonGroup({required String status});
+
+  void crateApiBcfNavigateToViewpoint({required String topicGuid, required String viewpointGuid});
+
   void crateApiCameraOrbitCamera({required double deltaX, required double deltaY});
+
+  void crateApiCameraPanCamera({required double deltaX, required double deltaY});
+
+  String crateApiBcfParseCommentsResponse({required String responseJson});
 
   Future<ModelInfo> crateApiModelsParseIfcContent({required String content});
 
+  String crateApiBcfParseTopicsResponse({required String responseJson});
+
+  Future<PerfCounters> crateApiSystemPerfCountersDefault();
+
   ElementInfo? crateApiSelectionPickElement({required double screenX, required double screenY});
+
+  String crateApiBcfPrepareTopicsForUpload();
 
   String crateApiRenderingReloadAllModelsMesh();
 
   String crateApiRenderingReloadModelMesh();
 
+  void crateApiOverlayRemoveAnnotation({required String annotationId});
+
   void crateApiOverlayRemoveOverlay({required String id});
+
+  void crateApiSectionRemoveSectionPlaneAt({required int index});
 
   Uint8List crateApiRenderingRenderFrame();
 
   void crateApiLightingResetElementColors();
 
+  void crateApiSystemResetPerformanceCounters();
+
+  BigInt crateApiSelectionRestoreSelectionSet({required String name});
+
+  void crateApiCameraRestoreViewpoint({required String name});
+
+  ClashSummary crateApiClashRunClashDetection(
+      {required double hardTolerance,
+      required double softTolerance,
+      required double clearanceTolerance,
+      required bool checkSameType});
+
+  ClashSummary crateApiClashRunClashDetectionFiltered(
+      {required String typeA, required String typeB, required double tolerance});
+
+  BigInt crateApiSelectionSaveSelectionSet({required String name});
+
+  ViewpointData crateApiCameraSaveViewpoint({required String name});
+
+  BigInt crateApiSelectionSearchAndSelect({required String query});
+
+  List<ElementInfo> crateApiSelectionSearchElements({required String query});
+
+  List<ElementInfo> crateApiSelectionSearchElementsByProperty(
+      {required String propertyName, required String propertyValue});
+
+  BigInt crateApiSelectionSelectByProperty({required String propertyName, required String propertyValue});
+
+  BigInt crateApiSelectionSelectBySearch({required String query});
+
+  void crateApiSelectionSelectElement({required int elementId});
+
+  void crateApiOverlaySetActiveAnnotationSet({required String setId});
+
   void crateApiLightingSetAmbientColor({required double r, required double g, required double b});
 
+  void crateApiOverlaySetAnnotationSetVisible({required String setId, required bool visible});
+
+  void crateApiBcfSetBcfAuthToken({required String token});
+
+  void crateApiBcfSetBcfProject({required String projectId});
+
+  void crateApiCameraSetCameraPosition({required double x, required double y, required double z});
+
+  void crateApiCameraSetCameraTarget({required double x, required double y, required double z});
+
   void crateApiSelectionSetColorMode({required int mode});
+
+  void crateApiSelectionSetColorProperty({required String propertyName});
+
+  String crateApiComparisonSetComparisonOverlay({required String modelIdA, required String modelIdB});
 
   void crateApiLightingSetElementColor({required int elementId, required int r, required int g, required int b});
 
@@ -221,6 +613,10 @@ abstract class RustLibApi extends BaseApi {
   void crateApiLightingSetLightIntensity({required double intensity});
 
   void crateApiModelsSetModelVisible({required String modelId, required bool visible});
+
+  void crateApiSectionSetMultipleSectionPlanes({required String planesJson});
+
+  void crateApiCameraSetOrthographic({required bool enabled});
 
   void crateApiOverlaySetOverlayOpacity({required String id, required double opacity});
 
@@ -239,6 +635,16 @@ abstract class RustLibApi extends BaseApi {
 
   void crateApiLightingSetRenderMode({required int mode});
 
+  void crateApiSectionSetSectionBox(
+      {required double minX,
+      required double minY,
+      required double minZ,
+      required double maxX,
+      required double maxY,
+      required double maxZ});
+
+  void crateApiSectionSetSectionBoxFromModel({required double padding});
+
   void crateApiSectionSetSectionPlane(
       {required double originX,
       required double originY,
@@ -253,17 +659,41 @@ abstract class RustLibApi extends BaseApi {
 
   void crateApiSelectionSetSelectedElement({int? elementId});
 
+  void crateApiBcfSetTopicAssignedTo({required String topicGuid, required String assignedTo});
+
+  void crateApiBcfSetTopicPriority({required String topicGuid, required int priority});
+
+  void crateApiBcfSetTopicStatus({required String topicGuid, required int status});
+
+  void crateApiCameraSetTurntableMode({required bool enabled});
+
+  void crateApiPropertiesSetUnitSystem({required int system});
+
   void crateApiOverlaySetViewMode({required String mode});
+
+  void crateApiCameraSetWalkthroughMode({required bool enabled});
+
+  void crateApiSelectionShowAllElements();
 
   void crateApiSelectionShowAllStoreys();
 
+  void crateApiSelectionShowElement({required int elementId});
+
   void crateApiMeasurementStartMeasurement({required String measurementType});
+
+  BigInt crateApiBcfSyncTopicsFromResponse({required String responseJson});
 
   Future<String> crateApiSystemTestAsync();
 
   String crateApiSystemTestErrorHandling({required bool shouldFail});
 
   Future<String> crateApiRenderingTestRendererInit();
+
+  bool crateApiCameraTickCameraAnimation({required double deltaTime});
+
+  bool crateApiSectionTickSectionAnimation({required double deltaTime});
+
+  bool crateApiSelectionToggleElementSelection({required int elementId});
 
   bool crateApiSelectionToggleGridVisible();
 
@@ -273,6 +703,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiOverlayUploadDrawingOverlay(
       {required String id, required int width, required int height, required List<int> rgbaPixels});
+
+  void crateApiCameraWalkCamera({required double forward, required double right, required double up});
 
   void crateApiCameraZoomCamera({required double delta});
 }
@@ -286,6 +718,135 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  String crateApiBcfAddBcfComment({required String topicGuid, required String author, required String text}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(author, serializer);
+        sse_encode_String(text, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfAddBcfCommentConstMeta,
+      argValues: [topicGuid, author, text],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfAddBcfCommentConstMeta => const TaskConstMeta(
+        debugName: "add_bcf_comment",
+        argNames: ["topicGuid", "author", "text"],
+      );
+
+  @override
+  void crateApiOverlayAddCalloutAnnotation(
+      {required String id, required double x, required double y, required double z, required String text}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        sse_encode_f_32(x, serializer);
+        sse_encode_f_32(y, serializer);
+        sse_encode_f_32(z, serializer);
+        sse_encode_String(text, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayAddCalloutAnnotationConstMeta,
+      argValues: [id, x, y, z, text],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayAddCalloutAnnotationConstMeta => const TaskConstMeta(
+        debugName: "add_callout_annotation",
+        argNames: ["id", "x", "y", "z", "text"],
+      );
+
+  @override
+  void crateApiOverlayAddDimensionLine(
+      {required String id,
+      required double x1,
+      required double y1,
+      required double z1,
+      required double x2,
+      required double y2,
+      required double z2,
+      required double offset}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        sse_encode_f_32(x1, serializer);
+        sse_encode_f_32(y1, serializer);
+        sse_encode_f_32(z1, serializer);
+        sse_encode_f_32(x2, serializer);
+        sse_encode_f_32(y2, serializer);
+        sse_encode_f_32(z2, serializer);
+        sse_encode_f_32(offset, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayAddDimensionLineConstMeta,
+      argValues: [id, x1, y1, z1, x2, y2, z2, offset],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayAddDimensionLineConstMeta => const TaskConstMeta(
+        debugName: "add_dimension_line",
+        argNames: ["id", "x1", "y1", "z1", "x2", "y2", "z2", "offset"],
+      );
+
+  @override
+  void crateApiOverlayAddLeaderLine(
+      {required String id,
+      required double anchorX,
+      required double anchorY,
+      required double anchorZ,
+      required double labelX,
+      required double labelY,
+      required double labelZ,
+      required String text}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        sse_encode_f_32(anchorX, serializer);
+        sse_encode_f_32(anchorY, serializer);
+        sse_encode_f_32(anchorZ, serializer);
+        sse_encode_f_32(labelX, serializer);
+        sse_encode_f_32(labelY, serializer);
+        sse_encode_f_32(labelZ, serializer);
+        sse_encode_String(text, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayAddLeaderLineConstMeta,
+      argValues: [id, anchorX, anchorY, anchorZ, labelX, labelY, labelZ, text],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayAddLeaderLineConstMeta => const TaskConstMeta(
+        debugName: "add_leader_line",
+        argNames: ["id", "anchorX", "anchorY", "anchorZ", "labelX", "labelY", "labelZ", "text"],
+      );
+
+  @override
   int crateApiMeasurementAddMeasurementPoint({required double x, required double y, required double z}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
@@ -293,7 +854,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(x, serializer);
         sse_encode_f_32(y, serializer);
         sse_encode_f_32(z, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_i_32,
@@ -311,11 +872,446 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiOverlayAddPinAnnotation(
+      {required String id,
+      required double x,
+      required double y,
+      required double z,
+      required String label,
+      required double r,
+      required double g,
+      required double b,
+      required double a}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        sse_encode_f_32(x, serializer);
+        sse_encode_f_32(y, serializer);
+        sse_encode_f_32(z, serializer);
+        sse_encode_String(label, serializer);
+        sse_encode_f_32(r, serializer);
+        sse_encode_f_32(g, serializer);
+        sse_encode_f_32(b, serializer);
+        sse_encode_f_32(a, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayAddPinAnnotationConstMeta,
+      argValues: [id, x, y, z, label, r, g, b, a],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayAddPinAnnotationConstMeta => const TaskConstMeta(
+        debugName: "add_pin_annotation",
+        argNames: ["id", "x", "y", "z", "label", "r", "g", "b", "a"],
+      );
+
+  @override
+  void crateApiOverlayAddRedlineAnnotation(
+      {required String id,
+      required String pointsJson,
+      required double r,
+      required double g,
+      required double b,
+      required double width}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        sse_encode_String(pointsJson, serializer);
+        sse_encode_f_32(r, serializer);
+        sse_encode_f_32(g, serializer);
+        sse_encode_f_32(b, serializer);
+        sse_encode_f_32(width, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayAddRedlineAnnotationConstMeta,
+      argValues: [id, pointsJson, r, g, b, width],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayAddRedlineAnnotationConstMeta => const TaskConstMeta(
+        debugName: "add_redline_annotation",
+        argNames: ["id", "pointsJson", "r", "g", "b", "width"],
+      );
+
+  @override
+  int crateApiSectionAddSectionPlane(
+      {required double originX,
+      required double originY,
+      required double originZ,
+      required double normalX,
+      required double normalY,
+      required double normalZ}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(originX, serializer);
+        sse_encode_f_32(originY, serializer);
+        sse_encode_f_32(originZ, serializer);
+        sse_encode_f_32(normalX, serializer);
+        sse_encode_f_32(normalY, serializer);
+        sse_encode_f_32(normalZ, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionAddSectionPlaneConstMeta,
+      argValues: [originX, originY, originZ, normalX, normalY, normalZ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionAddSectionPlaneConstMeta => const TaskConstMeta(
+        debugName: "add_section_plane",
+        argNames: ["originX", "originY", "originZ", "normalX", "normalY", "normalZ"],
+      );
+
+  @override
+  void crateApiCameraAnimateCameraTo(
+      {required double posX,
+      required double posY,
+      required double posZ,
+      required double targetX,
+      required double targetY,
+      required double targetZ,
+      required double duration}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(posX, serializer);
+        sse_encode_f_32(posY, serializer);
+        sse_encode_f_32(posZ, serializer);
+        sse_encode_f_32(targetX, serializer);
+        sse_encode_f_32(targetY, serializer);
+        sse_encode_f_32(targetZ, serializer);
+        sse_encode_f_32(duration, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraAnimateCameraToConstMeta,
+      argValues: [posX, posY, posZ, targetX, targetY, targetZ, duration],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraAnimateCameraToConstMeta => const TaskConstMeta(
+        debugName: "animate_camera_to",
+        argNames: ["posX", "posY", "posZ", "targetX", "targetY", "targetZ", "duration"],
+      );
+
+  @override
+  void crateApiSectionAnimateSectionPlane(
+      {required int axis, required double startPos, required double endPos, required double durationSecs}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(axis, serializer);
+        sse_encode_f_32(startPos, serializer);
+        sse_encode_f_32(endPos, serializer);
+        sse_encode_f_32(durationSecs, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionAnimateSectionPlaneConstMeta,
+      argValues: [axis, startPos, endPos, durationSecs],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionAnimateSectionPlaneConstMeta => const TaskConstMeta(
+        debugName: "animate_section_plane",
+        argNames: ["axis", "startPos", "endPos", "durationSecs"],
+      );
+
+  @override
+  BigInt crateApiSelectionApplySmartGroup({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionApplySmartGroupConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionApplySmartGroupConstMeta => const TaskConstMeta(
+        debugName: "apply_smart_group",
+        argNames: ["name"],
+      );
+
+  @override
+  void crateApiExportApplyViewpointShareData({required String json}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(json, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportApplyViewpointShareDataConstMeta,
+      argValues: [json],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportApplyViewpointShareDataConstMeta => const TaskConstMeta(
+        debugName: "apply_viewpoint_share_data",
+        argNames: ["json"],
+      );
+
+  @override
+  String crateApiBcfBuildCreateCommentRequest({required String topicGuid, required String comment}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(comment, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildCreateCommentRequestConstMeta,
+      argValues: [topicGuid, comment],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildCreateCommentRequestConstMeta => const TaskConstMeta(
+        debugName: "build_create_comment_request",
+        argNames: ["topicGuid", "comment"],
+      );
+
+  @override
+  String crateApiBcfBuildCreateTopicRequest(
+      {required String title,
+      required String description,
+      required String topicType,
+      required String priority,
+      required String status}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(title, serializer);
+        sse_encode_String(description, serializer);
+        sse_encode_String(topicType, serializer);
+        sse_encode_String(priority, serializer);
+        sse_encode_String(status, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildCreateTopicRequestConstMeta,
+      argValues: [title, description, topicType, priority, status],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildCreateTopicRequestConstMeta => const TaskConstMeta(
+        debugName: "build_create_topic_request",
+        argNames: ["title", "description", "topicType", "priority", "status"],
+      );
+
+  @override
+  String crateApiBcfBuildCreateViewpointRequest({required String topicGuid, required String viewpointJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(viewpointJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildCreateViewpointRequestConstMeta,
+      argValues: [topicGuid, viewpointJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildCreateViewpointRequestConstMeta => const TaskConstMeta(
+        debugName: "build_create_viewpoint_request",
+        argNames: ["topicGuid", "viewpointJson"],
+      );
+
+  @override
+  String crateApiBcfBuildGetTopicRequest({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildGetTopicRequestConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildGetTopicRequestConstMeta => const TaskConstMeta(
+        debugName: "build_get_topic_request",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  String crateApiBcfBuildListCommentsRequest({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildListCommentsRequestConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildListCommentsRequestConstMeta => const TaskConstMeta(
+        debugName: "build_list_comments_request",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  String crateApiBcfBuildListTopicsRequest() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildListTopicsRequestConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildListTopicsRequestConstMeta => const TaskConstMeta(
+        debugName: "build_list_topics_request",
+        argNames: [],
+      );
+
+  @override
+  String crateApiBcfBuildListViewpointsRequest({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildListViewpointsRequestConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildListViewpointsRequestConstMeta => const TaskConstMeta(
+        debugName: "build_list_viewpoints_request",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  String crateApiBcfBuildUpdateTopicRequest({required String topicGuid, required String updatesJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(updatesJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfBuildUpdateTopicRequestConstMeta,
+      argValues: [topicGuid, updatesJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfBuildUpdateTopicRequestConstMeta => const TaskConstMeta(
+        debugName: "build_update_topic_request",
+        argNames: ["topicGuid", "updatesJson"],
+      );
+
+  @override
+  void crateApiModelsCancelLoading({required String loadingId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(loadingId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsCancelLoadingConstMeta,
+      argValues: [loadingId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsCancelLoadingConstMeta => const TaskConstMeta(
+        debugName: "cancel_loading",
+        argNames: ["loadingId"],
+      );
+
+  @override
   void crateApiModelsClearAllModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -333,11 +1329,121 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSectionClearAllSectionPlanes() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionClearAllSectionPlanesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionClearAllSectionPlanesConstMeta => const TaskConstMeta(
+        debugName: "clear_all_section_planes",
+        argNames: [],
+      );
+
+  @override
+  void crateApiBcfClearBcfAuthToken() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiBcfClearBcfAuthTokenConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfClearBcfAuthTokenConstMeta => const TaskConstMeta(
+        debugName: "clear_bcf_auth_token",
+        argNames: [],
+      );
+
+  @override
+  void crateApiBcfClearBcfProject() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfClearBcfProjectConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfClearBcfProjectConstMeta => const TaskConstMeta(
+        debugName: "clear_bcf_project",
+        argNames: [],
+      );
+
+  @override
+  void crateApiClashClearClashResults() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashClearClashResultsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashClearClashResultsConstMeta => const TaskConstMeta(
+        debugName: "clear_clash_results",
+        argNames: [],
+      );
+
+  @override
+  void crateApiComparisonClearComparisonOverlay() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonClearComparisonOverlayConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonClearComparisonOverlayConstMeta => const TaskConstMeta(
+        debugName: "clear_comparison_overlay",
+        argNames: [],
+      );
+
+  @override
   void crateApiMeasurementClearMeasurement() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -355,11 +1461,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSectionClearSectionBox() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionClearSectionBoxConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionClearSectionBoxConstMeta => const TaskConstMeta(
+        debugName: "clear_section_box",
+        argNames: [],
+      );
+
+  @override
   void crateApiSectionClearSectionPlane() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -377,11 +1505,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSelectionClearSelection() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionClearSelectionConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionClearSelectionConstMeta => const TaskConstMeta(
+        debugName: "clear_selection",
+        argNames: [],
+      );
+
+  @override
   void crateApiLightingColorByType() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -403,7 +1553,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_color_mode,
@@ -421,12 +1571,776 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiSystemCompactMemory() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemCompactMemoryConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemCompactMemoryConstMeta => const TaskConstMeta(
+        debugName: "compact_memory",
+        argNames: [],
+      );
+
+  @override
+  ComparisonResult crateApiComparisonCompareModels({required String modelAId, required String modelBId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelAId, serializer);
+        sse_encode_String(modelBId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_comparison_result,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonCompareModelsConstMeta,
+      argValues: [modelAId, modelBId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonCompareModelsConstMeta => const TaskConstMeta(
+        debugName: "compare_models",
+        argNames: ["modelAId", "modelBId"],
+      );
+
+  @override
+  double crateApiOverlayComputeAreaFromPoints({required String pointsJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(pointsJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_f_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayComputeAreaFromPointsConstMeta,
+      argValues: [pointsJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayComputeAreaFromPointsConstMeta => const TaskConstMeta(
+        debugName: "compute_area_from_points",
+        argNames: ["pointsJson"],
+      );
+
+  @override
+  double crateApiOverlayComputeDistance(
+      {required double x1,
+      required double y1,
+      required double z1,
+      required double x2,
+      required double y2,
+      required double z2}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(x1, serializer);
+        sse_encode_f_32(y1, serializer);
+        sse_encode_f_32(z1, serializer);
+        sse_encode_f_32(x2, serializer);
+        sse_encode_f_32(y2, serializer);
+        sse_encode_f_32(z2, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_f_32,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayComputeDistanceConstMeta,
+      argValues: [x1, y1, z1, x2, y2, z2],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayComputeDistanceConstMeta => const TaskConstMeta(
+        debugName: "compute_distance",
+        argNames: ["x1", "y1", "z1", "x2", "y2", "z2"],
+      );
+
+  @override
+  void crateApiBcfConfigureBcfServer({required String serverUrl, required String apiVersion}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(serverUrl, serializer);
+        sse_encode_String(apiVersion, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfConfigureBcfServerConstMeta,
+      argValues: [serverUrl, apiVersion],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfConfigureBcfServerConstMeta => const TaskConstMeta(
+        debugName: "configure_bcf_server",
+        argNames: ["serverUrl", "apiVersion"],
+      );
+
+  @override
+  double crateApiPropertiesConvertArea({required double value}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_64(value, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_f_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesConvertAreaConstMeta,
+      argValues: [value],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesConvertAreaConstMeta => const TaskConstMeta(
+        debugName: "convert_area",
+        argNames: ["value"],
+      );
+
+  @override
+  double crateApiPropertiesConvertLength({required double value}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_64(value, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_f_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesConvertLengthConstMeta,
+      argValues: [value],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesConvertLengthConstMeta => const TaskConstMeta(
+        debugName: "convert_length",
+        argNames: ["value"],
+      );
+
+  @override
+  double crateApiPropertiesConvertVolume({required double value}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_64(value, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_f_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesConvertVolumeConstMeta,
+      argValues: [value],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesConvertVolumeConstMeta => const TaskConstMeta(
+        debugName: "convert_volume",
+        argNames: ["value"],
+      );
+
+  @override
+  String crateApiOverlayCreateAnnotationSet({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 42)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayCreateAnnotationSetConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayCreateAnnotationSetConstMeta => const TaskConstMeta(
+        debugName: "create_annotation_set",
+        argNames: ["name"],
+      );
+
+  @override
+  String crateApiBcfCreateBcfProject({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 43)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiBcfCreateBcfProjectConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfCreateBcfProjectConstMeta => const TaskConstMeta(
+        debugName: "create_bcf_project",
+        argNames: ["name"],
+      );
+
+  @override
+  String crateApiBcfCreateBcfTopic({required String title, required String description, required String topicType}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(title, serializer);
+        sse_encode_String(description, serializer);
+        sse_encode_String(topicType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 44)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfCreateBcfTopicConstMeta,
+      argValues: [title, description, topicType],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfCreateBcfTopicConstMeta => const TaskConstMeta(
+        debugName: "create_bcf_topic",
+        argNames: ["title", "description", "topicType"],
+      );
+
+  @override
+  void crateApiSelectionCreateSmartGroup({required String name, required String criteriaJson, required bool matchAll}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        sse_encode_String(criteriaJson, serializer);
+        sse_encode_bool(matchAll, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionCreateSmartGroupConstMeta,
+      argValues: [name, criteriaJson, matchAll],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionCreateSmartGroupConstMeta => const TaskConstMeta(
+        debugName: "create_smart_group",
+        argNames: ["name", "criteriaJson", "matchAll"],
+      );
+
+  @override
+  String crateApiBcfCreateViewpointFromCurrent({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfCreateViewpointFromCurrentConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfCreateViewpointFromCurrentConstMeta => const TaskConstMeta(
+        debugName: "create_viewpoint_from_current",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  void crateApiOverlayDeleteAnnotationSet({required String setId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(setId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayDeleteAnnotationSetConstMeta,
+      argValues: [setId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayDeleteAnnotationSetConstMeta => const TaskConstMeta(
+        debugName: "delete_annotation_set",
+        argNames: ["setId"],
+      );
+
+  @override
+  void crateApiSelectionDeleteSelectionSet({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionDeleteSelectionSetConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionDeleteSelectionSetConstMeta => const TaskConstMeta(
+        debugName: "delete_selection_set",
+        argNames: ["name"],
+      );
+
+  @override
+  void crateApiSelectionDeleteSmartGroup({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionDeleteSmartGroupConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionDeleteSmartGroupConstMeta => const TaskConstMeta(
+        debugName: "delete_smart_group",
+        argNames: ["name"],
+      );
+
+  @override
+  void crateApiBcfDeleteTopic({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfDeleteTopicConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfDeleteTopicConstMeta => const TaskConstMeta(
+        debugName: "delete_topic",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  void crateApiCameraDeleteViewpoint({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraDeleteViewpointConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraDeleteViewpointConstMeta => const TaskConstMeta(
+        debugName: "delete_viewpoint",
+        argNames: ["name"],
+      );
+
+  @override
+  void crateApiSelectionDeselectElement({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionDeselectElementConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionDeselectElementConstMeta => const TaskConstMeta(
+        debugName: "deselect_element",
+        argNames: ["elementId"],
+      );
+
+  @override
+  String crateApiModelsDetectFileSchema({required String fileContent}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(fileContent, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiModelsDetectFileSchemaConstMeta,
+      argValues: [fileContent],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsDetectFileSchemaConstMeta => const TaskConstMeta(
+        debugName: "detect_file_schema",
+        argNames: ["fileContent"],
+      );
+
+  @override
+  String crateApiPropertiesDetectIfcUnits() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiPropertiesDetectIfcUnitsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesDetectIfcUnitsConstMeta => const TaskConstMeta(
+        debugName: "detect_ifc_units",
+        argNames: [],
+      );
+
+  @override
+  String crateApiBcfExportBcfJsonString() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfExportBcfJsonStringConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfExportBcfJsonStringConstMeta => const TaskConstMeta(
+        debugName: "export_bcf_json_string",
+        argNames: [],
+      );
+
+  @override
+  Uint8List crateApiBcfExportBcfToBytes() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfExportBcfToBytesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfExportBcfToBytesConstMeta => const TaskConstMeta(
+        debugName: "export_bcf_to_bytes",
+        argNames: [],
+      );
+
+  @override
+  String crateApiClashExportClashCsv() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashExportClashCsvConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashExportClashCsvConstMeta => const TaskConstMeta(
+        debugName: "export_clash_csv",
+        argNames: [],
+      );
+
+  @override
+  String crateApiClashExportClashHtml() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashExportClashHtmlConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashExportClashHtmlConstMeta => const TaskConstMeta(
+        debugName: "export_clash_html",
+        argNames: [],
+      );
+
+  @override
+  String crateApiComparisonExportComparisonCsv({required String modelAId, required String modelBId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelAId, serializer);
+        sse_encode_String(modelBId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonExportComparisonCsvConstMeta,
+      argValues: [modelAId, modelBId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonExportComparisonCsvConstMeta => const TaskConstMeta(
+        debugName: "export_comparison_csv",
+        argNames: ["modelAId", "modelBId"],
+      );
+
+  @override
+  String crateApiExportExportElementSummaryCsv() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportElementSummaryCsvConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportElementSummaryCsvConstMeta => const TaskConstMeta(
+        debugName: "export_element_summary_csv",
+        argNames: [],
+      );
+
+  @override
+  String crateApiExportExportGltfJson() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportGltfJsonConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportGltfJsonConstMeta => const TaskConstMeta(
+        debugName: "export_gltf_json",
+        argNames: [],
+      );
+
+  @override
+  String crateApiExportExportHtmlReport() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportHtmlReportConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportHtmlReportConstMeta => const TaskConstMeta(
+        debugName: "export_html_report",
+        argNames: [],
+      );
+
+  @override
+  String crateApiOverlayExportMarkupJson() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayExportMarkupJsonConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayExportMarkupJsonConstMeta => const TaskConstMeta(
+        debugName: "export_markup_json",
+        argNames: [],
+      );
+
+  @override
+  String crateApiExportExportModelInfoJson() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportModelInfoJsonConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportModelInfoJsonConstMeta => const TaskConstMeta(
+        debugName: "export_model_info_json",
+        argNames: [],
+      );
+
+  @override
+  String crateApiExportExportPropertiesCsv() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportPropertiesCsvConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportPropertiesCsvConstMeta => const TaskConstMeta(
+        debugName: "export_properties_csv",
+        argNames: [],
+      );
+
+  @override
+  String crateApiExportExportQuantityReportCsv() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportQuantityReportCsvConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportQuantityReportCsvConstMeta => const TaskConstMeta(
+        debugName: "export_quantity_report_csv",
+        argNames: [],
+      );
+
+  @override
   Future<void> crateApiExportExportScreenshot({required String path}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(path, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -444,11 +2358,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  List<ElementInfo> crateApiSelectionFilterElementsByType({required String elementType}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(elementType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_element_info,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionFilterElementsByTypeConstMeta,
+      argValues: [elementType],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionFilterElementsByTypeConstMeta => const TaskConstMeta(
+        debugName: "filter_elements_by_type",
+        argNames: ["elementType"],
+      );
+
+  @override
   void crateApiCameraFitCameraToAllModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -466,11 +2403,80 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraFitCameraToElement({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraFitCameraToElementConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraFitCameraToElementConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_element",
+        argNames: ["elementId"],
+      );
+
+  @override
+  void crateApiCameraFitCameraToElementType({required String elementType}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(elementType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraFitCameraToElementTypeConstMeta,
+      argValues: [elementType],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraFitCameraToElementTypeConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_element_type",
+        argNames: ["elementType"],
+      );
+
+  @override
+  void crateApiCameraFitCameraToElements({required List<int> elementIds}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_list_prim_i_32_loose(elementIds, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraFitCameraToElementsConstMeta,
+      argValues: [elementIds],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraFitCameraToElementsConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_elements",
+        argNames: ["elementIds"],
+      );
+
+  @override
   void crateApiCameraFitCameraToModel() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -488,11 +2494,102 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraFitCameraToSelected() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraFitCameraToSelectedConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraFitCameraToSelectedConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_selected",
+        argNames: [],
+      );
+
+  @override
+  void crateApiCameraFitCameraToStorey({required String storeyName}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(storeyName, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 75)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraFitCameraToStoreyConstMeta,
+      argValues: [storeyName],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraFitCameraToStoreyConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_storey",
+        argNames: ["storeyName"],
+      );
+
+  @override
+  String? crateApiOverlayGetActiveAnnotationSet() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 76)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_opt_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayGetActiveAnnotationSetConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayGetActiveAnnotationSetConstMeta => const TaskConstMeta(
+        debugName: "get_active_annotation_set",
+        argNames: [],
+      );
+
+  @override
+  Int32List crateApiComparisonGetAddedElementIds({required String modelAId, required String modelBId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelAId, serializer);
+        sse_encode_String(modelBId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 77)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_i_32_strict,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonGetAddedElementIdsConstMeta,
+      argValues: [modelAId, modelBId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonGetAddedElementIdsConstMeta => const TaskConstMeta(
+        debugName: "get_added_element_ids",
+        argNames: ["modelAId", "modelBId"],
+      );
+
+  @override
   List<ElementInfo> crateApiSelectionGetAllElements() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 78)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_element_info,
@@ -514,7 +2611,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 79)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_element_info,
@@ -532,11 +2629,210 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  List<BcfTopicSummary> crateApiBcfGetAllTopics() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_bcf_topic_summary,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiBcfGetAllTopicsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfGetAllTopicsConstMeta => const TaskConstMeta(
+        debugName: "get_all_topics",
+        argNames: [],
+      );
+
+  @override
+  String crateApiOverlayGetAnnotationsJson() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayGetAnnotationsJsonConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayGetAnnotationsJsonConstMeta => const TaskConstMeta(
+        debugName: "get_annotations_json",
+        argNames: [],
+      );
+
+  @override
+  String crateApiPropertiesGetAreaUnitLabel() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetAreaUnitLabelConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetAreaUnitLabelConstMeta => const TaskConstMeta(
+        debugName: "get_area_unit_label",
+        argNames: [],
+      );
+
+  @override
+  String crateApiBcfGetBcfConfig() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiBcfGetBcfConfigConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfGetBcfConfigConstMeta => const TaskConstMeta(
+        debugName: "get_bcf_config",
+        argNames: [],
+      );
+
+  @override
+  (double, double, double) crateApiCameraGetCameraPosition() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_record_f_32_f_32_f_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraGetCameraPositionConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraGetCameraPositionConstMeta => const TaskConstMeta(
+        debugName: "get_camera_position",
+        argNames: [],
+      );
+
+  @override
+  (double, double, double) crateApiCameraGetCameraTarget() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_record_f_32_f_32_f_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraGetCameraTargetConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraGetCameraTargetConstMeta => const TaskConstMeta(
+        debugName: "get_camera_target",
+        argNames: [],
+      );
+
+  @override
+  int crateApiClashGetClashCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiClashGetClashCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashGetClashCountConstMeta => const TaskConstMeta(
+        debugName: "get_clash_count",
+        argNames: [],
+      );
+
+  @override
+  List<ClashInfo> crateApiClashGetClashResults() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 87)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_clash_info,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiClashGetClashResultsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashGetClashResultsConstMeta => const TaskConstMeta(
+        debugName: "get_clash_results",
+        argNames: [],
+      );
+
+  @override
+  List<ClashInfo> crateApiClashGetClashesByGroup({required String groupName}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(groupName, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 88)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_clash_info,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiClashGetClashesByGroupConstMeta,
+      argValues: [groupName],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashGetClashesByGroupConstMeta => const TaskConstMeta(
+        debugName: "get_clashes_by_group",
+        argNames: ["groupName"],
+      );
+
+  @override
   int crateApiSelectionGetColorMode() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 89)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_i_32,
@@ -554,11 +2850,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiComparisonGetComparisonElementStatus({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 90)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiComparisonGetComparisonElementStatusConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonGetComparisonElementStatusConstMeta => const TaskConstMeta(
+        debugName: "get_comparison_element_status",
+        argNames: ["elementId"],
+      );
+
+  @override
+  String crateApiComparisonGetComparisonOverlayColors() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 91)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonGetComparisonOverlayColorsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonGetComparisonOverlayColorsConstMeta => const TaskConstMeta(
+        debugName: "get_comparison_overlay_colors",
+        argNames: [],
+      );
+
+  @override
+  BigInt crateApiSystemGetCpuMemoryBytes() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 92)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_u_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetCpuMemoryBytesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetCpuMemoryBytesConstMeta => const TaskConstMeta(
+        debugName: "get_cpu_memory_bytes",
+        argNames: [],
+      );
+
+  @override
   Uint8List crateApiExportGetCurrentFrameRgba() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 93)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
@@ -576,11 +2939,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiSystemGetDiagnosticReport() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 94)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetDiagnosticReportConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetDiagnosticReportConstMeta => const TaskConstMeta(
+        debugName: "get_diagnostic_report",
+        argNames: [],
+      );
+
+  @override
   Map<String, BigInt> crateApiSelectionGetElementCounts() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 95)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_Map_String_usize_None,
@@ -603,7 +2988,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 96)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_box_autoadd_material_data,
@@ -626,7 +3011,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 97)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_property_set_info,
@@ -649,7 +3034,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 98)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_property_set_info,
@@ -672,7 +3057,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 99)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_String,
@@ -695,7 +3080,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 100)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_box_autoadd_type_object_data,
@@ -717,7 +3102,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 101)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_Map_String_list_prim_i_32_strict_None,
@@ -735,11 +3120,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Map<String, Int32List> crateApiPropertiesGetElementsGroupedByType() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 102)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_Map_String_list_prim_i_32_strict_None,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiPropertiesGetElementsGroupedByTypeConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetElementsGroupedByTypeConstMeta => const TaskConstMeta(
+        debugName: "get_elements_grouped_by_type",
+        argNames: [],
+      );
+
+  @override
+  BigInt crateApiSystemGetFrameCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 103)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_u_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetFrameCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetFrameCountConstMeta => const TaskConstMeta(
+        debugName: "get_frame_count",
+        argNames: [],
+      );
+
+  @override
   GeoReference? crateApiSelectionGetGeoReference() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 104)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_box_autoadd_geo_reference,
@@ -757,11 +3186,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  BigInt crateApiSystemGetGpuMemoryBytes() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 105)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_u_64,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetGpuMemoryBytesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetGpuMemoryBytesConstMeta => const TaskConstMeta(
+        debugName: "get_gpu_memory_bytes",
+        argNames: [],
+      );
+
+  @override
   BigInt crateApiSelectionGetGridLineCount() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 106)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_usize,
@@ -783,7 +3234,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 107)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_grid_line,
@@ -801,11 +3252,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  BigInt crateApiSelectionGetHiddenElementCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 108)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionGetHiddenElementCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetHiddenElementCountConstMeta => const TaskConstMeta(
+        debugName: "get_hidden_element_count",
+        argNames: [],
+      );
+
+  @override
   List<String> crateApiSelectionGetHiddenElementTypes() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 109)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_String,
@@ -827,7 +3300,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 110)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_String,
@@ -845,11 +3318,100 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiPropertiesGetLengthUnitLabel() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 111)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetLengthUnitLabelConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetLengthUnitLabelConstMeta => const TaskConstMeta(
+        debugName: "get_length_unit_label",
+        argNames: [],
+      );
+
+  @override
+  String crateApiSystemGetLoadingProgress() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 112)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetLoadingProgressConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetLoadingProgressConstMeta => const TaskConstMeta(
+        debugName: "get_loading_progress",
+        argNames: [],
+      );
+
+  @override
+  String crateApiModelsGetLoadingState({required String loadingId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(loadingId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 113)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiModelsGetLoadingStateConstMeta,
+      argValues: [loadingId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsGetLoadingStateConstMeta => const TaskConstMeta(
+        debugName: "get_loading_state",
+        argNames: ["loadingId"],
+      );
+
+  @override
+  String? crateApiPropertiesGetMapConversion() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 114)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_opt_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiPropertiesGetMapConversionConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetMapConversionConstMeta => const TaskConstMeta(
+        debugName: "get_map_conversion",
+        argNames: [],
+      );
+
+  @override
   int crateApiMeasurementGetMeasurementPointCount() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 115)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_i_32,
@@ -871,7 +3433,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 116)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_measurement_result,
@@ -889,11 +3451,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiSystemGetMemoryStats() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 117)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetMemoryStatsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetMemoryStatsConstMeta => const TaskConstMeta(
+        debugName: "get_memory_stats",
+        argNames: [],
+      );
+
+  @override
+  String crateApiSystemGetMemorySummary() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 118)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetMemorySummaryConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetMemorySummaryConstMeta => const TaskConstMeta(
+        debugName: "get_memory_summary",
+        argNames: [],
+      );
+
+  @override
   BigInt crateApiModelsGetModelCount() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 119)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_usize,
@@ -915,7 +3521,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 120)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_model_info,
@@ -933,11 +3539,103 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Int32List crateApiComparisonGetModifiedElementIds({required String modelAId, required String modelBId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelAId, serializer);
+        sse_encode_String(modelBId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 121)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_i_32_strict,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonGetModifiedElementIdsConstMeta,
+      argValues: [modelAId, modelBId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonGetModifiedElementIdsConstMeta => const TaskConstMeta(
+        debugName: "get_modified_element_ids",
+        argNames: ["modelAId", "modelBId"],
+      );
+
+  @override
+  List<QuantitySummary> crateApiPropertiesGetQuantitySummaryByStorey() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 122)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_quantity_summary,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetQuantitySummaryByStoreyConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetQuantitySummaryByStoreyConstMeta => const TaskConstMeta(
+        debugName: "get_quantity_summary_by_storey",
+        argNames: [],
+      );
+
+  @override
+  List<QuantitySummary> crateApiPropertiesGetQuantitySummaryByType() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 123)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_quantity_summary,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetQuantitySummaryByTypeConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetQuantitySummaryByTypeConstMeta => const TaskConstMeta(
+        debugName: "get_quantity_summary_by_type",
+        argNames: [],
+      );
+
+  @override
+  Int32List crateApiComparisonGetRemovedElementIds({required String modelAId, required String modelBId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelAId, serializer);
+        sse_encode_String(modelBId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 124)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_i_32_strict,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonGetRemovedElementIdsConstMeta,
+      argValues: [modelAId, modelBId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonGetRemovedElementIdsConstMeta => const TaskConstMeta(
+        debugName: "get_removed_element_ids",
+        argNames: ["modelAId", "modelBId"],
+      );
+
+  @override
   int crateApiLightingGetRenderMode() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 125)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_i_32,
@@ -959,7 +3657,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 126)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_render_stats,
@@ -977,11 +3675,211 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiSystemGetRendererCapabilities() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 127)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemGetRendererCapabilitiesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemGetRendererCapabilitiesConstMeta => const TaskConstMeta(
+        debugName: "get_renderer_capabilities",
+        argNames: [],
+      );
+
+  @override
+  (Uint8List, String) crateApiExportGetScreenshotWithInfo() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 128)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_record_list_prim_u_8_strict_string,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportGetScreenshotWithInfoConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportGetScreenshotWithInfoConstMeta => const TaskConstMeta(
+        debugName: "get_screenshot_with_info",
+        argNames: [],
+      );
+
+  @override
+  int crateApiSectionGetSectionPlaneCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 129)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSectionGetSectionPlaneCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionGetSectionPlaneCountConstMeta => const TaskConstMeta(
+        debugName: "get_section_plane_count",
+        argNames: [],
+      );
+
+  @override
+  Int32List crateApiSelectionGetSelectedElements() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 130)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_i_32_strict,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionGetSelectedElementsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSelectedElementsConstMeta => const TaskConstMeta(
+        debugName: "get_selected_elements",
+        argNames: [],
+      );
+
+  @override
+  BigInt crateApiSelectionGetSelectionCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 131)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionGetSelectionCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSelectionCountConstMeta => const TaskConstMeta(
+        debugName: "get_selection_count",
+        argNames: [],
+      );
+
+  @override
+  List<String> crateApiSelectionGetSelectionSetNames() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 132)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionGetSelectionSetNamesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSelectionSetNamesConstMeta => const TaskConstMeta(
+        debugName: "get_selection_set_names",
+        argNames: [],
+      );
+
+  @override
+  String crateApiSelectionGetSmartGroupCriteriaJson({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 133)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionGetSmartGroupCriteriaJsonConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSmartGroupCriteriaJsonConstMeta => const TaskConstMeta(
+        debugName: "get_smart_group_criteria_json",
+        argNames: ["name"],
+      );
+
+  @override
+  BigInt crateApiSelectionGetSmartGroupElementCount({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 134)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionGetSmartGroupElementCountConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSmartGroupElementCountConstMeta => const TaskConstMeta(
+        debugName: "get_smart_group_element_count",
+        argNames: ["name"],
+      );
+
+  @override
+  List<String> crateApiSelectionGetSmartGroupNames() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 135)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionGetSmartGroupNamesConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionGetSmartGroupNamesConstMeta => const TaskConstMeta(
+        debugName: "get_smart_group_names",
+        argNames: [],
+      );
+
+  @override
   List<SpatialNode> crateApiPropertiesGetSpatialTree() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 136)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_spatial_node,
@@ -1003,7 +3901,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 137)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1021,11 +3919,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  int crateApiBcfGetTopicCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 138)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiBcfGetTopicCountConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfGetTopicCountConstMeta => const TaskConstMeta(
+        debugName: "get_topic_count",
+        argNames: [],
+      );
+
+  @override
+  BcfTopicDetail crateApiBcfGetTopicDetail({required String topicGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 139)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bcf_topic_detail,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfGetTopicDetailConstMeta,
+      argValues: [topicGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfGetTopicDetailConstMeta => const TaskConstMeta(
+        debugName: "get_topic_detail",
+        argNames: ["topicGuid"],
+      );
+
+  @override
+  int crateApiPropertiesGetUnitSystem() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 140)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetUnitSystemConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetUnitSystemConstMeta => const TaskConstMeta(
+        debugName: "get_unit_system",
+        argNames: [],
+      );
+
+  @override
   String crateApiSystemGetVersion() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 141)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1047,7 +4012,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 142)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1065,13 +4030,262 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiExportGetViewpointShareData() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 143)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportGetViewpointShareDataConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportGetViewpointShareDataConstMeta => const TaskConstMeta(
+        debugName: "get_viewpoint_share_data",
+        argNames: [],
+      );
+
+  @override
+  List<ViewpointData> crateApiCameraGetViewpoints() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 144)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_viewpoint_data,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraGetViewpointsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraGetViewpointsConstMeta => const TaskConstMeta(
+        debugName: "get_viewpoints",
+        argNames: [],
+      );
+
+  @override
+  String crateApiPropertiesGetVolumeUnitLabel() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 145)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiPropertiesGetVolumeUnitLabelConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesGetVolumeUnitLabelConstMeta => const TaskConstMeta(
+        debugName: "get_volume_unit_label",
+        argNames: [],
+      );
+
+  @override
+  void crateApiSelectionHideElement({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 146)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionHideElementConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionHideElementConstMeta => const TaskConstMeta(
+        debugName: "hide_element",
+        argNames: ["elementId"],
+      );
+
+  @override
+  int crateApiSelectionHideSelected() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 147)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionHideSelectedConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionHideSelectedConstMeta => const TaskConstMeta(
+        debugName: "hide_selected",
+        argNames: [],
+      );
+
+  @override
+  int crateApiBcfImportBcfFromBytes({required List<int> data}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_list_prim_u_8_loose(data, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 148)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfImportBcfFromBytesConstMeta,
+      argValues: [data],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfImportBcfFromBytesConstMeta => const TaskConstMeta(
+        debugName: "import_bcf_from_bytes",
+        argNames: ["data"],
+      );
+
+  @override
+  int crateApiBcfImportBcfJsonString({required String json}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(json, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 149)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfImportBcfJsonStringConstMeta,
+      argValues: [json],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfImportBcfJsonStringConstMeta => const TaskConstMeta(
+        debugName: "import_bcf_json_string",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsImportGlbFile({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 150, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsImportGlbFileConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsImportGlbFileConstMeta => const TaskConstMeta(
+        debugName: "import_glb_file",
+        argNames: ["filePath"],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsImportGltfFile({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 151, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsImportGltfFileConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsImportGltfFileConstMeta => const TaskConstMeta(
+        debugName: "import_gltf_file",
+        argNames: ["filePath"],
+      );
+
+  @override
+  void crateApiOverlayImportMarkupJson({required String json}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(json, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 152)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayImportMarkupJsonConstMeta,
+      argValues: [json],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayImportMarkupJsonConstMeta => const TaskConstMeta(
+        debugName: "import_markup_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsImportObjFile({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 153, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsImportObjFileConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsImportObjFileConstMeta => const TaskConstMeta(
+        debugName: "import_obj_file",
+        argNames: ["filePath"],
+      );
+
+  @override
   Future<String> crateApiRenderingInitRenderer({required int width, required int height}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_u_32(width, serializer);
         sse_encode_u_32(height, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 154, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1093,7 +4307,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 155)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1111,12 +4325,56 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiCameraIsCameraAnimating() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 156)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraIsCameraAnimatingConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraIsCameraAnimatingConstMeta => const TaskConstMeta(
+        debugName: "is_camera_animating",
+        argNames: [],
+      );
+
+  @override
+  bool crateApiComparisonIsComparisonOverlayActive() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 157)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiComparisonIsComparisonOverlayActiveConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonIsComparisonOverlayActiveConstMeta => const TaskConstMeta(
+        debugName: "is_comparison_overlay_active",
+        argNames: [],
+      );
+
+  @override
   bool crateApiSelectionIsElementTypeVisible({required String elementType}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(elementType, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 158)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1138,7 +4396,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 159)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1156,11 +4414,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiSystemIsLoading() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 160)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemIsLoadingConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemIsLoadingConstMeta => const TaskConstMeta(
+        debugName: "is_loading",
+        argNames: [],
+      );
+
+  @override
   bool crateApiModelsIsModelLoaded() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 161)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1178,11 +4458,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiCameraIsOrthographic() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 162)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraIsOrthographicConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraIsOrthographicConstMeta => const TaskConstMeta(
+        debugName: "is_orthographic",
+        argNames: [],
+      );
+
+  @override
   bool crateApiRenderingIsRendererInitialized() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 163)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1200,11 +4502,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiSectionIsSectionAnimating() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 164)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSectionIsSectionAnimatingConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionIsSectionAnimatingConstMeta => const TaskConstMeta(
+        debugName: "is_section_animating",
+        argNames: [],
+      );
+
+  @override
+  bool crateApiSectionIsSectionBoxActive() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 165)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSectionIsSectionBoxActiveConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionIsSectionBoxActiveConstMeta => const TaskConstMeta(
+        debugName: "is_section_box_active",
+        argNames: [],
+      );
+
+  @override
   bool crateApiSectionIsSectionPlaneActive() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 42)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 166)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1222,11 +4568,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiCameraIsTurntableMode() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 167)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraIsTurntableModeConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraIsTurntableModeConstMeta => const TaskConstMeta(
+        debugName: "is_turntable_mode",
+        argNames: [],
+      );
+
+  @override
+  bool crateApiCameraIsWalkthroughMode() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 168)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraIsWalkthroughModeConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraIsWalkthroughModeConstMeta => const TaskConstMeta(
+        debugName: "is_walkthrough_mode",
+        argNames: [],
+      );
+
+  @override
   bool crateApiLightingIsWireframeSupported() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 43)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 169)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -1244,12 +4634,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  int crateApiSelectionIsolateSelected() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 170)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionIsolateSelectedConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionIsolateSelectedConstMeta => const TaskConstMeta(
+        debugName: "isolate_selected",
+        argNames: [],
+      );
+
+  @override
   int crateApiSelectionIsolateStorey({required String storeyName}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(storeyName, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 44)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 171)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_i_32,
@@ -1267,11 +4679,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiOverlayListAnnotationSets() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 172)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiOverlayListAnnotationSetsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayListAnnotationSetsConstMeta => const TaskConstMeta(
+        debugName: "list_annotation_sets",
+        argNames: [],
+      );
+
+  @override
   List<RegisteredModelInfo> crateApiModelsListLoadedModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 173)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_registered_model_info,
@@ -1289,11 +4723,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiModelsListLoadingTasks() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 174)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiModelsListLoadingTasksConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsListLoadingTasksConstMeta => const TaskConstMeta(
+        debugName: "list_loading_tasks",
+        argNames: [],
+      );
+
+  @override
   String crateApiRenderingLoadAllModelsIntoRenderer() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 175)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1316,7 +4772,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(filePath, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 176, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_model_info,
@@ -1334,13 +4790,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String> crateApiModelsLoadIfcFileAsync({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 177, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsLoadIfcFileAsyncConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsLoadIfcFileAsyncConstMeta => const TaskConstMeta(
+        debugName: "load_ifc_file_async",
+        argNames: ["filePath"],
+      );
+
+  @override
   Future<ModelInfo> crateApiModelsLoadModel({required String modelId, required String filePath}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
         sse_encode_String(filePath, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 178, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_model_info,
@@ -1362,7 +4841,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 179)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1380,13 +4859,129 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraLookCamera({required double deltaX, required double deltaY}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(deltaX, serializer);
+        sse_encode_f_32(deltaY, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 180)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraLookCameraConstMeta,
+      argValues: [deltaX, deltaY],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraLookCameraConstMeta => const TaskConstMeta(
+        debugName: "look_camera",
+        argNames: ["deltaX", "deltaY"],
+      );
+
+  @override
+  Future<MemoryStats> crateApiSystemMemoryStatsDefault() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 181, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_memory_stats,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemMemoryStatsDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemMemoryStatsDefaultConstMeta => const TaskConstMeta(
+        debugName: "memory_stats_default",
+        argNames: [],
+      );
+
+  @override
+  void crateApiClashNavigateToClash({required int clashId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(clashId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 182)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashNavigateToClashConstMeta,
+      argValues: [clashId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashNavigateToClashConstMeta => const TaskConstMeta(
+        debugName: "navigate_to_clash",
+        argNames: ["clashId"],
+      );
+
+  @override
+  BigInt crateApiComparisonNavigateToComparisonGroup({required String status}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(status, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 183)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonNavigateToComparisonGroupConstMeta,
+      argValues: [status],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonNavigateToComparisonGroupConstMeta => const TaskConstMeta(
+        debugName: "navigate_to_comparison_group",
+        argNames: ["status"],
+      );
+
+  @override
+  void crateApiBcfNavigateToViewpoint({required String topicGuid, required String viewpointGuid}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(viewpointGuid, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 184)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfNavigateToViewpointConstMeta,
+      argValues: [topicGuid, viewpointGuid],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfNavigateToViewpointConstMeta => const TaskConstMeta(
+        debugName: "navigate_to_viewpoint",
+        argNames: ["topicGuid", "viewpointGuid"],
+      );
+
+  @override
   void crateApiCameraOrbitCamera({required double deltaX, required double deltaY}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(deltaX, serializer);
         sse_encode_f_32(deltaY, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 185)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1404,12 +4999,59 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraPanCamera({required double deltaX, required double deltaY}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(deltaX, serializer);
+        sse_encode_f_32(deltaY, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 186)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraPanCameraConstMeta,
+      argValues: [deltaX, deltaY],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraPanCameraConstMeta => const TaskConstMeta(
+        debugName: "pan_camera",
+        argNames: ["deltaX", "deltaY"],
+      );
+
+  @override
+  String crateApiBcfParseCommentsResponse({required String responseJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(responseJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 187)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfParseCommentsResponseConstMeta,
+      argValues: [responseJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfParseCommentsResponseConstMeta => const TaskConstMeta(
+        debugName: "parse_comments_response",
+        argNames: ["responseJson"],
+      );
+
+  @override
   Future<ModelInfo> crateApiModelsParseIfcContent({required String content}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(content, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 188, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_model_info,
@@ -1427,13 +5069,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiBcfParseTopicsResponse({required String responseJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(responseJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 189)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfParseTopicsResponseConstMeta,
+      argValues: [responseJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfParseTopicsResponseConstMeta => const TaskConstMeta(
+        debugName: "parse_topics_response",
+        argNames: ["responseJson"],
+      );
+
+  @override
+  Future<PerfCounters> crateApiSystemPerfCountersDefault() {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 190, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_perf_counters,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemPerfCountersDefaultConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemPerfCountersDefaultConstMeta => const TaskConstMeta(
+        debugName: "perf_counters_default",
+        argNames: [],
+      );
+
+  @override
   ElementInfo? crateApiSelectionPickElement({required double screenX, required double screenY}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(screenX, serializer);
         sse_encode_f_32(screenY, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 191)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_opt_box_autoadd_element_info,
@@ -1451,11 +5138,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  String crateApiBcfPrepareTopicsForUpload() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 192)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfPrepareTopicsForUploadConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfPrepareTopicsForUploadConstMeta => const TaskConstMeta(
+        debugName: "prepare_topics_for_upload",
+        argNames: [],
+      );
+
+  @override
   String crateApiRenderingReloadAllModelsMesh() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 193)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1477,7 +5186,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 194)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -1495,12 +5204,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiOverlayRemoveAnnotation({required String annotationId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(annotationId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 195)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayRemoveAnnotationConstMeta,
+      argValues: [annotationId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayRemoveAnnotationConstMeta => const TaskConstMeta(
+        debugName: "remove_annotation",
+        argNames: ["annotationId"],
+      );
+
+  @override
   void crateApiOverlayRemoveOverlay({required String id}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(id, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 196)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1518,11 +5250,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSectionRemoveSectionPlaneAt({required int index}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(index, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 197)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionRemoveSectionPlaneAtConstMeta,
+      argValues: [index],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionRemoveSectionPlaneAtConstMeta => const TaskConstMeta(
+        debugName: "remove_section_plane_at",
+        argNames: ["index"],
+      );
+
+  @override
   Uint8List crateApiRenderingRenderFrame() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 198)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
@@ -1544,7 +5299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 199)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1562,6 +5317,340 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSystemResetPerformanceCounters() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 200)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemResetPerformanceCountersConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSystemResetPerformanceCountersConstMeta => const TaskConstMeta(
+        debugName: "reset_performance_counters",
+        argNames: [],
+      );
+
+  @override
+  BigInt crateApiSelectionRestoreSelectionSet({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 201)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionRestoreSelectionSetConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionRestoreSelectionSetConstMeta => const TaskConstMeta(
+        debugName: "restore_selection_set",
+        argNames: ["name"],
+      );
+
+  @override
+  void crateApiCameraRestoreViewpoint({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 202)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraRestoreViewpointConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraRestoreViewpointConstMeta => const TaskConstMeta(
+        debugName: "restore_viewpoint",
+        argNames: ["name"],
+      );
+
+  @override
+  ClashSummary crateApiClashRunClashDetection(
+      {required double hardTolerance,
+      required double softTolerance,
+      required double clearanceTolerance,
+      required bool checkSameType}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(hardTolerance, serializer);
+        sse_encode_f_32(softTolerance, serializer);
+        sse_encode_f_32(clearanceTolerance, serializer);
+        sse_encode_bool(checkSameType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 203)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_clash_summary,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashRunClashDetectionConstMeta,
+      argValues: [hardTolerance, softTolerance, clearanceTolerance, checkSameType],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashRunClashDetectionConstMeta => const TaskConstMeta(
+        debugName: "run_clash_detection",
+        argNames: ["hardTolerance", "softTolerance", "clearanceTolerance", "checkSameType"],
+      );
+
+  @override
+  ClashSummary crateApiClashRunClashDetectionFiltered(
+      {required String typeA, required String typeB, required double tolerance}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(typeA, serializer);
+        sse_encode_String(typeB, serializer);
+        sse_encode_f_32(tolerance, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 204)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_clash_summary,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiClashRunClashDetectionFilteredConstMeta,
+      argValues: [typeA, typeB, tolerance],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiClashRunClashDetectionFilteredConstMeta => const TaskConstMeta(
+        debugName: "run_clash_detection_filtered",
+        argNames: ["typeA", "typeB", "tolerance"],
+      );
+
+  @override
+  BigInt crateApiSelectionSaveSelectionSet({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 205)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionSaveSelectionSetConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSaveSelectionSetConstMeta => const TaskConstMeta(
+        debugName: "save_selection_set",
+        argNames: ["name"],
+      );
+
+  @override
+  ViewpointData crateApiCameraSaveViewpoint({required String name}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(name, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 206)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_viewpoint_data,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSaveViewpointConstMeta,
+      argValues: [name],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSaveViewpointConstMeta => const TaskConstMeta(
+        debugName: "save_viewpoint",
+        argNames: ["name"],
+      );
+
+  @override
+  BigInt crateApiSelectionSearchAndSelect({required String query}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(query, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 207)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionSearchAndSelectConstMeta,
+      argValues: [query],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSearchAndSelectConstMeta => const TaskConstMeta(
+        debugName: "search_and_select",
+        argNames: ["query"],
+      );
+
+  @override
+  List<ElementInfo> crateApiSelectionSearchElements({required String query}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(query, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 208)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_element_info,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionSearchElementsConstMeta,
+      argValues: [query],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSearchElementsConstMeta => const TaskConstMeta(
+        debugName: "search_elements",
+        argNames: ["query"],
+      );
+
+  @override
+  List<ElementInfo> crateApiSelectionSearchElementsByProperty(
+      {required String propertyName, required String propertyValue}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(propertyName, serializer);
+        sse_encode_String(propertyValue, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 209)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_element_info,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionSearchElementsByPropertyConstMeta,
+      argValues: [propertyName, propertyValue],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSearchElementsByPropertyConstMeta => const TaskConstMeta(
+        debugName: "search_elements_by_property",
+        argNames: ["propertyName", "propertyValue"],
+      );
+
+  @override
+  BigInt crateApiSelectionSelectByProperty({required String propertyName, required String propertyValue}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(propertyName, serializer);
+        sse_encode_String(propertyValue, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 210)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionSelectByPropertyConstMeta,
+      argValues: [propertyName, propertyValue],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSelectByPropertyConstMeta => const TaskConstMeta(
+        debugName: "select_by_property",
+        argNames: ["propertyName", "propertyValue"],
+      );
+
+  @override
+  BigInt crateApiSelectionSelectBySearch({required String query}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(query, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 211)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionSelectBySearchConstMeta,
+      argValues: [query],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSelectBySearchConstMeta => const TaskConstMeta(
+        debugName: "select_by_search",
+        argNames: ["query"],
+      );
+
+  @override
+  void crateApiSelectionSelectElement({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 212)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionSelectElementConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSelectElementConstMeta => const TaskConstMeta(
+        debugName: "select_element",
+        argNames: ["elementId"],
+      );
+
+  @override
+  void crateApiOverlaySetActiveAnnotationSet({required String setId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(setId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 213)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlaySetActiveAnnotationSetConstMeta,
+      argValues: [setId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlaySetActiveAnnotationSetConstMeta => const TaskConstMeta(
+        debugName: "set_active_annotation_set",
+        argNames: ["setId"],
+      );
+
+  @override
   void crateApiLightingSetAmbientColor({required double r, required double g, required double b}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
@@ -1569,7 +5658,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(r, serializer);
         sse_encode_f_32(g, serializer);
         sse_encode_f_32(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 214)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1587,12 +5676,132 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiOverlaySetAnnotationSetVisible({required String setId, required bool visible}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(setId, serializer);
+        sse_encode_bool(visible, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 215)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlaySetAnnotationSetVisibleConstMeta,
+      argValues: [setId, visible],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlaySetAnnotationSetVisibleConstMeta => const TaskConstMeta(
+        debugName: "set_annotation_set_visible",
+        argNames: ["setId", "visible"],
+      );
+
+  @override
+  void crateApiBcfSetBcfAuthToken({required String token}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(token, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 216)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSetBcfAuthTokenConstMeta,
+      argValues: [token],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSetBcfAuthTokenConstMeta => const TaskConstMeta(
+        debugName: "set_bcf_auth_token",
+        argNames: ["token"],
+      );
+
+  @override
+  void crateApiBcfSetBcfProject({required String projectId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(projectId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 217)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSetBcfProjectConstMeta,
+      argValues: [projectId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSetBcfProjectConstMeta => const TaskConstMeta(
+        debugName: "set_bcf_project",
+        argNames: ["projectId"],
+      );
+
+  @override
+  void crateApiCameraSetCameraPosition({required double x, required double y, required double z}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(x, serializer);
+        sse_encode_f_32(y, serializer);
+        sse_encode_f_32(z, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 218)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSetCameraPositionConstMeta,
+      argValues: [x, y, z],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSetCameraPositionConstMeta => const TaskConstMeta(
+        debugName: "set_camera_position",
+        argNames: ["x", "y", "z"],
+      );
+
+  @override
+  void crateApiCameraSetCameraTarget({required double x, required double y, required double z}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(x, serializer);
+        sse_encode_f_32(y, serializer);
+        sse_encode_f_32(z, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 219)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSetCameraTargetConstMeta,
+      argValues: [x, y, z],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSetCameraTargetConstMeta => const TaskConstMeta(
+        debugName: "set_camera_target",
+        argNames: ["x", "y", "z"],
+      );
+
+  @override
   void crateApiSelectionSetColorMode({required int mode}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(mode, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 220)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1610,6 +5819,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSelectionSetColorProperty({required String propertyName}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(propertyName, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 221)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionSetColorPropertyConstMeta,
+      argValues: [propertyName],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSetColorPropertyConstMeta => const TaskConstMeta(
+        debugName: "set_color_property",
+        argNames: ["propertyName"],
+      );
+
+  @override
+  String crateApiComparisonSetComparisonOverlay({required String modelIdA, required String modelIdB}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelIdA, serializer);
+        sse_encode_String(modelIdB, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 222)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiComparisonSetComparisonOverlayConstMeta,
+      argValues: [modelIdA, modelIdB],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiComparisonSetComparisonOverlayConstMeta => const TaskConstMeta(
+        debugName: "set_comparison_overlay",
+        argNames: ["modelIdA", "modelIdB"],
+      );
+
+  @override
   void crateApiLightingSetElementColor({required int elementId, required int r, required int g, required int b}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
@@ -1618,7 +5874,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_8(r, serializer);
         sse_encode_u_8(g, serializer);
         sse_encode_u_8(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 223)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1642,7 +5898,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(elementType, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 224)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1665,7 +5921,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 225)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1690,7 +5946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(r, serializer);
         sse_encode_f_32(g, serializer);
         sse_encode_f_32(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 226)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1715,7 +5971,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(x, serializer);
         sse_encode_f_32(y, serializer);
         sse_encode_f_32(z, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 227)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1738,7 +5994,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(intensity, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 228)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1762,7 +6018,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 229)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1780,13 +6036,59 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSectionSetMultipleSectionPlanes({required String planesJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(planesJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 230)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionSetMultipleSectionPlanesConstMeta,
+      argValues: [planesJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionSetMultipleSectionPlanesConstMeta => const TaskConstMeta(
+        debugName: "set_multiple_section_planes",
+        argNames: ["planesJson"],
+      );
+
+  @override
+  void crateApiCameraSetOrthographic({required bool enabled}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_bool(enabled, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 231)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSetOrthographicConstMeta,
+      argValues: [enabled],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSetOrthographicConstMeta => const TaskConstMeta(
+        debugName: "set_orthographic",
+        argNames: ["enabled"],
+      );
+
+  @override
   void crateApiOverlaySetOverlayOpacity({required String id, required double opacity}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(id, serializer);
         sse_encode_f_32(opacity, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 232)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1822,7 +6124,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(scaleX, serializer);
         sse_encode_f_32(scaleY, serializer);
         sse_encode_f_32(rotation, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 233)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1846,7 +6148,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(id, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 234)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1869,7 +6171,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 235)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1892,7 +6194,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(mode, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 236)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1907,6 +6209,63 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiLightingSetRenderModeConstMeta => const TaskConstMeta(
         debugName: "set_render_mode",
         argNames: ["mode"],
+      );
+
+  @override
+  void crateApiSectionSetSectionBox(
+      {required double minX,
+      required double minY,
+      required double minZ,
+      required double maxX,
+      required double maxY,
+      required double maxZ}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(minX, serializer);
+        sse_encode_f_32(minY, serializer);
+        sse_encode_f_32(minZ, serializer);
+        sse_encode_f_32(maxX, serializer);
+        sse_encode_f_32(maxY, serializer);
+        sse_encode_f_32(maxZ, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 237)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionSetSectionBoxConstMeta,
+      argValues: [minX, minY, minZ, maxX, maxY, maxZ],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionSetSectionBoxConstMeta => const TaskConstMeta(
+        debugName: "set_section_box",
+        argNames: ["minX", "minY", "minZ", "maxX", "maxY", "maxZ"],
+      );
+
+  @override
+  void crateApiSectionSetSectionBoxFromModel({required double padding}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(padding, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 238)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSectionSetSectionBoxFromModelConstMeta,
+      argValues: [padding],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionSetSectionBoxFromModelConstMeta => const TaskConstMeta(
+        debugName: "set_section_box_from_model",
+        argNames: ["padding"],
       );
 
   @override
@@ -1926,7 +6285,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(normalX, serializer);
         sse_encode_f_32(normalY, serializer);
         sse_encode_f_32(normalZ, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 239)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1949,7 +6308,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(enabled, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 240)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1973,7 +6332,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(axis, serializer);
         sse_encode_f_32(position, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 241)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -1996,7 +6355,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_opt_box_autoadd_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 75)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 242)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2014,12 +6373,130 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiBcfSetTopicAssignedTo({required String topicGuid, required String assignedTo}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_String(assignedTo, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 243)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSetTopicAssignedToConstMeta,
+      argValues: [topicGuid, assignedTo],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSetTopicAssignedToConstMeta => const TaskConstMeta(
+        debugName: "set_topic_assigned_to",
+        argNames: ["topicGuid", "assignedTo"],
+      );
+
+  @override
+  void crateApiBcfSetTopicPriority({required String topicGuid, required int priority}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_i_32(priority, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 244)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSetTopicPriorityConstMeta,
+      argValues: [topicGuid, priority],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSetTopicPriorityConstMeta => const TaskConstMeta(
+        debugName: "set_topic_priority",
+        argNames: ["topicGuid", "priority"],
+      );
+
+  @override
+  void crateApiBcfSetTopicStatus({required String topicGuid, required int status}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(topicGuid, serializer);
+        sse_encode_i_32(status, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 245)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSetTopicStatusConstMeta,
+      argValues: [topicGuid, status],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSetTopicStatusConstMeta => const TaskConstMeta(
+        debugName: "set_topic_status",
+        argNames: ["topicGuid", "status"],
+      );
+
+  @override
+  void crateApiCameraSetTurntableMode({required bool enabled}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_bool(enabled, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 246)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSetTurntableModeConstMeta,
+      argValues: [enabled],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSetTurntableModeConstMeta => const TaskConstMeta(
+        debugName: "set_turntable_mode",
+        argNames: ["enabled"],
+      );
+
+  @override
+  void crateApiPropertiesSetUnitSystem({required int system}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(system, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 247)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiPropertiesSetUnitSystemConstMeta,
+      argValues: [system],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiPropertiesSetUnitSystemConstMeta => const TaskConstMeta(
+        debugName: "set_unit_system",
+        argNames: ["system"],
+      );
+
+  @override
   void crateApiOverlaySetViewMode({required String mode}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(mode, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 76)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 248)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2037,11 +6514,56 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraSetWalkthroughMode({required bool enabled}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_bool(enabled, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 249)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraSetWalkthroughModeConstMeta,
+      argValues: [enabled],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraSetWalkthroughModeConstMeta => const TaskConstMeta(
+        debugName: "set_walkthrough_mode",
+        argNames: ["enabled"],
+      );
+
+  @override
+  void crateApiSelectionShowAllElements() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 250)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionShowAllElementsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionShowAllElementsConstMeta => const TaskConstMeta(
+        debugName: "show_all_elements",
+        argNames: [],
+      );
+
+  @override
   void crateApiSelectionShowAllStoreys() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 77)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 251)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2059,12 +6581,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiSelectionShowElement({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 252)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionShowElementConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionShowElementConstMeta => const TaskConstMeta(
+        debugName: "show_element",
+        argNames: ["elementId"],
+      );
+
+  @override
   void crateApiMeasurementStartMeasurement({required String measurementType}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(measurementType, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 78)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 253)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2082,11 +6627,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  BigInt crateApiBcfSyncTopicsFromResponse({required String responseJson}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(responseJson, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 254)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_usize,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiBcfSyncTopicsFromResponseConstMeta,
+      argValues: [responseJson],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiBcfSyncTopicsFromResponseConstMeta => const TaskConstMeta(
+        debugName: "sync_topics_from_response",
+        argNames: ["responseJson"],
+      );
+
+  @override
   Future<String> crateApiSystemTestAsync() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 79, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 255, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -2109,7 +6677,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(shouldFail, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 256)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -2131,7 +6699,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 257, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -2149,11 +6717,80 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiCameraTickCameraAnimation({required double deltaTime}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(deltaTime, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 258)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiCameraTickCameraAnimationConstMeta,
+      argValues: [deltaTime],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraTickCameraAnimationConstMeta => const TaskConstMeta(
+        debugName: "tick_camera_animation",
+        argNames: ["deltaTime"],
+      );
+
+  @override
+  bool crateApiSectionTickSectionAnimation({required double deltaTime}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(deltaTime, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 259)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSectionTickSectionAnimationConstMeta,
+      argValues: [deltaTime],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSectionTickSectionAnimationConstMeta => const TaskConstMeta(
+        debugName: "tick_section_animation",
+        argNames: ["deltaTime"],
+      );
+
+  @override
+  bool crateApiSelectionToggleElementSelection({required int elementId}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 260)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionToggleElementSelectionConstMeta,
+      argValues: [elementId],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionToggleElementSelectionConstMeta => const TaskConstMeta(
+        debugName: "toggle_element_selection",
+        argNames: ["elementId"],
+      );
+
+  @override
   bool crateApiSelectionToggleGridVisible() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 261)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
@@ -2175,7 +6812,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 262)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2198,7 +6835,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 263)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2225,7 +6862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(width, serializer);
         sse_encode_u_32(height, serializer);
         sse_encode_list_prim_u_8_loose(rgbaPixels, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 264, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2243,12 +6880,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiCameraWalkCamera({required double forward, required double right, required double up}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(forward, serializer);
+        sse_encode_f_32(right, serializer);
+        sse_encode_f_32(up, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 265)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraWalkCameraConstMeta,
+      argValues: [forward, right, up],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraWalkCameraConstMeta => const TaskConstMeta(
+        debugName: "walk_camera",
+        argNames: ["forward", "right", "up"],
+      );
+
+  @override
   void crateApiCameraZoomCamera({required double delta}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(delta, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 266)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -2281,6 +6943,56 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  BcfCommentData dco_decode_bcf_comment_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return BcfCommentData(
+      guid: dco_decode_String(arr[0]),
+      date: dco_decode_String(arr[1]),
+      author: dco_decode_String(arr[2]),
+      text: dco_decode_String(arr[3]),
+      viewpointGuid: dco_decode_opt_String(arr[4]),
+    );
+  }
+
+  @protected
+  BcfTopicDetail dco_decode_bcf_topic_detail(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return BcfTopicDetail(
+      guid: dco_decode_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+      description: dco_decode_String(arr[2]),
+      status: dco_decode_String(arr[3]),
+      priority: dco_decode_String(arr[4]),
+      topicType: dco_decode_String(arr[5]),
+      creationDate: dco_decode_String(arr[6]),
+      creationAuthor: dco_decode_String(arr[7]),
+      modifiedDate: dco_decode_opt_String(arr[8]),
+      assignedTo: dco_decode_opt_String(arr[9]),
+      comments: dco_decode_list_bcf_comment_data(arr[10]),
+      viewpointCount: dco_decode_i_32(arr[11]),
+    );
+  }
+
+  @protected
+  BcfTopicSummary dco_decode_bcf_topic_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return BcfTopicSummary(
+      guid: dco_decode_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+      status: dco_decode_String(arr[2]),
+      priority: dco_decode_String(arr[3]),
+      commentCount: dco_decode_i_32(arr[4]),
+      creationDate: dco_decode_String(arr[5]),
+    );
   }
 
   @protected
@@ -2337,9 +7049,97 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ClashGroupInfo dco_decode_clash_group_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ClashGroupInfo(
+      name: dco_decode_String(arr[0]),
+      count: dco_decode_i_32(arr[1]),
+    );
+  }
+
+  @protected
+  ClashInfo dco_decode_clash_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
+    return ClashInfo(
+      id: dco_decode_i_32(arr[0]),
+      elementAId: dco_decode_i_32(arr[1]),
+      elementAName: dco_decode_String(arr[2]),
+      elementAType: dco_decode_String(arr[3]),
+      elementBId: dco_decode_i_32(arr[4]),
+      elementBName: dco_decode_String(arr[5]),
+      elementBType: dco_decode_String(arr[6]),
+      clashType: dco_decode_i_32(arr[7]),
+      distance: dco_decode_f_32(arr[8]),
+      pointX: dco_decode_f_32(arr[9]),
+      pointY: dco_decode_f_32(arr[10]),
+      pointZ: dco_decode_f_32(arr[11]),
+      groupName: dco_decode_String(arr[12]),
+    );
+  }
+
+  @protected
+  ClashSummary dco_decode_clash_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return ClashSummary(
+      totalClashes: dco_decode_i_32(arr[0]),
+      hardClashes: dco_decode_i_32(arr[1]),
+      softClashes: dco_decode_i_32(arr[2]),
+      clearanceClashes: dco_decode_i_32(arr[3]),
+      groups: dco_decode_list_clash_group_info(arr[4]),
+    );
+  }
+
+  @protected
   ColorMode dco_decode_color_mode(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ColorMode.values[raw as int];
+  }
+
+  @protected
+  ComparisonElement dco_decode_comparison_element(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return ComparisonElement(
+      elementId: dco_decode_i_32(arr[0]),
+      globalId: dco_decode_String(arr[1]),
+      name: dco_decode_String(arr[2]),
+      elementType: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
+  ComparisonModification dco_decode_comparison_modification(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return ComparisonModification(
+      globalId: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      elementType: dco_decode_String(arr[2]),
+      oldElementId: dco_decode_i_32(arr[3]),
+      newElementId: dco_decode_i_32(arr[4]),
+      changes: dco_decode_list_String(arr[5]),
+    );
+  }
+
+  @protected
+  ComparisonResult dco_decode_comparison_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return ComparisonResult(
+      addedElements: dco_decode_list_comparison_element(arr[0]),
+      removedElements: dco_decode_list_comparison_element(arr[1]),
+      modifiedElements: dco_decode_list_comparison_modification(arr[2]),
+      unchangedCount: dco_decode_i_32(arr[3]),
+    );
   }
 
   @protected
@@ -2417,6 +7217,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<BcfCommentData> dco_decode_list_bcf_comment_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_bcf_comment_data).toList();
+  }
+
+  @protected
+  List<BcfTopicSummary> dco_decode_list_bcf_topic_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_bcf_topic_summary).toList();
+  }
+
+  @protected
+  List<ClashGroupInfo> dco_decode_list_clash_group_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_clash_group_info).toList();
+  }
+
+  @protected
+  List<ClashInfo> dco_decode_list_clash_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_clash_info).toList();
+  }
+
+  @protected
+  List<ComparisonElement> dco_decode_list_comparison_element(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_comparison_element).toList();
+  }
+
+  @protected
+  List<ComparisonModification> dco_decode_list_comparison_modification(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_comparison_modification).toList();
+  }
+
+  @protected
   List<ElementInfo> dco_decode_list_element_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_element_info).toList();
@@ -2444,6 +7280,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Float32List dco_decode_list_prim_f_32_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Float32List;
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_i_32_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
   }
 
   @protected
@@ -2477,6 +7319,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<QuantitySummary> dco_decode_list_quantity_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_quantity_summary).toList();
+  }
+
+  @protected
   List<(String, Int32List)> dco_decode_list_record_string_list_prim_i_32_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_record_string_list_prim_i_32_strict).toList();
@@ -2498,6 +7346,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<SpatialNode> dco_decode_list_spatial_node(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_spatial_node).toList();
+  }
+
+  @protected
+  List<ViewpointData> dco_decode_list_viewpoint_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_viewpoint_data).toList();
   }
 
   @protected
@@ -2545,6 +7399,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       value: dco_decode_f_64(arr[1]),
       unit: dco_decode_String(arr[2]),
       points: dco_decode_list_measurement_point(arr[3]),
+    );
+  }
+
+  @protected
+  MemoryStats dco_decode_memory_stats(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return MemoryStats(
+      totalVertices: dco_decode_usize(arr[0]),
+      totalIndices: dco_decode_usize(arr[1]),
+      totalElements: dco_decode_usize(arr[2]),
+      totalModels: dco_decode_usize(arr[3]),
+      estimatedGpuBytes: dco_decode_usize(arr[4]),
+      estimatedCpuBytes: dco_decode_usize(arr[5]),
+      meshCacheBytes: dco_decode_usize(arr[6]),
+      bvhNodeCount: dco_decode_usize(arr[7]),
     );
   }
 
@@ -2621,6 +7492,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PerfCounters dco_decode_perf_counters(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PerfCounters(
+      frameCount: dco_decode_u_64(arr[0]),
+      totalRenderTimeUs: dco_decode_u_64(arr[1]),
+      peakRenderTimeUs: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
   PropertyInfo dco_decode_property_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2639,6 +7522,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return PropertySetInfo(
       name: dco_decode_String(arr[0]),
       properties: dco_decode_list_property_info(arr[1]),
+    );
+  }
+
+  @protected
+  QuantitySummary dco_decode_quantity_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return QuantitySummary(
+      groupName: dco_decode_String(arr[0]),
+      elementCount: dco_decode_i_32(arr[1]),
+      totalArea: dco_decode_f_64(arr[2]),
+      totalVolume: dco_decode_f_64(arr[3]),
+      totalLength: dco_decode_f_64(arr[4]),
+      totalWeight: dco_decode_f_64(arr[5]),
+    );
+  }
+
+  @protected
+  (double, double, double) dco_decode_record_f_32_f_32_f_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) {
+      throw Exception('Expected 3 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_f_32(arr[0]),
+      dco_decode_f_32(arr[1]),
+      dco_decode_f_32(arr[2]),
+    );
+  }
+
+  @protected
+  (Uint8List, String) dco_decode_record_list_prim_u_8_strict_string(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_list_prim_u_8_strict(arr[0]),
+      dco_decode_String(arr[1]),
     );
   }
 
@@ -2730,6 +7655,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -2745,6 +7676,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt dco_decode_usize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeU64(raw);
+  }
+
+  @protected
+  ViewpointData dco_decode_viewpoint_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return ViewpointData(
+      name: dco_decode_String(arr[0]),
+      position: dco_decode_f_32_array_3(arr[1]),
+      target: dco_decode_f_32_array_3(arr[2]),
+      fov: dco_decode_f_32(arr[3]),
+      orthographic: dco_decode_bool(arr[4]),
+    );
   }
 
   @protected
@@ -2766,6 +7711,66 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  BcfCommentData sse_decode_bcf_comment_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_guid = sse_decode_String(deserializer);
+    var var_date = sse_decode_String(deserializer);
+    var var_author = sse_decode_String(deserializer);
+    var var_text = sse_decode_String(deserializer);
+    var var_viewpointGuid = sse_decode_opt_String(deserializer);
+    return BcfCommentData(
+        guid: var_guid, date: var_date, author: var_author, text: var_text, viewpointGuid: var_viewpointGuid);
+  }
+
+  @protected
+  BcfTopicDetail sse_decode_bcf_topic_detail(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_guid = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_description = sse_decode_String(deserializer);
+    var var_status = sse_decode_String(deserializer);
+    var var_priority = sse_decode_String(deserializer);
+    var var_topicType = sse_decode_String(deserializer);
+    var var_creationDate = sse_decode_String(deserializer);
+    var var_creationAuthor = sse_decode_String(deserializer);
+    var var_modifiedDate = sse_decode_opt_String(deserializer);
+    var var_assignedTo = sse_decode_opt_String(deserializer);
+    var var_comments = sse_decode_list_bcf_comment_data(deserializer);
+    var var_viewpointCount = sse_decode_i_32(deserializer);
+    return BcfTopicDetail(
+        guid: var_guid,
+        title: var_title,
+        description: var_description,
+        status: var_status,
+        priority: var_priority,
+        topicType: var_topicType,
+        creationDate: var_creationDate,
+        creationAuthor: var_creationAuthor,
+        modifiedDate: var_modifiedDate,
+        assignedTo: var_assignedTo,
+        comments: var_comments,
+        viewpointCount: var_viewpointCount);
+  }
+
+  @protected
+  BcfTopicSummary sse_decode_bcf_topic_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_guid = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_status = sse_decode_String(deserializer);
+    var var_priority = sse_decode_String(deserializer);
+    var var_commentCount = sse_decode_i_32(deserializer);
+    var var_creationDate = sse_decode_String(deserializer);
+    return BcfTopicSummary(
+        guid: var_guid,
+        title: var_title,
+        status: var_status,
+        priority: var_priority,
+        commentCount: var_commentCount,
+        creationDate: var_creationDate);
   }
 
   @protected
@@ -2819,10 +7824,109 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ClashGroupInfo sse_decode_clash_group_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_count = sse_decode_i_32(deserializer);
+    return ClashGroupInfo(name: var_name, count: var_count);
+  }
+
+  @protected
+  ClashInfo sse_decode_clash_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_i_32(deserializer);
+    var var_elementAId = sse_decode_i_32(deserializer);
+    var var_elementAName = sse_decode_String(deserializer);
+    var var_elementAType = sse_decode_String(deserializer);
+    var var_elementBId = sse_decode_i_32(deserializer);
+    var var_elementBName = sse_decode_String(deserializer);
+    var var_elementBType = sse_decode_String(deserializer);
+    var var_clashType = sse_decode_i_32(deserializer);
+    var var_distance = sse_decode_f_32(deserializer);
+    var var_pointX = sse_decode_f_32(deserializer);
+    var var_pointY = sse_decode_f_32(deserializer);
+    var var_pointZ = sse_decode_f_32(deserializer);
+    var var_groupName = sse_decode_String(deserializer);
+    return ClashInfo(
+        id: var_id,
+        elementAId: var_elementAId,
+        elementAName: var_elementAName,
+        elementAType: var_elementAType,
+        elementBId: var_elementBId,
+        elementBName: var_elementBName,
+        elementBType: var_elementBType,
+        clashType: var_clashType,
+        distance: var_distance,
+        pointX: var_pointX,
+        pointY: var_pointY,
+        pointZ: var_pointZ,
+        groupName: var_groupName);
+  }
+
+  @protected
+  ClashSummary sse_decode_clash_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_totalClashes = sse_decode_i_32(deserializer);
+    var var_hardClashes = sse_decode_i_32(deserializer);
+    var var_softClashes = sse_decode_i_32(deserializer);
+    var var_clearanceClashes = sse_decode_i_32(deserializer);
+    var var_groups = sse_decode_list_clash_group_info(deserializer);
+    return ClashSummary(
+        totalClashes: var_totalClashes,
+        hardClashes: var_hardClashes,
+        softClashes: var_softClashes,
+        clearanceClashes: var_clearanceClashes,
+        groups: var_groups);
+  }
+
+  @protected
   ColorMode sse_decode_color_mode(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
     return ColorMode.values[inner];
+  }
+
+  @protected
+  ComparisonElement sse_decode_comparison_element(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_elementId = sse_decode_i_32(deserializer);
+    var var_globalId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_elementType = sse_decode_String(deserializer);
+    return ComparisonElement(
+        elementId: var_elementId, globalId: var_globalId, name: var_name, elementType: var_elementType);
+  }
+
+  @protected
+  ComparisonModification sse_decode_comparison_modification(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_globalId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_elementType = sse_decode_String(deserializer);
+    var var_oldElementId = sse_decode_i_32(deserializer);
+    var var_newElementId = sse_decode_i_32(deserializer);
+    var var_changes = sse_decode_list_String(deserializer);
+    return ComparisonModification(
+        globalId: var_globalId,
+        name: var_name,
+        elementType: var_elementType,
+        oldElementId: var_oldElementId,
+        newElementId: var_newElementId,
+        changes: var_changes);
+  }
+
+  @protected
+  ComparisonResult sse_decode_comparison_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_addedElements = sse_decode_list_comparison_element(deserializer);
+    var var_removedElements = sse_decode_list_comparison_element(deserializer);
+    var var_modifiedElements = sse_decode_list_comparison_modification(deserializer);
+    var var_unchangedCount = sse_decode_i_32(deserializer);
+    return ComparisonResult(
+        addedElements: var_addedElements,
+        removedElements: var_removedElements,
+        modifiedElements: var_modifiedElements,
+        unchangedCount: var_unchangedCount);
   }
 
   @protected
@@ -2911,6 +8015,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<BcfCommentData> sse_decode_list_bcf_comment_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <BcfCommentData>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_bcf_comment_data(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<BcfTopicSummary> sse_decode_list_bcf_topic_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <BcfTopicSummary>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_bcf_topic_summary(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ClashGroupInfo> sse_decode_list_clash_group_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ClashGroupInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_clash_group_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ClashInfo> sse_decode_list_clash_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ClashInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_clash_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ComparisonElement> sse_decode_list_comparison_element(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ComparisonElement>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_comparison_element(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ComparisonModification> sse_decode_list_comparison_modification(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ComparisonModification>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_comparison_modification(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<ElementInfo> sse_decode_list_element_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2966,6 +8142,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<int> sse_decode_list_prim_i_32_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getInt32List(len_);
+  }
+
+  @protected
   Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -3006,6 +8189,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <PropertySetInfo>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_property_set_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<QuantitySummary> sse_decode_list_quantity_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <QuantitySummary>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_quantity_summary(deserializer));
     }
     return ans_;
   }
@@ -3059,6 +8254,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<ViewpointData> sse_decode_list_viewpoint_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ViewpointData>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_viewpoint_data(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   MaterialData sse_decode_material_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_name = sse_decode_String(deserializer);
@@ -3093,6 +8300,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_points = sse_decode_list_measurement_point(deserializer);
     return MeasurementResult(
         measurementType: var_measurementType, value: var_value, unit: var_unit, points: var_points);
+  }
+
+  @protected
+  MemoryStats sse_decode_memory_stats(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_totalVertices = sse_decode_usize(deserializer);
+    var var_totalIndices = sse_decode_usize(deserializer);
+    var var_totalElements = sse_decode_usize(deserializer);
+    var var_totalModels = sse_decode_usize(deserializer);
+    var var_estimatedGpuBytes = sse_decode_usize(deserializer);
+    var var_estimatedCpuBytes = sse_decode_usize(deserializer);
+    var var_meshCacheBytes = sse_decode_usize(deserializer);
+    var var_bvhNodeCount = sse_decode_usize(deserializer);
+    return MemoryStats(
+        totalVertices: var_totalVertices,
+        totalIndices: var_totalIndices,
+        totalElements: var_totalElements,
+        totalModels: var_totalModels,
+        estimatedGpuBytes: var_estimatedGpuBytes,
+        estimatedCpuBytes: var_estimatedCpuBytes,
+        meshCacheBytes: var_meshCacheBytes,
+        bvhNodeCount: var_bvhNodeCount);
   }
 
   @protected
@@ -3206,6 +8435,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PerfCounters sse_decode_perf_counters(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_frameCount = sse_decode_u_64(deserializer);
+    var var_totalRenderTimeUs = sse_decode_u_64(deserializer);
+    var var_peakRenderTimeUs = sse_decode_u_64(deserializer);
+    return PerfCounters(
+        frameCount: var_frameCount, totalRenderTimeUs: var_totalRenderTimeUs, peakRenderTimeUs: var_peakRenderTimeUs);
+  }
+
+  @protected
   PropertyInfo sse_decode_property_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_name = sse_decode_String(deserializer);
@@ -3219,6 +8458,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_name = sse_decode_String(deserializer);
     var var_properties = sse_decode_list_property_info(deserializer);
     return PropertySetInfo(name: var_name, properties: var_properties);
+  }
+
+  @protected
+  QuantitySummary sse_decode_quantity_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_groupName = sse_decode_String(deserializer);
+    var var_elementCount = sse_decode_i_32(deserializer);
+    var var_totalArea = sse_decode_f_64(deserializer);
+    var var_totalVolume = sse_decode_f_64(deserializer);
+    var var_totalLength = sse_decode_f_64(deserializer);
+    var var_totalWeight = sse_decode_f_64(deserializer);
+    return QuantitySummary(
+        groupName: var_groupName,
+        elementCount: var_elementCount,
+        totalArea: var_totalArea,
+        totalVolume: var_totalVolume,
+        totalLength: var_totalLength,
+        totalWeight: var_totalWeight);
+  }
+
+  @protected
+  (double, double, double) sse_decode_record_f_32_f_32_f_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_f_32(deserializer);
+    var var_field1 = sse_decode_f_32(deserializer);
+    var var_field2 = sse_decode_f_32(deserializer);
+    return (var_field0, var_field1, var_field2);
+  }
+
+  @protected
+  (Uint8List, String) sse_decode_record_list_prim_u_8_strict_string(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_field1 = sse_decode_String(deserializer);
+    return (var_field0, var_field1);
   }
 
   @protected
@@ -3299,6 +8573,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -3313,6 +8593,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  ViewpointData sse_decode_viewpoint_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_position = sse_decode_f_32_array_3(deserializer);
+    var var_target = sse_decode_f_32_array_3(deserializer);
+    var var_fov = sse_decode_f_32(deserializer);
+    var var_orthographic = sse_decode_bool(deserializer);
+    return ViewpointData(
+        name: var_name, position: var_position, target: var_target, fov: var_fov, orthographic: var_orthographic);
   }
 
   @protected
@@ -3331,6 +8623,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bcf_comment_data(BcfCommentData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.guid, serializer);
+    sse_encode_String(self.date, serializer);
+    sse_encode_String(self.author, serializer);
+    sse_encode_String(self.text, serializer);
+    sse_encode_opt_String(self.viewpointGuid, serializer);
+  }
+
+  @protected
+  void sse_encode_bcf_topic_detail(BcfTopicDetail self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.guid, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.description, serializer);
+    sse_encode_String(self.status, serializer);
+    sse_encode_String(self.priority, serializer);
+    sse_encode_String(self.topicType, serializer);
+    sse_encode_String(self.creationDate, serializer);
+    sse_encode_String(self.creationAuthor, serializer);
+    sse_encode_opt_String(self.modifiedDate, serializer);
+    sse_encode_opt_String(self.assignedTo, serializer);
+    sse_encode_list_bcf_comment_data(self.comments, serializer);
+    sse_encode_i_32(self.viewpointCount, serializer);
+  }
+
+  @protected
+  void sse_encode_bcf_topic_summary(BcfTopicSummary self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.guid, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.status, serializer);
+    sse_encode_String(self.priority, serializer);
+    sse_encode_i_32(self.commentCount, serializer);
+    sse_encode_String(self.creationDate, serializer);
   }
 
   @protected
@@ -3383,9 +8713,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_clash_group_info(ClashGroupInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_i_32(self.count, serializer);
+  }
+
+  @protected
+  void sse_encode_clash_info(ClashInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.id, serializer);
+    sse_encode_i_32(self.elementAId, serializer);
+    sse_encode_String(self.elementAName, serializer);
+    sse_encode_String(self.elementAType, serializer);
+    sse_encode_i_32(self.elementBId, serializer);
+    sse_encode_String(self.elementBName, serializer);
+    sse_encode_String(self.elementBType, serializer);
+    sse_encode_i_32(self.clashType, serializer);
+    sse_encode_f_32(self.distance, serializer);
+    sse_encode_f_32(self.pointX, serializer);
+    sse_encode_f_32(self.pointY, serializer);
+    sse_encode_f_32(self.pointZ, serializer);
+    sse_encode_String(self.groupName, serializer);
+  }
+
+  @protected
+  void sse_encode_clash_summary(ClashSummary self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.totalClashes, serializer);
+    sse_encode_i_32(self.hardClashes, serializer);
+    sse_encode_i_32(self.softClashes, serializer);
+    sse_encode_i_32(self.clearanceClashes, serializer);
+    sse_encode_list_clash_group_info(self.groups, serializer);
+  }
+
+  @protected
   void sse_encode_color_mode(ColorMode self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_comparison_element(ComparisonElement self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.elementId, serializer);
+    sse_encode_String(self.globalId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.elementType, serializer);
+  }
+
+  @protected
+  void sse_encode_comparison_modification(ComparisonModification self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.globalId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.elementType, serializer);
+    sse_encode_i_32(self.oldElementId, serializer);
+    sse_encode_i_32(self.newElementId, serializer);
+    sse_encode_list_String(self.changes, serializer);
+  }
+
+  @protected
+  void sse_encode_comparison_result(ComparisonResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_comparison_element(self.addedElements, serializer);
+    sse_encode_list_comparison_element(self.removedElements, serializer);
+    sse_encode_list_comparison_modification(self.modifiedElements, serializer);
+    sse_encode_i_32(self.unchangedCount, serializer);
   }
 
   @protected
@@ -3454,6 +8848,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_bcf_comment_data(List<BcfCommentData> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_bcf_comment_data(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_bcf_topic_summary(List<BcfTopicSummary> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_bcf_topic_summary(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_clash_group_info(List<ClashGroupInfo> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_clash_group_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_clash_info(List<ClashInfo> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_clash_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_comparison_element(List<ComparisonElement> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_comparison_element(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_comparison_modification(List<ComparisonModification> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_comparison_modification(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_element_info(List<ElementInfo> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -3497,6 +8945,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_prim_i_32_loose(List<int> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putInt32List(self is Int32List ? self : Int32List.fromList(self));
+  }
+
+  @protected
   void sse_encode_list_prim_i_32_strict(Int32List self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -3532,6 +8987,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_property_set_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_quantity_summary(List<QuantitySummary> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_quantity_summary(item, serializer);
     }
   }
 
@@ -3572,6 +9036,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_viewpoint_data(List<ViewpointData> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_viewpoint_data(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_material_data(MaterialData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.name, serializer);
@@ -3601,6 +9074,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.value, serializer);
     sse_encode_String(self.unit, serializer);
     sse_encode_list_measurement_point(self.points, serializer);
+  }
+
+  @protected
+  void sse_encode_memory_stats(MemoryStats self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(self.totalVertices, serializer);
+    sse_encode_usize(self.totalIndices, serializer);
+    sse_encode_usize(self.totalElements, serializer);
+    sse_encode_usize(self.totalModels, serializer);
+    sse_encode_usize(self.estimatedGpuBytes, serializer);
+    sse_encode_usize(self.estimatedCpuBytes, serializer);
+    sse_encode_usize(self.meshCacheBytes, serializer);
+    sse_encode_usize(self.bvhNodeCount, serializer);
   }
 
   @protected
@@ -3696,6 +9182,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_perf_counters(PerfCounters self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.frameCount, serializer);
+    sse_encode_u_64(self.totalRenderTimeUs, serializer);
+    sse_encode_u_64(self.peakRenderTimeUs, serializer);
+  }
+
+  @protected
   void sse_encode_property_info(PropertyInfo self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.name, serializer);
@@ -3707,6 +9201,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.name, serializer);
     sse_encode_list_property_info(self.properties, serializer);
+  }
+
+  @protected
+  void sse_encode_quantity_summary(QuantitySummary self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.groupName, serializer);
+    sse_encode_i_32(self.elementCount, serializer);
+    sse_encode_f_64(self.totalArea, serializer);
+    sse_encode_f_64(self.totalVolume, serializer);
+    sse_encode_f_64(self.totalLength, serializer);
+    sse_encode_f_64(self.totalWeight, serializer);
+  }
+
+  @protected
+  void sse_encode_record_f_32_f_32_f_32((double, double, double) self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_32(self.$1, serializer);
+    sse_encode_f_32(self.$2, serializer);
+    sse_encode_f_32(self.$3, serializer);
+  }
+
+  @protected
+  void sse_encode_record_list_prim_u_8_strict_string((Uint8List, String) self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(self.$1, serializer);
+    sse_encode_String(self.$2, serializer);
   }
 
   @protected
@@ -3769,6 +9289,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
@@ -3783,5 +9309,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_viewpoint_data(ViewpointData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_f_32_array_3(self.position, serializer);
+    sse_encode_f_32_array_3(self.target, serializer);
+    sse_encode_f_32(self.fov, serializer);
+    sse_encode_bool(self.orthographic, serializer);
   }
 }

@@ -17,6 +17,8 @@ enum ColorMode {
   byType,
   byStorey,
   byMaterial,
+  byProperty,
+  grayscale,
   ;
 
   static Future<ColorMode> default_() => RustLib.instance.api.crateApiStateColorModeDefault();

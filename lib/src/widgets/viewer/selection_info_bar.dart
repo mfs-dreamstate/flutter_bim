@@ -17,9 +17,13 @@ class SelectionInfoBar extends ConsumerWidget {
       left: 16,
       right: 16,
       bottom: 16,
-      child: GestureDetector(
-        onTap: () => _showPropertiesPanel(context, ref, selectedElement),
-        child: Container(
+      child: Semantics(
+        liveRegion: true,
+        label: 'Selected element: ${selectedElement.name.isEmpty ? 'Unnamed' : selectedElement.name}, '
+            'Type: ${selectedElement.elementType}',
+        child: GestureDetector(
+          onTap: () => _showPropertiesPanel(context, ref, selectedElement),
+          child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Theme.of(context)
@@ -89,6 +93,7 @@ class SelectionInfoBar extends ConsumerWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

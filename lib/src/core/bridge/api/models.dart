@@ -8,9 +8,33 @@ import '../bim/model_registry.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Load an IFC file and parse it (backward compatible - loads as primary)
+// These functions are ignored because they are not marked as `pub`: `build_model_from_gltf`, `next_loading_id`, `set_loading_state`, `to_json`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `LoadingState`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+
+/// Check the status of an async loading task.
+/// Returns JSON describing the current state.
+String getLoadingState({required String loadingId}) =>
+    RustLib.instance.api.crateApiModelsGetLoadingState(loadingId: loadingId);
+
+/// Cancel an async loading task (if possible).
+/// Currently marks the task as failed; actual cancellation of in-flight I/O
+/// is not supported by the synchronous parsing pipeline.
+void cancelLoading({required String loadingId}) =>
+    RustLib.instance.api.crateApiModelsCancelLoading(loadingId: loadingId);
+
+/// List all active loading tasks as JSON array.
+String listLoadingTasks() => RustLib.instance.api.crateApiModelsListLoadingTasks();
+
+/// Load an IFC file and parse it (backward compatible - loads as primary).
+/// Updates loading task state as it progresses.
 Future<ModelInfo> loadIfcFile({required String filePath}) =>
     RustLib.instance.api.crateApiModelsLoadIfcFile(filePath: filePath);
+
+/// Start loading an IFC file in the background.
+/// Returns a loading ID that can be used to check progress via `get_loading_state`.
+Future<String> loadIfcFileAsync({required String filePath}) =>
+    RustLib.instance.api.crateApiModelsLoadIfcFileAsync(filePath: filePath);
 
 /// Get information about the currently loaded model (primary model)
 ModelInfo getModelInfo() => RustLib.instance.api.crateApiModelsGetModelInfo();
@@ -47,3 +71,19 @@ void setPrimaryModel({required String modelId}) => RustLib.instance.api.crateApi
 
 /// Clear all models
 void clearAllModels() => RustLib.instance.api.crateApiModelsClearAllModels();
+
+/// Import an OBJ file and register it as a model.
+Future<ModelInfo> importObjFile({required String filePath}) =>
+    RustLib.instance.api.crateApiModelsImportObjFile(filePath: filePath);
+
+/// Import a glTF JSON file and register it as a model.
+Future<ModelInfo> importGltfFile({required String filePath}) =>
+    RustLib.instance.api.crateApiModelsImportGltfFile(filePath: filePath);
+
+/// Import a GLB binary file and register it as a model.
+Future<ModelInfo> importGlbFile({required String filePath}) =>
+    RustLib.instance.api.crateApiModelsImportGlbFile(filePath: filePath);
+
+/// Detect the IFC schema version of a file from its content.
+String detectFileSchema({required String fileContent}) =>
+    RustLib.instance.api.crateApiModelsDetectFileSchema(fileContent: fileContent);

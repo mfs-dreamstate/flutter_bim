@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    name: Dart Analyze & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: dart analyze
+      - run: dart format --set-exit-if-changed .
+
+  test-dart:
+    name: Flutter Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter test
+
+  test-rust:
+    name: Rust Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: cd rust && cargo test
+      - run: cd rust && cargo clippy -- -D warnings
+        continue-on-error: true  # clippy warnings don't block
+
+  build-android:
+    name: Build Android
+    needs: [analyze, test-dart, test-rust]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          cache-on-failure: true
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+      - name: Build Rust libraries
+        run: |
+          cd rust
+          cargo ndk -t arm64-v8a -o ../android/src/main/jniLibs build --release
+          cargo ndk -t x86_64 -o ../android/src/main/jniLibs build --release
+      - name: Build APK
+        run: cd example && flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: example/build/app/outputs/flutter-apk/app-release.apk

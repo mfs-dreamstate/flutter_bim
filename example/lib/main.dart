@@ -10,36 +10,81 @@ void main() {
   runApp(const BimViewerApp());
 }
 
-class BimViewerApp extends StatelessWidget {
+class BimViewerApp extends StatefulWidget {
   const BimViewerApp({super.key});
+
+  /// Normal light theme using a seed color.
+  static final ThemeData normalLight = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.light,
+    ),
+    useMaterial3: true,
+  );
+
+  /// Normal dark theme using a seed color.
+  static final ThemeData normalDark = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blue,
+      brightness: Brightness.dark,
+    ),
+    useMaterial3: true,
+  );
+
+  /// High contrast light theme for improved accessibility.
+  static final ThemeData highContrastLight = ThemeData(
+    useMaterial3: true,
+    colorScheme: const ColorScheme.highContrastLight(),
+  );
+
+  /// High contrast dark theme for improved accessibility.
+  static final ThemeData highContrastDark = ThemeData(
+    useMaterial3: true,
+    colorScheme: const ColorScheme.highContrastDark(),
+  );
+
+  @override
+  State<BimViewerApp> createState() => _BimViewerAppState();
+}
+
+class _BimViewerAppState extends State<BimViewerApp> {
+  bool _highContrast = false;
+
+  void _toggleHighContrast() {
+    setState(() {
+      _highContrast = !_highContrast;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BIM Viewer',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: _highContrast
+          ? BimViewerApp.highContrastLight
+          : BimViewerApp.normalLight,
+      darkTheme: _highContrast
+          ? BimViewerApp.highContrastDark
+          : BimViewerApp.normalDark,
       themeMode: ThemeMode.system,
-      home: const HomePage(),
+      home: HomePage(
+        highContrast: _highContrast,
+        onToggleHighContrast: _toggleHighContrast,
+      ),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final bool highContrast;
+  final VoidCallback onToggleHighContrast;
+
+  const HomePage({
+    super.key,
+    required this.highContrast,
+    required this.onToggleHighContrast,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -341,6 +386,17 @@ class _HomePageState extends State<HomePage> {
         elevation: 2,
         actions: [
           IconButton(
+            icon: Icon(
+              widget.highContrast
+                  ? Icons.contrast
+                  : Icons.contrast_outlined,
+            ),
+            onPressed: widget.onToggleHighContrast,
+            tooltip: widget.highContrast
+                ? 'Disable High Contrast'
+                : 'Enable High Contrast',
+          ),
+          IconButton(
             icon: Badge(
               isLabelVisible: _modelCount > 0,
               label: Text('$_modelCount'),
@@ -523,8 +579,7 @@ class _HomePageState extends State<HomePage> {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 16),
-                        textStyle: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -594,7 +649,7 @@ class _HomePageState extends State<HomePage> {
                       label: const Text('View Model'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     )
                   else

@@ -13,6 +13,8 @@ class RendererState {
   final String? error;
   final bool wireframeSupported;
   final int renderMode; // 0 = Shaded, 1 = Wireframe, 2 = X-Ray
+  final int renderWidth;
+  final int renderHeight;
 
   const RendererState({
     this.isInitializing = true,
@@ -21,6 +23,8 @@ class RendererState {
     this.error,
     this.wireframeSupported = false,
     this.renderMode = 0,
+    this.renderWidth = 480,
+    this.renderHeight = 360,
   });
 
   RendererState copyWith({
@@ -30,6 +34,8 @@ class RendererState {
     String? Function()? error,
     bool? wireframeSupported,
     int? renderMode,
+    int? renderWidth,
+    int? renderHeight,
   }) {
     return RendererState(
       isInitializing: isInitializing ?? this.isInitializing,
@@ -38,6 +44,8 @@ class RendererState {
       error: error != null ? error() : this.error,
       wireframeSupported: wireframeSupported ?? this.wireframeSupported,
       renderMode: renderMode ?? this.renderMode,
+      renderWidth: renderWidth ?? this.renderWidth,
+      renderHeight: renderHeight ?? this.renderHeight,
     );
   }
 }
@@ -49,18 +57,28 @@ class RendererNotifier extends Notifier<RendererState> {
 
   IRendererService get _service => ref.read(rendererServiceProvider);
 
-  Future<void> initialize() async {
+  Future<void> initialize({int? width, int? height}) async {
+    // Don't re-init if already initialized or currently initializing
+    if (state.isInitialized) return;
+
+    final w = width ?? state.renderWidth;
+    final h = height ?? state.renderHeight;
+
     state = state.copyWith(
       isInitializing: true,
       error: () => null,
       status: 'Initializing GPU...',
+      renderWidth: w,
+      renderHeight: h,
     );
 
     try {
+      debugPrint('[RendererNotifier] Starting GPU init ${w}x$h...');
       final result = await _service.initialize(
-        width: RenderConfig.width,
-        height: RenderConfig.height,
+        width: w,
+        height: h,
       );
+      debugPrint('[RendererNotifier] GPU init success: $result');
       final wireframeSupported = _service.isWireframeSupported();
 
       state = state.copyWith(
@@ -70,6 +88,7 @@ class RendererNotifier extends Notifier<RendererState> {
         wireframeSupported: wireframeSupported,
       );
     } catch (e) {
+      debugPrint('[RendererNotifier] GPU init failed: $e');
       state = state.copyWith(
         isInitializing: false,
         error: () => e.toString(),

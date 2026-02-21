@@ -47,7 +47,7 @@ class ViewerBody extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${RenderConfig.width}x${RenderConfig.height}',
+                '${rendererState.renderWidth}x${rendererState.renderHeight}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

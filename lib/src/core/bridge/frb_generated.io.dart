@@ -3,7 +3,10 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/bcf.dart';
 import 'api/camera.dart';
+import 'api/clash.dart';
+import 'api/comparison.dart';
 import 'api/export.dart';
 import 'api/lighting.dart';
 import 'api/measurement.dart';
@@ -44,6 +47,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  BcfCommentData dco_decode_bcf_comment_data(dynamic raw);
+
+  @protected
+  BcfTopicDetail dco_decode_bcf_topic_detail(dynamic raw);
+
+  @protected
+  BcfTopicSummary dco_decode_bcf_topic_summary(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
@@ -68,7 +80,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TypeObjectData dco_decode_box_autoadd_type_object_data(dynamic raw);
 
   @protected
+  ClashGroupInfo dco_decode_clash_group_info(dynamic raw);
+
+  @protected
+  ClashInfo dco_decode_clash_info(dynamic raw);
+
+  @protected
+  ClashSummary dco_decode_clash_summary(dynamic raw);
+
+  @protected
   ColorMode dco_decode_color_mode(dynamic raw);
+
+  @protected
+  ComparisonElement dco_decode_comparison_element(dynamic raw);
+
+  @protected
+  ComparisonModification dco_decode_comparison_modification(dynamic raw);
+
+  @protected
+  ComparisonResult dco_decode_comparison_result(dynamic raw);
 
   @protected
   ElementInfo dco_decode_element_info(dynamic raw);
@@ -95,6 +125,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<BcfCommentData> dco_decode_list_bcf_comment_data(dynamic raw);
+
+  @protected
+  List<BcfTopicSummary> dco_decode_list_bcf_topic_summary(dynamic raw);
+
+  @protected
+  List<ClashGroupInfo> dco_decode_list_clash_group_info(dynamic raw);
+
+  @protected
+  List<ClashInfo> dco_decode_list_clash_info(dynamic raw);
+
+  @protected
+  List<ComparisonElement> dco_decode_list_comparison_element(dynamic raw);
+
+  @protected
+  List<ComparisonModification> dco_decode_list_comparison_modification(dynamic raw);
+
+  @protected
   List<ElementInfo> dco_decode_list_element_info(dynamic raw);
 
   @protected
@@ -108,6 +156,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
+
+  @protected
+  List<int> dco_decode_list_prim_i_32_loose(dynamic raw);
 
   @protected
   Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
@@ -125,6 +176,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PropertySetInfo> dco_decode_list_property_set_info(dynamic raw);
 
   @protected
+  List<QuantitySummary> dco_decode_list_quantity_summary(dynamic raw);
+
+  @protected
   List<(String, Int32List)> dco_decode_list_record_string_list_prim_i_32_strict(dynamic raw);
 
   @protected
@@ -137,6 +191,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SpatialNode> dco_decode_list_spatial_node(dynamic raw);
 
   @protected
+  List<ViewpointData> dco_decode_list_viewpoint_data(dynamic raw);
+
+  @protected
   MaterialData dco_decode_material_data(dynamic raw);
 
   @protected
@@ -147,6 +204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MeasurementResult dco_decode_measurement_result(dynamic raw);
+
+  @protected
+  MemoryStats dco_decode_memory_stats(dynamic raw);
 
   @protected
   ModelInfo dco_decode_model_info(dynamic raw);
@@ -176,10 +236,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TypeObjectData? dco_decode_opt_box_autoadd_type_object_data(dynamic raw);
 
   @protected
+  PerfCounters dco_decode_perf_counters(dynamic raw);
+
+  @protected
   PropertyInfo dco_decode_property_info(dynamic raw);
 
   @protected
   PropertySetInfo dco_decode_property_set_info(dynamic raw);
+
+  @protected
+  QuantitySummary dco_decode_quantity_summary(dynamic raw);
+
+  @protected
+  (double, double, double) dco_decode_record_f_32_f_32_f_32(dynamic raw);
+
+  @protected
+  (Uint8List, String) dco_decode_record_list_prim_u_8_strict_string(dynamic raw);
 
   @protected
   (String, Int32List) dco_decode_record_string_list_prim_i_32_strict(dynamic raw);
@@ -203,6 +275,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_u_32(dynamic raw);
 
   @protected
+  BigInt dco_decode_u_64(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
@@ -212,6 +287,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  ViewpointData dco_decode_viewpoint_data(dynamic raw);
+
+  @protected
   Map<String, Int32List> sse_decode_Map_String_list_prim_i_32_strict_None(SseDeserializer deserializer);
 
   @protected
@@ -219,6 +297,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  BcfCommentData sse_decode_bcf_comment_data(SseDeserializer deserializer);
+
+  @protected
+  BcfTopicDetail sse_decode_bcf_topic_detail(SseDeserializer deserializer);
+
+  @protected
+  BcfTopicSummary sse_decode_bcf_topic_summary(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -245,7 +332,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TypeObjectData sse_decode_box_autoadd_type_object_data(SseDeserializer deserializer);
 
   @protected
+  ClashGroupInfo sse_decode_clash_group_info(SseDeserializer deserializer);
+
+  @protected
+  ClashInfo sse_decode_clash_info(SseDeserializer deserializer);
+
+  @protected
+  ClashSummary sse_decode_clash_summary(SseDeserializer deserializer);
+
+  @protected
   ColorMode sse_decode_color_mode(SseDeserializer deserializer);
+
+  @protected
+  ComparisonElement sse_decode_comparison_element(SseDeserializer deserializer);
+
+  @protected
+  ComparisonModification sse_decode_comparison_modification(SseDeserializer deserializer);
+
+  @protected
+  ComparisonResult sse_decode_comparison_result(SseDeserializer deserializer);
 
   @protected
   ElementInfo sse_decode_element_info(SseDeserializer deserializer);
@@ -272,6 +377,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<BcfCommentData> sse_decode_list_bcf_comment_data(SseDeserializer deserializer);
+
+  @protected
+  List<BcfTopicSummary> sse_decode_list_bcf_topic_summary(SseDeserializer deserializer);
+
+  @protected
+  List<ClashGroupInfo> sse_decode_list_clash_group_info(SseDeserializer deserializer);
+
+  @protected
+  List<ClashInfo> sse_decode_list_clash_info(SseDeserializer deserializer);
+
+  @protected
+  List<ComparisonElement> sse_decode_list_comparison_element(SseDeserializer deserializer);
+
+  @protected
+  List<ComparisonModification> sse_decode_list_comparison_modification(SseDeserializer deserializer);
+
+  @protected
   List<ElementInfo> sse_decode_list_element_info(SseDeserializer deserializer);
 
   @protected
@@ -285,6 +408,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
+
+  @protected
+  List<int> sse_decode_list_prim_i_32_loose(SseDeserializer deserializer);
 
   @protected
   Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
@@ -302,6 +428,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PropertySetInfo> sse_decode_list_property_set_info(SseDeserializer deserializer);
 
   @protected
+  List<QuantitySummary> sse_decode_list_quantity_summary(SseDeserializer deserializer);
+
+  @protected
   List<(String, Int32List)> sse_decode_list_record_string_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
@@ -314,6 +443,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SpatialNode> sse_decode_list_spatial_node(SseDeserializer deserializer);
 
   @protected
+  List<ViewpointData> sse_decode_list_viewpoint_data(SseDeserializer deserializer);
+
+  @protected
   MaterialData sse_decode_material_data(SseDeserializer deserializer);
 
   @protected
@@ -324,6 +456,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MeasurementResult sse_decode_measurement_result(SseDeserializer deserializer);
+
+  @protected
+  MemoryStats sse_decode_memory_stats(SseDeserializer deserializer);
 
   @protected
   ModelInfo sse_decode_model_info(SseDeserializer deserializer);
@@ -353,10 +488,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TypeObjectData? sse_decode_opt_box_autoadd_type_object_data(SseDeserializer deserializer);
 
   @protected
+  PerfCounters sse_decode_perf_counters(SseDeserializer deserializer);
+
+  @protected
   PropertyInfo sse_decode_property_info(SseDeserializer deserializer);
 
   @protected
   PropertySetInfo sse_decode_property_set_info(SseDeserializer deserializer);
+
+  @protected
+  QuantitySummary sse_decode_quantity_summary(SseDeserializer deserializer);
+
+  @protected
+  (double, double, double) sse_decode_record_f_32_f_32_f_32(SseDeserializer deserializer);
+
+  @protected
+  (Uint8List, String) sse_decode_record_list_prim_u_8_strict_string(SseDeserializer deserializer);
 
   @protected
   (String, Int32List) sse_decode_record_string_list_prim_i_32_strict(SseDeserializer deserializer);
@@ -380,6 +527,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
@@ -389,6 +539,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  ViewpointData sse_decode_viewpoint_data(SseDeserializer deserializer);
+
+  @protected
   void sse_encode_Map_String_list_prim_i_32_strict_None(Map<String, Int32List> self, SseSerializer serializer);
 
   @protected
@@ -396,6 +549,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bcf_comment_data(BcfCommentData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bcf_topic_detail(BcfTopicDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bcf_topic_summary(BcfTopicSummary self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
@@ -422,7 +584,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_type_object_data(TypeObjectData self, SseSerializer serializer);
 
   @protected
+  void sse_encode_clash_group_info(ClashGroupInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_clash_info(ClashInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_clash_summary(ClashSummary self, SseSerializer serializer);
+
+  @protected
   void sse_encode_color_mode(ColorMode self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_comparison_element(ComparisonElement self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_comparison_modification(ComparisonModification self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_comparison_result(ComparisonResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_element_info(ElementInfo self, SseSerializer serializer);
@@ -449,6 +629,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_bcf_comment_data(List<BcfCommentData> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_bcf_topic_summary(List<BcfTopicSummary> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_clash_group_info(List<ClashGroupInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_clash_info(List<ClashInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_comparison_element(List<ComparisonElement> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_comparison_modification(List<ComparisonModification> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_element_info(List<ElementInfo> self, SseSerializer serializer);
 
   @protected
@@ -462,6 +660,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_prim_f_32_strict(Float32List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_i_32_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_i_32_strict(Int32List self, SseSerializer serializer);
@@ -479,6 +680,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_property_set_info(List<PropertySetInfo> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_quantity_summary(List<QuantitySummary> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_record_string_list_prim_i_32_strict(List<(String, Int32List)> self, SseSerializer serializer);
 
   @protected
@@ -491,6 +695,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_spatial_node(List<SpatialNode> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_viewpoint_data(List<ViewpointData> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_material_data(MaterialData self, SseSerializer serializer);
 
   @protected
@@ -501,6 +708,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_measurement_result(MeasurementResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_memory_stats(MemoryStats self, SseSerializer serializer);
 
   @protected
   void sse_encode_model_info(ModelInfo self, SseSerializer serializer);
@@ -530,10 +740,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_type_object_data(TypeObjectData? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_perf_counters(PerfCounters self, SseSerializer serializer);
+
+  @protected
   void sse_encode_property_info(PropertyInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_property_set_info(PropertySetInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_quantity_summary(QuantitySummary self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_f_32_f_32_f_32((double, double, double) self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_list_prim_u_8_strict_string((Uint8List, String) self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_string_list_prim_i_32_strict((String, Int32List) self, SseSerializer serializer);
@@ -557,6 +779,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
@@ -564,6 +789,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_viewpoint_data(ViewpointData self, SseSerializer serializer);
 }
 
 // Section: wire_class

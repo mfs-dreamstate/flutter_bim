@@ -6,6 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `active_set_id`, `now_millis`, `with_markup`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ViewMode`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
@@ -49,3 +50,116 @@ void setViewMode({required String mode}) => RustLib.instance.api.crateApiOverlay
 
 /// Get current view mode
 String getViewMode() => RustLib.instance.api.crateApiOverlayGetViewMode();
+
+/// Create a new annotation set. Returns the set ID.
+String createAnnotationSet({required String name}) =>
+    RustLib.instance.api.crateApiOverlayCreateAnnotationSet(name: name);
+
+/// Delete an annotation set by ID.
+void deleteAnnotationSet({required String setId}) =>
+    RustLib.instance.api.crateApiOverlayDeleteAnnotationSet(setId: setId);
+
+/// List all annotation sets as a JSON array of {id, name, count, visible}.
+String listAnnotationSets() => RustLib.instance.api.crateApiOverlayListAnnotationSets();
+
+/// Set an annotation set's visibility.
+void setAnnotationSetVisible({required String setId, required bool visible}) =>
+    RustLib.instance.api.crateApiOverlaySetAnnotationSetVisible(setId: setId, visible: visible);
+
+/// Set the active annotation set for subsequent CRUD operations.
+void setActiveAnnotationSet({required String setId}) =>
+    RustLib.instance.api.crateApiOverlaySetActiveAnnotationSet(setId: setId);
+
+/// Get the active annotation set ID, or None.
+String? getActiveAnnotationSet() => RustLib.instance.api.crateApiOverlayGetActiveAnnotationSet();
+
+/// Add a pin annotation to the active set.
+void addPinAnnotation(
+        {required String id,
+        required double x,
+        required double y,
+        required double z,
+        required String label,
+        required double r,
+        required double g,
+        required double b,
+        required double a}) =>
+    RustLib.instance.api
+        .crateApiOverlayAddPinAnnotation(id: id, x: x, y: y, z: z, label: label, r: r, g: g, b: b, a: a);
+
+/// Add a callout annotation to the active set.
+void addCalloutAnnotation(
+        {required String id, required double x, required double y, required double z, required String text}) =>
+    RustLib.instance.api.crateApiOverlayAddCalloutAnnotation(id: id, x: x, y: y, z: z, text: text);
+
+/// Add a redline annotation to the active set. Points are passed as a JSON array of [x,y,z].
+void addRedlineAnnotation(
+        {required String id,
+        required String pointsJson,
+        required double r,
+        required double g,
+        required double b,
+        required double width}) =>
+    RustLib.instance.api
+        .crateApiOverlayAddRedlineAnnotation(id: id, pointsJson: pointsJson, r: r, g: g, b: b, width: width);
+
+/// Add a dimension line between two 3D points.
+void addDimensionLine(
+        {required String id,
+        required double x1,
+        required double y1,
+        required double z1,
+        required double x2,
+        required double y2,
+        required double z2,
+        required double offset}) =>
+    RustLib.instance.api
+        .crateApiOverlayAddDimensionLine(id: id, x1: x1, y1: y1, z1: z1, x2: x2, y2: y2, z2: z2, offset: offset);
+
+/// Add a leader line from an anchor point to a label position.
+void addLeaderLine(
+        {required String id,
+        required double anchorX,
+        required double anchorY,
+        required double anchorZ,
+        required double labelX,
+        required double labelY,
+        required double labelZ,
+        required String text}) =>
+    RustLib.instance.api.crateApiOverlayAddLeaderLine(
+        id: id,
+        anchorX: anchorX,
+        anchorY: anchorY,
+        anchorZ: anchorZ,
+        labelX: labelX,
+        labelY: labelY,
+        labelZ: labelZ,
+        text: text);
+
+/// Remove an annotation by ID from the active set.
+void removeAnnotation({required String annotationId}) =>
+    RustLib.instance.api.crateApiOverlayRemoveAnnotation(annotationId: annotationId);
+
+/// Get all annotations in the active set as JSON.
+String getAnnotationsJson() => RustLib.instance.api.crateApiOverlayGetAnnotationsJson();
+
+/// Export the full markup store as JSON.
+String exportMarkupJson() => RustLib.instance.api.crateApiOverlayExportMarkupJson();
+
+/// Import markup data from JSON, replacing the current store.
+void importMarkupJson({required String json}) => RustLib.instance.api.crateApiOverlayImportMarkupJson(json: json);
+
+/// Compute the 3D Euclidean distance between two points.
+double computeDistance(
+        {required double x1,
+        required double y1,
+        required double z1,
+        required double x2,
+        required double y2,
+        required double z2}) =>
+    RustLib.instance.api.crateApiOverlayComputeDistance(x1: x1, y1: y1, z1: z1, x2: x2, y2: y2, z2: z2);
+
+/// Compute the area of a polygon defined by a JSON array of [x,y,z] points (projected to XY).
+/// Uses the shoelace formula on the XY projection.
+double computeAreaFromPoints({required String pointsJson}) =>
+    RustLib.instance.api.crateApiOverlayComputeAreaFromPoints(pointsJson: pointsJson);

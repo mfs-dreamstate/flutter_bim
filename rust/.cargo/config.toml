@@ -1,3 +1,23 @@
+# =============================================================================
+# iOS Targets
+# =============================================================================
+
+# iOS Device (ARM64)
+[target.aarch64-apple-ios]
+rustflags = ["-C", "link-arg=-isysroot", "-C", "link-arg=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"]
+
+# iOS Simulator (ARM64 - Apple Silicon Macs)
+[target.aarch64-apple-ios-sim]
+rustflags = ["-C", "link-arg=-isysroot", "-C", "link-arg=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"]
+
+# iOS Simulator (x86_64 - Intel Macs)
+[target.x86_64-apple-ios]
+rustflags = ["-C", "link-arg=-isysroot", "-C", "link-arg=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"]
+
+# =============================================================================
+# Android Targets
+# =============================================================================
+
 [target.aarch64-linux-android]
 linker = "C:\\Users\\stolt\\AppData\\Local\\Android\\Sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\aarch64-linux-android21-clang.cmd"
 

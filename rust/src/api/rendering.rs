@@ -5,6 +5,30 @@ use crate::bim::BoundingBox;
 use crate::renderer::{ElementDrawRange, Renderer};
 use super::state::{draw_ranges_from_mesh, with_state, ColorMode};
 
+/// Convert IFC Z-up coordinates to Y-up camera coordinates.
+/// Transform: [x, y, z] → [x, z, -y]
+fn ifc_to_yup_vertices(verts: &mut [f32]) {
+    for i in (0..verts.len()).step_by(3) {
+        let y = verts[i + 1];
+        let z = verts[i + 2];
+        verts[i + 1] = z;
+        verts[i + 2] = -y;
+    }
+}
+
+/// Convert IFC Z-up point to Y-up: [x, y, z] → [x, z, -y]
+fn ifc_to_yup_point(p: [f32; 3]) -> [f32; 3] {
+    [p[0], p[2], -p[1]]
+}
+
+/// Convert IFC Z-up bounding box to Y-up.
+/// Since -y flips, min/max may swap for the new Z axis.
+fn ifc_to_yup_bounds(min: [f32; 3], max: [f32; 3]) -> ([f32; 3], [f32; 3]) {
+    let new_min = [min[0], min[2], -max[1]];
+    let new_max = [max[0], max[2], -min[1]];
+    (new_min, new_max)
+}
+
 /// Distinct color palette for categorical coloring (10 colors)
 const PALETTE: [[f32; 4]; 10] = [
     [0.40, 0.76, 0.65, 1.0], // teal
@@ -77,7 +101,7 @@ pub fn is_renderer_initialized() -> bool {
 #[frb(sync)]
 pub fn load_model_into_renderer() -> Result<String, String> {
     with_state(|s| {
-        let (vertices, normals, colors, indices, draw_ranges, bounds) = {
+        let (mut vertices, mut normals, colors, indices, mut draw_ranges, bounds) = {
             let reg_model = s.registry.get_primary_model_mut().ok_or("No model loaded")?;
             let mesh = reg_model.get_mesh();
             let ranges = draw_ranges_from_mesh(mesh, None);
@@ -92,6 +116,15 @@ pub fn load_model_into_renderer() -> Result<String, String> {
         };
         let element_count = draw_ranges.len();
 
+        // Convert IFC Z-up to Y-up
+        ifc_to_yup_vertices(&mut vertices);
+        ifc_to_yup_vertices(&mut normals);
+        for range in &mut draw_ranges {
+            let (new_min, new_max) = ifc_to_yup_bounds(range.aabb_min, range.aabb_max);
+            range.aabb_min = new_min;
+            range.aabb_max = new_max;
+        }
+
         s.mark_bvh_dirty();
 
         let r = s.renderer()?;
@@ -102,7 +135,8 @@ pub fn load_model_into_renderer() -> Result<String, String> {
         r.set_instances(vec![])?;
 
         if let Some(bounds) = bounds {
-            r.fit_camera_to_bounds(bounds.min, bounds.max);
+            let (new_min, new_max) = ifc_to_yup_bounds(bounds.min, bounds.max);
+            r.fit_camera_to_bounds(new_min, new_max);
         }
 
         tracing::info!("Loaded model (non-instanced): {} elements", element_count);
@@ -168,6 +202,32 @@ pub fn load_all_models_into_renderer() -> Result<String, String> {
         let element_count = all_draw_ranges.len();
         let model_count = s.registry.model_count();
 
+        // Convert IFC Z-up coordinates to Y-up for the camera system
+        ifc_to_yup_vertices(&mut all_vertices);
+        ifc_to_yup_vertices(&mut all_normals);
+
+        // Transform element draw range bounds
+        for range in &mut all_draw_ranges {
+            let (new_min, new_max) = ifc_to_yup_bounds(range.aabb_min, range.aabb_max);
+            range.aabb_min = new_min;
+            range.aabb_max = new_max;
+        }
+
+        // Transform combined bounds
+        combined_bounds = combined_bounds.map(|b| {
+            let (new_min, new_max) = ifc_to_yup_bounds(b.min, b.max);
+            BoundingBox { min: new_min, max: new_max }
+        });
+
+        tracing::info!(
+            "Uploading mesh: {} vertices, {} normals, {} colors, {} indices, {} elements",
+            all_vertices.len() / 3,
+            all_normals.len() / 3,
+            all_colors.len() / 3,
+            all_indices.len(),
+            element_count
+        );
+
         s.mark_bvh_dirty();
 
         let r = s.renderer()?;
@@ -175,19 +235,40 @@ pub fn load_all_models_into_renderer() -> Result<String, String> {
         r.set_element_draw_ranges(all_draw_ranges)?;
         r.set_instances(vec![])?;
 
-        if let Some(bounds) = combined_bounds {
-            r.fit_camera_to_bounds(bounds.min, bounds.max);
-        }
+        // Compute vertex centroid (average of all vertex positions).
+        // Already in Y-up coordinates after the transform above.
+        let centroid = if all_vertices.len() >= 3 {
+            let vert_count = all_vertices.len() / 3;
+            let mut cx = 0.0_f64;
+            let mut cy = 0.0_f64;
+            let mut cz = 0.0_f64;
+            for i in 0..vert_count {
+                cx += all_vertices[i * 3] as f64;
+                cy += all_vertices[i * 3 + 1] as f64;
+                cz += all_vertices[i * 3 + 2] as f64;
+            }
+            let n = vert_count as f64;
+            Some([(cx / n) as f32, (cy / n) as f32, (cz / n) as f32])
+        } else {
+            None
+        };
 
-        tracing::info!(
-            "Loaded {} models: {} elements",
-            model_count,
-            element_count
-        );
+        let bounds_info = if let Some(bounds) = combined_bounds {
+            r.fit_camera_to_bounds_with_centroid(bounds.min, bounds.max, centroid);
+            format!("bounds=[{:.1},{:.1},{:.1}]-[{:.1},{:.1},{:.1}]",
+                bounds.min[0], bounds.min[1], bounds.min[2],
+                bounds.max[0], bounds.max[1], bounds.max[2])
+        } else {
+            "NO BOUNDS".to_string()
+        };
+
         Ok(format!(
-            "Loaded {} models: {} elements",
+            "Loaded {} models: {} elements, {} verts, {} idx, {}",
             model_count,
-            element_count
+            element_count,
+            all_vertices.len() / 3,
+            all_indices.len(),
+            bounds_info,
         ))
     })
 }
@@ -199,7 +280,7 @@ pub fn reload_model_mesh() -> Result<String, String> {
         let highlight_color = [0.2f32, 0.9, 0.9, 1.0];
         let selected = s.selected_element;
 
-        let (vertices, normals, mut colors, indices, draw_ranges) = {
+        let (mut vertices, mut normals, mut colors, indices, mut draw_ranges) = {
             let reg_model = s.registry.get_primary_model().ok_or("No model loaded")?;
             let mesh = reg_model.cached_mesh().ok_or("Mesh not cached")?;
             let ranges = draw_ranges_from_mesh(mesh, Some(&s.visibility));
@@ -239,6 +320,15 @@ pub fn reload_model_mesh() -> Result<String, String> {
 
         let element_count = draw_ranges.len();
 
+        // Convert IFC Z-up to Y-up
+        ifc_to_yup_vertices(&mut vertices);
+        ifc_to_yup_vertices(&mut normals);
+        for range in &mut draw_ranges {
+            let (new_min, new_max) = ifc_to_yup_bounds(range.aabb_min, range.aabb_max);
+            range.aabb_min = new_min;
+            range.aabb_max = new_max;
+        }
+
         s.mark_bvh_dirty();
 
         let r = s.renderer()?;
@@ -263,19 +353,23 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
 
         let highlight_color = [0.2f32, 0.9, 0.9, 1.0];
         let selected = s.selected_element;
+        let selected_set = s.selected_elements.clone();
         let color_mode = s.color_mode;
 
         // Build color-by maps if needed
         let mut type_color_map: HashMap<String, [f32; 4]> = HashMap::new();
         let mut storey_color_map: HashMap<i32, [f32; 4]> = HashMap::new();
         let mut material_color_map: HashMap<String, [f32; 4]> = HashMap::new();
+        let mut property_color_map: HashMap<String, [f32; 4]> = HashMap::new();
         let mut element_storey: HashMap<i32, i32> = HashMap::new();
         let mut element_material: HashMap<i32, String> = HashMap::new();
+        let mut element_property_value: HashMap<i32, String> = HashMap::new();
 
-        if color_mode != ColorMode::Normal {
+        if color_mode != ColorMode::Normal && color_mode != ColorMode::Grayscale {
             let mut type_index = 0usize;
             let mut storey_index = 0usize;
             let mut material_index = 0usize;
+            let mut property_index = 0usize;
 
             for (_id, reg_model) in s.registry.iter_visible() {
                 let model = &reg_model.model;
@@ -313,6 +407,26 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
                         element_material.insert(*elem_id, mat.name.clone());
                     }
                 }
+
+                // Build property color map — maps distinct property values to palette colors
+                if color_mode == ColorMode::ByProperty {
+                    if let Some(ref prop_name) = s.color_property_name {
+                        let prop_lower = prop_name.to_lowercase();
+                        for (elem_id, psets) in &model.element_property_sets {
+                            for pset in psets {
+                                for (key, value) in &pset.properties {
+                                    if key.to_lowercase() == prop_lower {
+                                        element_property_value.insert(*elem_id, value.clone());
+                                        if !property_color_map.contains_key(value) {
+                                            property_color_map.insert(value.clone(), palette_color(property_index));
+                                            property_index += 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -340,14 +454,14 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
                         continue; // individually hidden element
                     }
 
-                    let is_selected = selected == Some(e.id);
+                    let is_selected = selected == Some(e.id) || selected_set.contains(&e.id);
 
                     // Determine override color for this element
                     let override_color = if is_selected {
                         Some(highlight_color)
                     } else {
                         match color_mode {
-                            ColorMode::Normal => None,
+                            ColorMode::Normal | ColorMode::Grayscale => None,
                             ColorMode::ByType => type_color_map.get(&e.element_type).copied(),
                             ColorMode::ByStorey => {
                                 element_storey
@@ -362,6 +476,13 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
                                     .and_then(|name| material_color_map.get(name))
                                     .copied()
                                     .or(Some([0.5, 0.5, 0.5, 1.0])) // gray for no material
+                            }
+                            ColorMode::ByProperty => {
+                                element_property_value
+                                    .get(&e.id)
+                                    .and_then(|val| property_color_map.get(val))
+                                    .copied()
+                                    .or(Some([0.5, 0.5, 0.5, 1.0])) // gray for no property value
                             }
                         }
                     };
@@ -392,6 +513,26 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
             }
         }
 
+        // Apply grayscale post-processing (but preserve highlight color for selected elements)
+        if color_mode == ColorMode::Grayscale {
+            for i in (0..all_colors.len()).step_by(4) {
+                let r_val = all_colors[i];
+                let g_val = all_colors[i + 1];
+                let b_val = all_colors[i + 2];
+                // Skip vertices that have the highlight color (selected elements)
+                let is_highlight = (r_val - highlight_color[0]).abs() < 0.05
+                    && (g_val - highlight_color[1]).abs() < 0.05
+                    && (b_val - highlight_color[2]).abs() < 0.05;
+                if !is_highlight {
+                    let luma = r_val * 0.299 + g_val * 0.587 + b_val * 0.114;
+                    all_colors[i] = luma;
+                    all_colors[i + 1] = luma;
+                    all_colors[i + 2] = luma;
+                    // Keep alpha unchanged
+                }
+            }
+        }
+
         let element_count = all_draw_ranges.len();
         let model_count = s.registry.model_count();
 
@@ -415,6 +556,15 @@ pub fn reload_all_models_mesh() -> Result<String, String> {
                     all_colors[i] = 0.2;
                 }
             }
+        }
+
+        // Convert IFC Z-up to Y-up
+        ifc_to_yup_vertices(&mut all_vertices);
+        ifc_to_yup_vertices(&mut all_normals);
+        for range in &mut all_draw_ranges {
+            let (new_min, new_max) = ifc_to_yup_bounds(range.aabb_min, range.aabb_max);
+            range.aabb_min = new_min;
+            range.aabb_max = new_max;
         }
 
         s.mark_bvh_dirty();

@@ -3,11 +3,10 @@
 class RenderConfig {
   RenderConfig._();
 
-  /// Render surface width in pixels (reduced for mobile performance, scaled up).
-  static const int width = 480;
-
-  /// Render surface height in pixels.
-  static const int height = 360;
+  /// Render scale factor (0.0-1.0) applied to the viewport's physical pixels.
+  /// 0.4 = good balance of quality and performance on mobile.
+  /// 1.0 = full native resolution.
+  static const double renderScale = 0.4;
 
   /// Gesture throttle interval in milliseconds (~60Hz max gesture rate).
   static const int gestureThrottleMs = 16;
@@ -22,7 +21,10 @@ class RenderConfig {
   static const double mouseOrbitSensitivity = 0.01;
 
   /// Zoom sensitivity for pinch gestures.
-  static const double pinchZoomSensitivity = 80.0;
+  static const double pinchZoomSensitivity = 200.0;
+
+  /// Pan sensitivity for two-finger drag gestures.
+  static const double panSensitivity = 0.4;
 
   /// Zoom sensitivity for mouse wheel.
   static const double scrollZoomSensitivity = 0.01;

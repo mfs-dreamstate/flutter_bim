@@ -481,52 +481,55 @@ class _PropertyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+    return Semantics(
+      label: '$label: $value',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: SelectableText(
-                    value,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontFamily: copyable ? 'monospace' : null,
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SelectableText(
+                      value,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        fontFamily: copyable ? 'monospace' : null,
+                      ),
                     ),
                   ),
-                ),
-                if (copyable)
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 16),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: value));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Copied: $value'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    tooltip: 'Copy to clipboard',
-                  ),
-              ],
+                  if (copyable)
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: value));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Copied: $value'),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      tooltip: 'Copy to clipboard',
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

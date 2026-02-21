@@ -433,8 +433,7 @@ class _ModelListTile extends StatelessWidget {
         ),
         subtitle: Text(
           model.isPrimary ? 'Primary Model' : model.id,
-          style: TextStyle(
-            fontSize: 12,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: model.isPrimary ? colorScheme.primary : colorScheme.outline,
           ),
         ),
@@ -551,7 +550,7 @@ class _SampleOption extends StatelessWidget {
         child: Icon(icon, color: color, size: 20),
       ),
       title: Text(title),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
       onTap: onTap,
       dense: true,
     );

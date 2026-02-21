@@ -3,14 +3,51 @@
 //! High-level API for working with loaded IFC models.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{LazyLock, Mutex};
+
+use rayon::prelude::*;
 
 use super::entities::*;
-use super::geometry::{color_for_element_type, generate_box_with_normals, merge_meshes, BoundingBox};
+use super::geometry::{color_for_element_type, generate_box_with_normals, merge_meshes, BoundingBox, Mesh};
 use super::ifc_parser::IfcFile;
 use super::placement::PlacementCache;
 use super::tessellation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+
+// ========================================================================
+// Mesh Progress Tracking
+// ========================================================================
+
+/// Progress information for mesh generation.
+#[derive(Debug, Clone)]
+pub struct MeshProgress {
+    pub total_elements: usize,
+    pub completed_elements: usize,
+    pub current_phase: String, // "parsing", "tessellating", "uploading"
+    pub percentage: f32,
+}
+
+/// Global progress state for mesh generation (thread-safe).
+static MESH_PROGRESS: LazyLock<Mutex<Option<MeshProgress>>> = LazyLock::new(|| Mutex::new(None));
+
+/// Read the current mesh generation progress. Returns `None` if no generation is in progress.
+pub fn get_mesh_progress() -> Option<MeshProgress> {
+    MESH_PROGRESS.lock().ok()?.clone()
+}
+
+/// Check whether mesh generation is currently running.
+pub fn is_mesh_generating() -> bool {
+    MESH_PROGRESS.lock().ok().map_or(false, |g| g.is_some())
+}
+
+/// Set the global mesh progress (internal helper).
+fn set_mesh_progress(progress: Option<MeshProgress>) {
+    if let Ok(mut guard) = MESH_PROGRESS.lock() {
+        *guard = progress;
+    }
+}
 
 /// A parsed IFC property set with named properties.
 #[derive(Debug, Clone)]
@@ -881,38 +918,98 @@ pub struct ModelMesh {
 }
 
 impl BimModel {
-    /// Generate meshes from the BIM model for rendering.
+    /// Generate meshes from the BIM model for rendering (parallel via rayon).
     /// Attempts real IFC tessellation first; falls back to placeholder boxes.
+    /// Uses rayon's `par_iter()` for parallel tessellation of independent elements.
     pub fn generate_meshes(&self) -> ModelMesh {
-        let mut meshes = Vec::with_capacity(self.element_count);
-        let mut elements = Vec::with_capacity(self.element_count);
-        let mut current_triangle = 0u32;
+        let start = std::time::Instant::now();
 
         let has_entities = self.entity_map.as_ref().map_or(false, |m| !m.is_empty());
-        let mut placement_cache = PlacementCache::new();
-        let mut real_count = 0usize;
-        let mut fallback_count = 0usize;
 
         // Collect all typed elements with their type label and color
         let all_elements: Vec<(EntityId, &str, Option<&str>, &str)> = self.collect_all_elements();
+        let total = all_elements.len();
 
-        for (product_id, element_type, name, color_key) in &all_elements {
-            let color = color_for_element_type(color_key);
+        // Initialise progress tracking
+        set_mesh_progress(Some(MeshProgress {
+            total_elements: total,
+            completed_elements: 0,
+            current_phase: "tessellating".to_string(),
+            percentage: 0.0,
+        }));
 
-            // Try real tessellation if entity map is available
-            let real_mesh = if has_entities {
-                let entities = self.entity_map.as_ref().unwrap();
-                tessellation::tessellate_product(*product_id, entities, &mut placement_cache, color)
-            } else {
-                None
-            };
+        // Atomic counter for thread-safe progress reporting inside rayon
+        let completed_counter = AtomicUsize::new(0);
 
-            let mesh = if let Some(m) = real_mesh {
+        // ---- Parallel tessellation phase ----
+        // Each rayon task gets its own PlacementCache (RefCell isn't Sync).
+        let parallel_results: Vec<(usize, Option<Mesh>)> = if has_entities {
+            let entities = self.entity_map.as_ref().unwrap();
+
+            all_elements
+                .par_iter()
+                .enumerate()
+                .map(|(idx, (product_id, _element_type, _name, color_key))| {
+                    let color = color_for_element_type(color_key);
+                    let mut local_cache = PlacementCache::new();
+                    let mesh = tessellation::tessellate_product(
+                        *product_id,
+                        entities,
+                        &mut local_cache,
+                        color,
+                    );
+
+                    // Update progress atomically
+                    let done = completed_counter.fetch_add(1, Ordering::Relaxed) + 1;
+                    if done % 50 == 0 || done == total {
+                        set_mesh_progress(Some(MeshProgress {
+                            total_elements: total,
+                            completed_elements: done,
+                            current_phase: "tessellating".to_string(),
+                            percentage: done as f32 / total as f32 * 100.0,
+                        }));
+                    }
+
+                    (idx, mesh)
+                })
+                .collect()
+        } else {
+            // No entity map — all results are None (will fall back to boxes)
+            all_elements
+                .iter()
+                .enumerate()
+                .map(|(idx, _)| (idx, None))
+                .collect()
+        };
+
+        // ---- Sequential merge phase ----
+        set_mesh_progress(Some(MeshProgress {
+            total_elements: total,
+            completed_elements: total,
+            current_phase: "uploading".to_string(),
+            percentage: 100.0,
+        }));
+
+        // Build an index-ordered lookup of tessellation results
+        let mut tess_results: Vec<Option<Mesh>> = vec![None; total];
+        for (idx, mesh) in parallel_results {
+            tess_results[idx] = mesh;
+        }
+
+        let mut meshes = Vec::with_capacity(total);
+        let mut elements = Vec::with_capacity(total);
+        let mut current_triangle = 0u32;
+        let mut real_count = 0usize;
+        let mut fallback_count = 0usize;
+
+        for (i, (product_id, element_type, name, color_key)) in all_elements.iter().enumerate() {
+            let mesh = if let Some(m) = tess_results[i].take() {
                 real_count += 1;
                 m
             } else {
                 // Fallback to placeholder box
                 fallback_count += 1;
+                let color = color_for_element_type(color_key);
                 let (center, size) = self.placeholder_box_for(*product_id, element_type);
                 generate_box_with_normals(center, size, color)
             };
@@ -923,7 +1020,6 @@ impl BimModel {
                 max: [0.1, 0.1, 0.1],
             });
 
-            // Look up global_id from the entity map or the typed element
             let (global_id, display_name) = self.lookup_element_meta(*product_id, *name);
 
             elements.push(ElementInfo {
@@ -939,50 +1035,28 @@ impl BimModel {
             meshes.push(mesh);
         }
 
+        let elapsed = start.elapsed();
         if has_entities {
             tracing::info!(
-                "Tessellation: {} real, {} fallback boxes (total {})",
+                "Tessellated {} elements in {:.1}ms (parallel): {} real, {} fallback boxes",
+                real_count + fallback_count,
+                elapsed.as_millis(),
                 real_count,
                 fallback_count,
-                real_count + fallback_count
             );
         }
 
         // If no elements, create a default building shape
         if meshes.is_empty() {
-            let default_elements = [
-                ([0.0, 0.0, 0.0], [10.0, 0.3, 8.0], "SLAB", "Floor"),
-                ([-4.9, 1.5, 0.0], [0.2, 3.0, 8.0], "WALL", "Left Wall"),
-                ([4.9, 1.5, 0.0], [0.2, 3.0, 8.0], "WALL", "Right Wall"),
-                ([0.0, 1.5, -3.9], [10.0, 3.0, 0.2], "WALL", "Back Wall"),
-                ([0.0, 1.5, 3.9], [10.0, 3.0, 0.2], "WALL", "Front Wall"),
-                ([0.0, 3.15, 0.0], [10.0, 0.3, 8.0], "ROOF", "Roof"),
-            ];
-
-            for (i, (center, size, elem_type, name)) in default_elements.iter().enumerate() {
-                let mesh = generate_box_with_normals(*center, *size, color_for_element_type(elem_type));
-                let triangles = (mesh.indices.len() / 3) as u32;
-                let half = [size[0] / 2.0, size[1] / 2.0, size[2] / 2.0];
-                elements.push(ElementInfo {
-                    id: i as i32,
-                    element_type: elem_type.to_string(),
-                    name: name.to_string(),
-                    global_id: format!("default_{}", i),
-                    bounds: BoundingBox {
-                        min: [center[0] - half[0], center[1] - half[1], center[2] - half[2]],
-                        max: [center[0] + half[0], center[1] + half[1], center[2] + half[2]],
-                    },
-                    triangle_start: current_triangle,
-                    triangle_count: triangles,
-                });
-                current_triangle += triangles;
-                meshes.push(mesh);
-            }
+            Self::add_default_building_elements(&mut meshes, &mut elements, &mut current_triangle);
         }
 
         // Merge all meshes
         let merged = merge_meshes(meshes);
         let bounds = merged.bounding_box();
+
+        // Clear progress
+        set_mesh_progress(None);
 
         ModelMesh {
             vertices: merged.vertices,
@@ -991,6 +1065,153 @@ impl BimModel {
             colors: merged.colors,
             bounds,
             elements,
+        }
+    }
+
+    /// Generate meshes sequentially (old behaviour, useful for debugging / benchmarking).
+    pub fn generate_meshes_sequential(&self) -> ModelMesh {
+        let start = std::time::Instant::now();
+
+        let mut meshes = Vec::with_capacity(self.element_count);
+        let mut elements = Vec::with_capacity(self.element_count);
+        let mut current_triangle = 0u32;
+
+        let has_entities = self.entity_map.as_ref().map_or(false, |m| !m.is_empty());
+        let mut placement_cache = PlacementCache::new();
+        let mut real_count = 0usize;
+        let mut fallback_count = 0usize;
+
+        let all_elements: Vec<(EntityId, &str, Option<&str>, &str)> = self.collect_all_elements();
+
+        set_mesh_progress(Some(MeshProgress {
+            total_elements: all_elements.len(),
+            completed_elements: 0,
+            current_phase: "tessellating".to_string(),
+            percentage: 0.0,
+        }));
+
+        for (i, (product_id, element_type, name, color_key)) in all_elements.iter().enumerate() {
+            let color = color_for_element_type(color_key);
+
+            let real_mesh = if has_entities {
+                let entities = self.entity_map.as_ref().unwrap();
+                tessellation::tessellate_product(*product_id, entities, &mut placement_cache, color)
+            } else {
+                None
+            };
+
+            let mesh = if let Some(m) = real_mesh {
+                real_count += 1;
+                m
+            } else {
+                fallback_count += 1;
+                let (center, size) = self.placeholder_box_for(*product_id, element_type);
+                generate_box_with_normals(center, size, color)
+            };
+
+            let triangles = (mesh.indices.len() / 3) as u32;
+            let bounds = mesh.bounding_box().unwrap_or(BoundingBox {
+                min: [0.0, 0.0, 0.0],
+                max: [0.1, 0.1, 0.1],
+            });
+
+            let (global_id, display_name) = self.lookup_element_meta(*product_id, *name);
+
+            elements.push(ElementInfo {
+                id: *product_id,
+                element_type: element_type.to_string(),
+                name: display_name,
+                global_id,
+                bounds,
+                triangle_start: current_triangle,
+                triangle_count: triangles,
+            });
+            current_triangle += triangles;
+            meshes.push(mesh);
+
+            // Update progress every 50 elements
+            if (i + 1) % 50 == 0 || i + 1 == all_elements.len() {
+                set_mesh_progress(Some(MeshProgress {
+                    total_elements: all_elements.len(),
+                    completed_elements: i + 1,
+                    current_phase: "tessellating".to_string(),
+                    percentage: (i + 1) as f32 / all_elements.len() as f32 * 100.0,
+                }));
+            }
+        }
+
+        let elapsed = start.elapsed();
+        if has_entities {
+            tracing::info!(
+                "Tessellated {} elements in {:.1}ms (sequential): {} real, {} fallback boxes",
+                real_count + fallback_count,
+                elapsed.as_millis(),
+                real_count,
+                fallback_count,
+            );
+        }
+
+        if meshes.is_empty() {
+            Self::add_default_building_elements(&mut meshes, &mut elements, &mut current_triangle);
+        }
+
+        let merged = merge_meshes(meshes);
+        let bounds = merged.bounding_box();
+
+        set_mesh_progress(None);
+
+        ModelMesh {
+            vertices: merged.vertices,
+            indices: merged.indices,
+            normals: merged.normals,
+            colors: merged.colors,
+            bounds,
+            elements,
+        }
+    }
+
+    /// Adds default building elements when no elements exist in the model.
+    fn add_default_building_elements(
+        meshes: &mut Vec<Mesh>,
+        elements: &mut Vec<ElementInfo>,
+        current_triangle: &mut u32,
+    ) {
+        let default_elements = [
+            ([0.0, 0.0, 0.0], [10.0, 0.3, 8.0], "SLAB", "Floor"),
+            ([-4.9, 1.5, 0.0], [0.2, 3.0, 8.0], "WALL", "Left Wall"),
+            ([4.9, 1.5, 0.0], [0.2, 3.0, 8.0], "WALL", "Right Wall"),
+            ([0.0, 1.5, -3.9], [10.0, 3.0, 0.2], "WALL", "Back Wall"),
+            ([0.0, 1.5, 3.9], [10.0, 3.0, 0.2], "WALL", "Front Wall"),
+            ([0.0, 3.15, 0.0], [10.0, 0.3, 8.0], "ROOF", "Roof"),
+        ];
+
+        for (i, (center, size, elem_type, name)) in default_elements.iter().enumerate() {
+            let mesh =
+                generate_box_with_normals(*center, *size, color_for_element_type(elem_type));
+            let triangles = (mesh.indices.len() / 3) as u32;
+            let half = [size[0] / 2.0, size[1] / 2.0, size[2] / 2.0];
+            elements.push(ElementInfo {
+                id: i as i32,
+                element_type: elem_type.to_string(),
+                name: name.to_string(),
+                global_id: format!("default_{}", i),
+                bounds: BoundingBox {
+                    min: [
+                        center[0] - half[0],
+                        center[1] - half[1],
+                        center[2] - half[2],
+                    ],
+                    max: [
+                        center[0] + half[0],
+                        center[1] + half[1],
+                        center[2] + half[2],
+                    ],
+                },
+                triangle_start: *current_triangle,
+                triangle_count: triangles,
+            });
+            *current_triangle += triangles;
+            meshes.push(mesh);
         }
     }
 
@@ -1236,6 +1457,29 @@ impl BimModel {
                     .collect::<Vec<_>>()
                     .join(", "),
                 None => String::new(),
+            }
+        } else if entity
+            .entity_type
+            .eq_ignore_ascii_case("IFCPROPERTYTABLEVALUE")
+        {
+            // IFCPROPERTYTABLEVALUE(Name, Description, DefiningValues, DefinedValues,
+            //                       DefiningUnit, DefinedUnit, CurveInterpolation)
+            let defining = entity.get_list(2).map(|list| {
+                list.iter()
+                    .map(|v| Self::ifc_value_to_string(Some(v)))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }).unwrap_or_default();
+            let defined = entity.get_list(3).map(|list| {
+                list.iter()
+                    .map(|v| Self::ifc_value_to_string(Some(v)))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }).unwrap_or_default();
+            if defining.is_empty() && defined.is_empty() {
+                String::new()
+            } else {
+                format!("{} -> {}", defining, defined)
             }
         } else {
             // Unknown property type - try attribute 2 as a generic value
@@ -1719,5 +1963,832 @@ impl BimModel {
         let mesh = self.generate_meshes();
         mesh.elements.into_iter().find(|e| e.id == element_id)
     }
+}
 
+// ========================================================================
+// LOD (Level-of-Detail) Geometry Management
+// ========================================================================
+
+/// Geometry detail level.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum LodMeshLevel {
+    Full,        // original tessellation
+    Medium,      // 50% triangle reduction
+    Low,         // 25% triangle reduction
+    BoundingBox, // 12-triangle box
+}
+
+/// A single LOD variant of an element's geometry.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LodGeometry {
+    pub level: LodMeshLevel,
+    pub vertices: Vec<f32>,  // x,y,z flat
+    pub normals: Vec<f32>,   // nx,ny,nz flat
+    pub indices: Vec<u32>,
+    pub triangle_count: usize,
+}
+
+/// Per-element LOD state tracking.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ElementLodState {
+    pub element_id: usize,
+    pub current_level: LodMeshLevel,
+    pub available_levels: Vec<LodMeshLevel>,
+    pub distance_to_camera: f32,
+    pub screen_size_pixels: f32,
+}
+
+/// Summary of current LOD distribution across all elements.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LodSummary {
+    pub full_count: usize,
+    pub medium_count: usize,
+    pub low_count: usize,
+    pub bbox_count: usize,
+    pub hidden_count: usize,
+    pub total_triangles: usize,
+    pub budget_utilization: f32, // 0.0..1.0
+}
+
+/// Manages level-of-detail transitions for model elements.
+#[derive(Debug)]
+pub struct LodManager {
+    pub elements: Vec<ElementLodState>,
+    pub distance_thresholds: [f32; 4], // Full->Medium, Medium->Low, Low->BBox, BBox->Hidden
+    pub hysteresis: f32,                // prevents LOD flickering (default 0.1 = 10%)
+    pub total_triangles_budget: usize,  // max triangles to render
+    pub current_triangle_count: usize,
+}
+
+impl LodManager {
+    /// Create a new LodManager with default thresholds and the given triangle budget.
+    pub fn new(budget: usize) -> Self {
+        Self {
+            elements: Vec::new(),
+            distance_thresholds: [50.0, 150.0, 400.0, 1000.0],
+            hysteresis: 0.1,
+            total_triangles_budget: budget,
+            current_triangle_count: 0,
+        }
+    }
+
+    /// Set custom distance thresholds for LOD transitions.
+    pub fn set_thresholds(&mut self, thresholds: [f32; 4]) {
+        self.distance_thresholds = thresholds;
+    }
+
+    /// Update the distance-to-camera for each tracked element.
+    pub fn update_distances(
+        &mut self,
+        camera_pos: [f32; 3],
+        element_positions: &[(usize, [f32; 3])],
+    ) {
+        for (elem_id, pos) in element_positions {
+            let dx = pos[0] - camera_pos[0];
+            let dy = pos[1] - camera_pos[1];
+            let dz = pos[2] - camera_pos[2];
+            let dist = (dx * dx + dy * dy + dz * dz).sqrt();
+
+            if let Some(state) = self.elements.iter_mut().find(|e| e.element_id == *elem_id) {
+                state.distance_to_camera = dist;
+            }
+        }
+    }
+
+    /// Based on distances and hysteresis, decide the desired LOD per element.
+    pub fn compute_desired_lods(&self) -> Vec<(usize, LodMeshLevel)> {
+        let mut result = Vec::with_capacity(self.elements.len());
+        for elem in &self.elements {
+            let dist = elem.distance_to_camera;
+            let current_idx = Self::lod_to_index(elem.current_level);
+
+            // Determine desired LOD from distance thresholds
+            let desired = if dist < self.distance_thresholds[0] {
+                LodMeshLevel::Full
+            } else if dist < self.distance_thresholds[1] {
+                LodMeshLevel::Medium
+            } else if dist < self.distance_thresholds[2] {
+                LodMeshLevel::Low
+            } else {
+                LodMeshLevel::BoundingBox
+            };
+
+            let desired_idx = Self::lod_to_index(desired);
+
+            // Apply hysteresis: only transition if beyond threshold * (1 +/- hysteresis)
+            let final_level = if desired_idx > current_idx {
+                // Downgrade: require distance to exceed threshold * (1 + hysteresis)
+                let threshold_idx = if desired_idx >= 1 { desired_idx - 1 } else { 0 };
+                let threshold = self.distance_thresholds[threshold_idx.min(3)];
+                if dist > threshold * (1.0 + self.hysteresis) {
+                    desired
+                } else {
+                    elem.current_level
+                }
+            } else if desired_idx < current_idx {
+                // Upgrade: require distance to be below threshold * (1 - hysteresis)
+                let threshold_idx = if current_idx >= 1 { current_idx - 1 } else { 0 };
+                let threshold = self.distance_thresholds[threshold_idx.min(3)];
+                if dist < threshold * (1.0 - self.hysteresis) {
+                    desired
+                } else {
+                    elem.current_level
+                }
+            } else {
+                desired
+            };
+
+            result.push((elem.element_id, final_level));
+        }
+        result
+    }
+
+    /// Downgrade distant elements if over budget.
+    pub fn apply_budget_constraint(
+        &self,
+        desired: &mut Vec<(usize, LodMeshLevel)>,
+        triangle_counts: &[(LodMeshLevel, usize)],
+    ) {
+        // Build a map from LodMeshLevel to triangle count
+        let count_map: HashMap<LodMeshLevel, usize> = triangle_counts.iter().copied().collect();
+
+        // Calculate total triangles with current desired LODs
+        let mut total: usize = 0;
+        for (_, level) in desired.iter() {
+            total += count_map.get(level).copied().unwrap_or(0);
+        }
+
+        if total <= self.total_triangles_budget {
+            return;
+        }
+
+        // Sort by distance (farthest first) so we downgrade distant elements first
+        // We need to look up distances from self.elements
+        let mut indexed: Vec<(usize, usize, LodMeshLevel, f32)> = desired
+            .iter()
+            .enumerate()
+            .map(|(idx, (elem_id, level))| {
+                let dist = self
+                    .elements
+                    .iter()
+                    .find(|e| e.element_id == *elem_id)
+                    .map(|e| e.distance_to_camera)
+                    .unwrap_or(0.0);
+                (idx, *elem_id, *level, dist)
+            })
+            .collect();
+
+        // Sort farthest first
+        indexed.sort_by(|a, b| b.3.partial_cmp(&a.3).unwrap_or(std::cmp::Ordering::Equal));
+
+        for (idx, _elem_id, level, _dist) in &indexed {
+            if total <= self.total_triangles_budget {
+                break;
+            }
+            let current_count = count_map.get(level).copied().unwrap_or(0);
+            let next_level = Self::downgrade_level(*level);
+            if next_level == *level {
+                continue; // already at lowest
+            }
+            let new_count = count_map.get(&next_level).copied().unwrap_or(0);
+            total = total - current_count + new_count;
+            desired[*idx].1 = next_level;
+        }
+    }
+
+    /// Return elements that need LOD changes (element_id, new_level, old_level).
+    pub fn get_lod_transitions(
+        &self,
+        desired: &[(usize, LodMeshLevel)],
+    ) -> Vec<(usize, LodMeshLevel, LodMeshLevel)> {
+        let mut transitions = Vec::new();
+        for (elem_id, new_level) in desired {
+            if let Some(state) = self.elements.iter().find(|e| e.element_id == *elem_id) {
+                if state.current_level != *new_level {
+                    transitions.push((*elem_id, *new_level, state.current_level));
+                }
+            }
+        }
+        transitions
+    }
+
+    /// Get a summary of the current LOD distribution.
+    pub fn lod_summary(&self) -> LodSummary {
+        let mut full_count = 0usize;
+        let mut medium_count = 0usize;
+        let mut low_count = 0usize;
+        let mut bbox_count = 0usize;
+        let hidden_count = 0usize;
+
+        for elem in &self.elements {
+            match elem.current_level {
+                LodMeshLevel::Full => full_count += 1,
+                LodMeshLevel::Medium => medium_count += 1,
+                LodMeshLevel::Low => low_count += 1,
+                LodMeshLevel::BoundingBox => bbox_count += 1,
+            }
+        }
+
+        let utilization = if self.total_triangles_budget > 0 {
+            self.current_triangle_count as f32 / self.total_triangles_budget as f32
+        } else {
+            0.0
+        };
+
+        LodSummary {
+            full_count,
+            medium_count,
+            low_count,
+            bbox_count,
+            hidden_count,
+            total_triangles: self.current_triangle_count,
+            budget_utilization: utilization.min(1.0),
+        }
+    }
+
+    // Internal helpers
+
+    fn lod_to_index(level: LodMeshLevel) -> usize {
+        match level {
+            LodMeshLevel::Full => 0,
+            LodMeshLevel::Medium => 1,
+            LodMeshLevel::Low => 2,
+            LodMeshLevel::BoundingBox => 3,
+        }
+    }
+
+    fn downgrade_level(level: LodMeshLevel) -> LodMeshLevel {
+        match level {
+            LodMeshLevel::Full => LodMeshLevel::Medium,
+            LodMeshLevel::Medium => LodMeshLevel::Low,
+            LodMeshLevel::Low => LodMeshLevel::BoundingBox,
+            LodMeshLevel::BoundingBox => LodMeshLevel::BoundingBox,
+        }
+    }
+}
+
+// ========================================================================
+// Geometry Simplification Helpers
+// ========================================================================
+
+/// Simple uniform decimation by skipping every Nth triangle.
+/// `target_ratio` is the fraction of triangles to keep (e.g. 0.5 = 50%).
+/// Not sophisticated but fast.
+pub fn simplify_mesh_uniform(
+    vertices: &[f32],
+    normals: &[f32],
+    indices: &[u32],
+    target_ratio: f32,
+) -> LodGeometry {
+    let original_tri_count = indices.len() / 3;
+    if original_tri_count == 0 || target_ratio >= 1.0 {
+        return LodGeometry {
+            level: LodMeshLevel::Full,
+            vertices: vertices.to_vec(),
+            normals: normals.to_vec(),
+            indices: indices.to_vec(),
+            triangle_count: original_tri_count,
+        };
+    }
+
+    let target_count = ((original_tri_count as f32 * target_ratio).ceil() as usize).max(1);
+    // Calculate step: keep every step-th triangle
+    let step = if target_count >= original_tri_count {
+        1
+    } else {
+        original_tri_count / target_count
+    };
+
+    let mut new_indices = Vec::new();
+    let mut kept = 0usize;
+    for i in (0..indices.len()).step_by(3) {
+        if i / 3 % step == 0 {
+            if i + 2 < indices.len() {
+                new_indices.push(indices[i]);
+                new_indices.push(indices[i + 1]);
+                new_indices.push(indices[i + 2]);
+                kept += 1;
+            }
+        }
+    }
+
+    let level = if target_ratio > 0.4 {
+        LodMeshLevel::Medium
+    } else {
+        LodMeshLevel::Low
+    };
+
+    LodGeometry {
+        level,
+        vertices: vertices.to_vec(),
+        normals: normals.to_vec(),
+        indices: new_indices,
+        triangle_count: kept,
+    }
+}
+
+/// Generate a 12-triangle box matching the element's AABB.
+pub fn generate_bounding_box_lod(
+    bounds_min: [f32; 3],
+    bounds_max: [f32; 3],
+    color: [f32; 4],
+) -> LodGeometry {
+    let _ = color; // reserved for future per-vertex coloring
+
+    let min = bounds_min;
+    let max = bounds_max;
+
+    // 8 corner vertices
+    #[rustfmt::skip]
+    let vertices: Vec<f32> = vec![
+        min[0], min[1], min[2], // 0: ---
+        max[0], min[1], min[2], // 1: +--
+        max[0], max[1], min[2], // 2: ++-
+        min[0], max[1], min[2], // 3: -+-
+        min[0], min[1], max[2], // 4: --+
+        max[0], min[1], max[2], // 5: +-+
+        max[0], max[1], max[2], // 6: +++
+        min[0], max[1], max[2], // 7: -++
+    ];
+
+    // Normals (approximate: use face normals, but here assign per-vertex as average for simplicity)
+    // For a box, each face has 4 vertices sharing the same normal.
+    // We use 24 vertices (4 per face * 6 faces) for correct normals.
+    #[rustfmt::skip]
+    let face_vertices: Vec<f32> = vec![
+        // Front face (z = max[2]), normal (0,0,1)
+        min[0], min[1], max[2],
+        max[0], min[1], max[2],
+        max[0], max[1], max[2],
+        min[0], max[1], max[2],
+        // Back face (z = min[2]), normal (0,0,-1)
+        max[0], min[1], min[2],
+        min[0], min[1], min[2],
+        min[0], max[1], min[2],
+        max[0], max[1], min[2],
+        // Top face (y = max[1]), normal (0,1,0)
+        min[0], max[1], min[2],
+        min[0], max[1], max[2],
+        max[0], max[1], max[2],
+        max[0], max[1], min[2],
+        // Bottom face (y = min[1]), normal (0,-1,0)
+        min[0], min[1], max[2],
+        min[0], min[1], min[2],
+        max[0], min[1], min[2],
+        max[0], min[1], max[2],
+        // Right face (x = max[0]), normal (1,0,0)
+        max[0], min[1], min[2],
+        max[0], min[1], max[2],
+        max[0], max[1], max[2],
+        max[0], max[1], min[2],
+        // Left face (x = min[0]), normal (-1,0,0)
+        min[0], min[1], max[2],
+        min[0], min[1], min[2],
+        min[0], max[1], min[2],
+        min[0], max[1], max[2],
+    ];
+
+    #[rustfmt::skip]
+    let face_normals: Vec<f32> = vec![
+        // Front
+        0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,
+        // Back
+        0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,
+        // Top
+        0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,
+        // Bottom
+        0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,
+        // Right
+        1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0,
+        // Left
+       -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+    ];
+
+    // 6 faces * 2 triangles = 12 triangles, 36 indices
+    #[rustfmt::skip]
+    let face_indices: Vec<u32> = vec![
+        // Front
+         0,  1,  2,   0,  2,  3,
+        // Back
+         4,  5,  6,   4,  6,  7,
+        // Top
+         8,  9, 10,   8, 10, 11,
+        // Bottom
+        12, 13, 14,  12, 14, 15,
+        // Right
+        16, 17, 18,  16, 18, 19,
+        // Left
+        20, 21, 22,  20, 22, 23,
+    ];
+
+    let _ = vertices; // unused; we use face_vertices instead for correct normals
+
+    LodGeometry {
+        level: LodMeshLevel::BoundingBox,
+        vertices: face_vertices,
+        normals: face_normals,
+        indices: face_indices,
+        triangle_count: 12,
+    }
+}
+
+/// Generate Full + Medium (50%) + Low (25%) + BBox LODs for an element.
+pub fn generate_lod_chain(
+    vertices: &[f32],
+    normals: &[f32],
+    indices: &[u32],
+    bounds: ([f32; 3], [f32; 3]),
+) -> Vec<LodGeometry> {
+    let full_tri_count = indices.len() / 3;
+
+    let full = LodGeometry {
+        level: LodMeshLevel::Full,
+        vertices: vertices.to_vec(),
+        normals: normals.to_vec(),
+        indices: indices.to_vec(),
+        triangle_count: full_tri_count,
+    };
+
+    let medium = simplify_mesh_uniform(vertices, normals, indices, 0.5);
+    let mut medium = medium;
+    medium.level = LodMeshLevel::Medium;
+
+    let low = simplify_mesh_uniform(vertices, normals, indices, 0.25);
+    let mut low = low;
+    low.level = LodMeshLevel::Low;
+
+    let bbox = generate_bounding_box_lod(bounds.0, bounds.1, [0.5, 0.5, 0.5, 1.0]);
+
+    vec![full, medium, low, bbox]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper: create a BimModel with N walls (no entity map, so only fallback boxes).
+    fn model_with_walls(n: usize) -> BimModel {
+        let mut model = BimModel::new();
+        for i in 0..n {
+            model.walls.push(IfcWall {
+                product: IfcProduct {
+                    id: i as EntityId,
+                    global_id: format!("wall_{}", i),
+                    name: Some(format!("Wall {}", i)),
+                    description: None,
+                    object_type: None,
+                    properties: None,
+                },
+                predefined_type: None,
+            });
+        }
+        model.element_count = n;
+        model
+    }
+
+    #[test]
+    fn test_parallel_and_sequential_produce_same_results() {
+        let model = model_with_walls(20);
+
+        let mesh_par = model.generate_meshes();
+        let mesh_seq = model.generate_meshes_sequential();
+
+        // Same number of elements
+        assert_eq!(mesh_par.elements.len(), mesh_seq.elements.len());
+
+        // Same total vertex/index counts
+        assert_eq!(mesh_par.vertices.len(), mesh_seq.vertices.len());
+        assert_eq!(mesh_par.indices.len(), mesh_seq.indices.len());
+
+        // Same bounds
+        assert_eq!(
+            mesh_par.bounds.is_some(),
+            mesh_seq.bounds.is_some(),
+        );
+        if let (Some(bp), Some(bs)) = (&mesh_par.bounds, &mesh_seq.bounds) {
+            for k in 0..3 {
+                assert!((bp.min[k] - bs.min[k]).abs() < 1e-4);
+                assert!((bp.max[k] - bs.max[k]).abs() < 1e-4);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mesh_progress_tracking() {
+        // Generate meshes (will set and then clear progress internally)
+        let model = model_with_walls(5);
+        let _mesh = model.generate_meshes();
+
+        // After this specific call completes, progress should be cleared.
+        // (Note: global state is shared so we only assert the post-condition
+        //  of our own call, which always clears at the end.)
+        let progress = get_mesh_progress();
+        assert!(
+            progress.is_none(),
+            "Progress should be None after generate_meshes completes"
+        );
+    }
+
+    #[test]
+    fn test_default_building_when_empty() {
+        let model = BimModel::new();
+        let mesh = model.generate_meshes();
+
+        // Default building has 6 elements
+        assert_eq!(mesh.elements.len(), 6);
+        assert!(!mesh.vertices.is_empty());
+    }
+
+    // ================================================================
+    // LOD Tests
+    // ================================================================
+
+    #[test]
+    fn test_lod_manager_new() {
+        let mgr = LodManager::new(100_000);
+        assert_eq!(mgr.total_triangles_budget, 100_000);
+        assert_eq!(mgr.current_triangle_count, 0);
+        assert!((mgr.hysteresis - 0.1).abs() < 1e-6);
+        assert_eq!(mgr.distance_thresholds, [50.0, 150.0, 400.0, 1000.0]);
+        assert!(mgr.elements.is_empty());
+    }
+
+    #[test]
+    fn test_lod_manager_thresholds() {
+        let mut mgr = LodManager::new(50_000);
+        let custom = [10.0, 30.0, 100.0, 500.0];
+        mgr.set_thresholds(custom);
+        assert_eq!(mgr.distance_thresholds, custom);
+    }
+
+    #[test]
+    fn test_lod_update_distances() {
+        let mut mgr = LodManager::new(100_000);
+        mgr.elements.push(ElementLodState {
+            element_id: 1,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium, LodMeshLevel::Low, LodMeshLevel::BoundingBox],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 100.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 2,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 50.0,
+        });
+
+        let camera = [0.0, 0.0, 0.0];
+        let positions = vec![(1, [3.0, 4.0, 0.0]), (2, [0.0, 0.0, 10.0])];
+        mgr.update_distances(camera, &positions);
+
+        assert!((mgr.elements[0].distance_to_camera - 5.0).abs() < 1e-4);
+        assert!((mgr.elements[1].distance_to_camera - 10.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_lod_compute_desired() {
+        let mut mgr = LodManager::new(100_000);
+        // Set tight thresholds for easy testing
+        mgr.set_thresholds([10.0, 20.0, 30.0, 100.0]);
+        mgr.hysteresis = 0.0; // disable hysteresis for deterministic test
+
+        mgr.elements.push(ElementLodState {
+            element_id: 1,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full],
+            distance_to_camera: 5.0, // < 10 => Full
+            screen_size_pixels: 100.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 2,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium],
+            distance_to_camera: 15.0, // 10..20 => Medium
+            screen_size_pixels: 50.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 3,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Low],
+            distance_to_camera: 25.0, // 20..30 => Low
+            screen_size_pixels: 20.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 4,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::BoundingBox],
+            distance_to_camera: 50.0, // >= 30 => BBox
+            screen_size_pixels: 5.0,
+        });
+
+        let desired = mgr.compute_desired_lods();
+        assert_eq!(desired.len(), 4);
+        assert_eq!(desired[0], (1, LodMeshLevel::Full));
+        assert_eq!(desired[1], (2, LodMeshLevel::Medium));
+        assert_eq!(desired[2], (3, LodMeshLevel::Low));
+        assert_eq!(desired[3], (4, LodMeshLevel::BoundingBox));
+    }
+
+    #[test]
+    fn test_lod_budget_constraint() {
+        let mut mgr = LodManager::new(100); // very tight budget
+        mgr.hysteresis = 0.0;
+        mgr.set_thresholds([10.0, 20.0, 30.0, 100.0]);
+
+        mgr.elements.push(ElementLodState {
+            element_id: 1,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full],
+            distance_to_camera: 5.0,
+            screen_size_pixels: 100.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 2,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium],
+            distance_to_camera: 50.0, // far away
+            screen_size_pixels: 10.0,
+        });
+
+        let mut desired = vec![
+            (1, LodMeshLevel::Full),
+            (2, LodMeshLevel::Full),
+        ];
+
+        // Triangle counts: Full=200, Medium=100, Low=50, BBox=12
+        let tri_counts = vec![
+            (LodMeshLevel::Full, 200),
+            (LodMeshLevel::Medium, 100),
+            (LodMeshLevel::Low, 50),
+            (LodMeshLevel::BoundingBox, 12),
+        ];
+
+        mgr.apply_budget_constraint(&mut desired, &tri_counts);
+
+        // Element 2 is farther and should be downgraded first
+        // Total was 400, budget is 100, so both will be downgraded
+        // Element 2 (farther) gets downgraded first
+        assert!(
+            desired[1].1 != LodMeshLevel::Full,
+            "Far element should be downgraded under tight budget"
+        );
+    }
+
+    #[test]
+    fn test_lod_transitions() {
+        let mut mgr = LodManager::new(100_000);
+        mgr.elements.push(ElementLodState {
+            element_id: 1,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium],
+            distance_to_camera: 100.0,
+            screen_size_pixels: 50.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 2,
+            current_level: LodMeshLevel::Medium,
+            available_levels: vec![LodMeshLevel::Full, LodMeshLevel::Medium],
+            distance_to_camera: 10.0,
+            screen_size_pixels: 200.0,
+        });
+
+        let desired = vec![
+            (1, LodMeshLevel::Medium),   // Full -> Medium (change)
+            (2, LodMeshLevel::Medium),   // Medium -> Medium (no change)
+        ];
+
+        let transitions = mgr.get_lod_transitions(&desired);
+        assert_eq!(transitions.len(), 1);
+        assert_eq!(transitions[0], (1, LodMeshLevel::Medium, LodMeshLevel::Full));
+    }
+
+    #[test]
+    fn test_lod_summary() {
+        let mut mgr = LodManager::new(1000);
+        mgr.current_triangle_count = 500;
+
+        mgr.elements.push(ElementLodState {
+            element_id: 1,
+            current_level: LodMeshLevel::Full,
+            available_levels: vec![],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 0.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 2,
+            current_level: LodMeshLevel::Medium,
+            available_levels: vec![],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 0.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 3,
+            current_level: LodMeshLevel::Low,
+            available_levels: vec![],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 0.0,
+        });
+        mgr.elements.push(ElementLodState {
+            element_id: 4,
+            current_level: LodMeshLevel::BoundingBox,
+            available_levels: vec![],
+            distance_to_camera: 0.0,
+            screen_size_pixels: 0.0,
+        });
+
+        let summary = mgr.lod_summary();
+        assert_eq!(summary.full_count, 1);
+        assert_eq!(summary.medium_count, 1);
+        assert_eq!(summary.low_count, 1);
+        assert_eq!(summary.bbox_count, 1);
+        assert_eq!(summary.hidden_count, 0);
+        assert_eq!(summary.total_triangles, 500);
+        assert!((summary.budget_utilization - 0.5).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_simplify_mesh_uniform() {
+        // Create a simple mesh with 4 triangles (12 indices)
+        let vertices: Vec<f32> = vec![
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            1.0, 1.0, 0.0,
+            2.0, 0.0, 0.0,
+        ];
+        let normals: Vec<f32> = vec![
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+        ];
+        let indices: Vec<u32> = vec![
+            0, 1, 2,
+            1, 3, 2,
+            1, 4, 3,
+            0, 2, 3,
+        ];
+
+        // Simplify to 50%
+        let simplified = simplify_mesh_uniform(&vertices, &normals, &indices, 0.5);
+        assert!(simplified.triangle_count <= 4);
+        assert!(simplified.triangle_count >= 1);
+        assert_eq!(simplified.indices.len(), simplified.triangle_count * 3);
+
+        // Full ratio should keep all
+        let full = simplify_mesh_uniform(&vertices, &normals, &indices, 1.0);
+        assert_eq!(full.triangle_count, 4);
+    }
+
+    #[test]
+    fn test_generate_bbox_lod() {
+        let lod = generate_bounding_box_lod(
+            [-1.0, -2.0, -3.0],
+            [1.0, 2.0, 3.0],
+            [0.5, 0.5, 0.5, 1.0],
+        );
+
+        assert_eq!(lod.level, LodMeshLevel::BoundingBox);
+        assert_eq!(lod.triangle_count, 12);
+        assert_eq!(lod.indices.len(), 36); // 12 triangles * 3
+        assert_eq!(lod.vertices.len(), 72); // 24 vertices * 3 components
+        assert_eq!(lod.normals.len(), 72);  // 24 normals * 3 components
+    }
+
+    #[test]
+    fn test_generate_lod_chain() {
+        // Simple quad: 2 triangles
+        let vertices: Vec<f32> = vec![
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+        ];
+        let normals: Vec<f32> = vec![
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+        ];
+        let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3];
+        let bounds = ([0.0, 0.0, 0.0], [1.0, 1.0, 0.0]);
+
+        let chain = generate_lod_chain(&vertices, &normals, &indices, bounds);
+        assert_eq!(chain.len(), 4);
+        assert_eq!(chain[0].level, LodMeshLevel::Full);
+        assert_eq!(chain[1].level, LodMeshLevel::Medium);
+        assert_eq!(chain[2].level, LodMeshLevel::Low);
+        assert_eq!(chain[3].level, LodMeshLevel::BoundingBox);
+
+        // Full should have original triangle count
+        assert_eq!(chain[0].triangle_count, 2);
+        // BBox should always have 12 triangles
+        assert_eq!(chain[3].triangle_count, 12);
+        // Medium and low should have <= original
+        assert!(chain[1].triangle_count <= chain[0].triangle_count);
+        assert!(chain[2].triangle_count <= chain[1].triangle_count || chain[2].triangle_count <= chain[0].triangle_count);
+    }
 }

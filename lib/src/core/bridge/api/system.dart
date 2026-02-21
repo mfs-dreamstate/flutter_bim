@@ -6,6 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `count_bvh_nodes`, `format_bytes`, `record_frame`, `update_memory_stats`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`, `fmt`
+
 /// Initialize the BIM viewer engine
 /// This should be called once when the app starts
 String initialize() => RustLib.instance.api.crateApiSystemInitialize();
@@ -22,3 +25,116 @@ Future<String> testAsync() => RustLib.instance.api.crateApiSystemTestAsync();
 /// Test error handling across FFI
 String testErrorHandling({required bool shouldFail}) =>
     RustLib.instance.api.crateApiSystemTestErrorHandling(shouldFail: shouldFail);
+
+/// Get current loading progress as JSON.
+/// Returns: {"phase": "tessellating", "percentage": 45.2, "completed": 452, "total": 1000}
+/// Returns empty string if not currently loading.
+String getLoadingProgress() => RustLib.instance.api.crateApiSystemGetLoadingProgress();
+
+/// Check if a model is currently being loaded/processed.
+bool isLoading() => RustLib.instance.api.crateApiSystemIsLoading();
+
+/// Get current memory usage statistics as JSON.
+String getMemoryStats() => RustLib.instance.api.crateApiSystemGetMemoryStats();
+
+/// Get a human-readable memory usage summary.
+String getMemorySummary() => RustLib.instance.api.crateApiSystemGetMemorySummary();
+
+/// Get estimated GPU memory usage in bytes.
+BigInt getGpuMemoryBytes() => RustLib.instance.api.crateApiSystemGetGpuMemoryBytes();
+
+/// Get estimated CPU memory usage in bytes.
+BigInt getCpuMemoryBytes() => RustLib.instance.api.crateApiSystemGetCpuMemoryBytes();
+
+/// Force garbage collection / memory cleanup.
+/// Clears invalidated mesh caches and entity maps, then updates stats.
+String compactMemory() => RustLib.instance.api.crateApiSystemCompactMemory();
+
+/// Get the number of frames rendered (for performance monitoring).
+BigInt getFrameCount() => RustLib.instance.api.crateApiSystemGetFrameCount();
+
+/// Reset performance counters.
+void resetPerformanceCounters() => RustLib.instance.api.crateApiSystemResetPerformanceCounters();
+
+/// Get renderer capabilities/features as JSON.
+String getRendererCapabilities() => RustLib.instance.api.crateApiSystemGetRendererCapabilities();
+
+/// Get a full system diagnostic report.
+String getDiagnosticReport() => RustLib.instance.api.crateApiSystemGetDiagnosticReport();
+
+/// Memory usage statistics for the BIM viewer.
+class MemoryStats {
+  final BigInt totalVertices;
+  final BigInt totalIndices;
+  final BigInt totalElements;
+  final BigInt totalModels;
+  final BigInt estimatedGpuBytes;
+  final BigInt estimatedCpuBytes;
+  final BigInt meshCacheBytes;
+  final BigInt bvhNodeCount;
+
+  const MemoryStats({
+    required this.totalVertices,
+    required this.totalIndices,
+    required this.totalElements,
+    required this.totalModels,
+    required this.estimatedGpuBytes,
+    required this.estimatedCpuBytes,
+    required this.meshCacheBytes,
+    required this.bvhNodeCount,
+  });
+
+  static Future<MemoryStats> default_() => RustLib.instance.api.crateApiSystemMemoryStatsDefault();
+
+  @override
+  int get hashCode =>
+      totalVertices.hashCode ^
+      totalIndices.hashCode ^
+      totalElements.hashCode ^
+      totalModels.hashCode ^
+      estimatedGpuBytes.hashCode ^
+      estimatedCpuBytes.hashCode ^
+      meshCacheBytes.hashCode ^
+      bvhNodeCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MemoryStats &&
+          runtimeType == other.runtimeType &&
+          totalVertices == other.totalVertices &&
+          totalIndices == other.totalIndices &&
+          totalElements == other.totalElements &&
+          totalModels == other.totalModels &&
+          estimatedGpuBytes == other.estimatedGpuBytes &&
+          estimatedCpuBytes == other.estimatedCpuBytes &&
+          meshCacheBytes == other.meshCacheBytes &&
+          bvhNodeCount == other.bvhNodeCount;
+}
+
+/// Performance counters for monitoring.
+class PerfCounters {
+  final BigInt frameCount;
+  final BigInt totalRenderTimeUs;
+  final BigInt peakRenderTimeUs;
+
+  const PerfCounters({
+    required this.frameCount,
+    required this.totalRenderTimeUs,
+    required this.peakRenderTimeUs,
+  });
+
+  static Future<PerfCounters> default_() => RustLib.instance.api.crateApiSystemPerfCountersDefault();
+
+  @override
+  int get hashCode => frameCount.hashCode ^ totalRenderTimeUs.hashCode ^ peakRenderTimeUs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PerfCounters &&
+          runtimeType == other.runtimeType &&
+          frameCount == other.frameCount &&
+          totalRenderTimeUs == other.totalRenderTimeUs &&
+          peakRenderTimeUs == other.peakRenderTimeUs;
+}

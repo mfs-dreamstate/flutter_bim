@@ -17,6 +17,9 @@ abstract interface class IRendererService {
   /// Zoom the camera by delta amount.
   void zoomCamera({required double delta});
 
+  /// Pan the camera (translate position and target).
+  void panCamera({required double deltaX, required double deltaY});
+
   /// Fit camera to all visible model bounds.
   void fitCameraToAllModels();
 

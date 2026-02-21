@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 
 use flutter_rust_bridge::frb;
@@ -15,6 +15,8 @@ pub(crate) enum ColorMode {
     ByType,
     ByStorey,
     ByMaterial,
+    ByProperty,
+    Grayscale,
 }
 
 /// Consolidated application state — replaces 10 separate global statics.
@@ -27,6 +29,9 @@ pub(crate) struct AppState {
     pub isolated_storey: Option<String>,
     pub color_mode: ColorMode,
     pub selected_element: Option<i32>,
+    pub selected_elements: HashSet<i32>,
+    pub selection_sets: HashMap<String, Vec<i32>>,
+    pub color_property_name: Option<String>,
     pub pick_accelerator: PickAccelerator,
     pub pick_bvh_dirty: bool,
     pub grid_visible: bool,
@@ -34,6 +39,7 @@ pub(crate) struct AppState {
     pub measurement_type: Option<super::measurement::MeasurementType>,
     pub section_plane: Option<super::section::SectionPlane>,
     pub view_mode: super::overlay::ViewMode,
+    pub viewpoints: Vec<super::camera::ViewpointData>,
 }
 
 impl AppState {
@@ -46,6 +52,9 @@ impl AppState {
             isolated_storey: None,
             color_mode: ColorMode::Normal,
             selected_element: None,
+            selected_elements: HashSet::new(),
+            selection_sets: HashMap::new(),
+            color_property_name: None,
             pick_accelerator: PickAccelerator::empty(),
             pick_bvh_dirty: false,
             grid_visible: true,
@@ -53,6 +62,7 @@ impl AppState {
             measurement_type: None,
             section_plane: None,
             view_mode: super::overlay::ViewMode::ThreeD,
+            viewpoints: Vec::new(),
         }
     }
 

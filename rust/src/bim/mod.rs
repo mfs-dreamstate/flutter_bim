@@ -5,12 +5,19 @@
 
 pub mod entities;
 pub mod geometry;
+pub mod gltf_import;
 pub mod ifc_parser;
 pub mod model;
 pub mod model_registry;
+pub mod obj_import;
 pub mod placement;
 pub mod tessellation;
 pub mod triangulate;
+pub mod bcf;
+pub mod clash;
+pub mod dxf_import;
+pub mod point_cloud;
+pub mod pdf_import;
 
 pub use entities::*;
 pub use geometry::*;

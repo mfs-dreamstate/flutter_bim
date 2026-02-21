@@ -28,6 +28,9 @@ class MockRendererService implements IRendererService {
   void zoomCamera({required double delta}) {}
 
   @override
+  void panCamera({required double deltaX, required double deltaY}) {}
+
+  @override
   void fitCameraToAllModels() {}
 
   @override

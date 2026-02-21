@@ -1,7 +1,30 @@
 use flutter_rust_bridge::frb;
+use std::sync::{LazyLock, Mutex};
 
 use crate::bim::{ElementInfo, GridLine};
 use super::state::with_state;
+
+// ============================================================================
+// Smart Group Types & Storage
+// ============================================================================
+
+/// A filter criterion for smart groups
+#[derive(Debug, Clone)]
+pub struct FilterCriterion {
+    pub field: String,      // "type", "storey", "material", "name", "property:PropName"
+    pub operator: String,   // "equals", "contains", "starts_with", "greater_than", "less_than"
+    pub value: String,
+}
+
+/// A smart group definition
+#[derive(Debug, Clone)]
+pub struct SmartGroup {
+    pub name: String,
+    pub criteria: Vec<FilterCriterion>,
+    pub match_all: bool,  // true = AND, false = OR
+}
+
+static SMART_GROUPS: LazyLock<Mutex<Vec<SmartGroup>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 /// Pick element at screen coordinates (searches all visible models)
 #[frb(sync)]
@@ -157,7 +180,7 @@ pub fn get_isolated_storey() -> Option<String> {
 // ============================================================================
 
 /// Set the color visualization mode.
-/// 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material
+/// 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material, 4 = By Property, 5 = Grayscale
 /// Call reload_all_models_mesh() after this to apply.
 #[frb(sync)]
 pub fn set_color_mode(mode: i32) -> Result<(), String> {
@@ -167,6 +190,8 @@ pub fn set_color_mode(mode: i32) -> Result<(), String> {
             1 => super::state::ColorMode::ByType,
             2 => super::state::ColorMode::ByStorey,
             3 => super::state::ColorMode::ByMaterial,
+            4 => super::state::ColorMode::ByProperty,
+            5 => super::state::ColorMode::Grayscale,
             _ => return Err(format!("Invalid color mode: {}", mode)),
         };
         Ok(())
@@ -174,7 +199,7 @@ pub fn set_color_mode(mode: i32) -> Result<(), String> {
 }
 
 /// Get the current color mode.
-/// Returns: 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material
+/// Returns: 0 = Normal, 1 = By Type, 2 = By Storey, 3 = By Material, 4 = By Property, 5 = Grayscale
 #[frb(sync)]
 pub fn get_color_mode() -> i32 {
     with_state(|s| match s.color_mode {
@@ -182,6 +207,19 @@ pub fn get_color_mode() -> i32 {
         super::state::ColorMode::ByType => 1,
         super::state::ColorMode::ByStorey => 2,
         super::state::ColorMode::ByMaterial => 3,
+        super::state::ColorMode::ByProperty => 4,
+        super::state::ColorMode::Grayscale => 5,
+    })
+}
+
+/// Set the property name for color-by-property mode.
+/// Also sets the color mode to ByProperty.
+#[frb(sync)]
+pub fn set_color_property(property_name: String) -> Result<(), String> {
+    with_state(|s| {
+        s.color_property_name = Some(property_name);
+        s.color_mode = super::state::ColorMode::ByProperty;
+        Ok(())
     })
 }
 
@@ -191,6 +229,251 @@ pub fn set_selected_element(element_id: Option<i32>) -> Result<(), String> {
     with_state(|s| {
         s.selected_element = element_id;
         Ok(())
+    })
+}
+
+// ============================================================================
+// Multi-Select API
+// ============================================================================
+
+/// Select an element (add to selection)
+#[frb(sync)]
+pub fn select_element(element_id: i32) -> Result<(), String> {
+    with_state(|s| {
+        s.selected_elements.insert(element_id);
+        s.selected_element = Some(element_id); // keep backward compat
+        Ok(())
+    })
+}
+
+/// Deselect an element (remove from selection)
+#[frb(sync)]
+pub fn deselect_element(element_id: i32) -> Result<(), String> {
+    with_state(|s| {
+        s.selected_elements.remove(&element_id);
+        if s.selected_element == Some(element_id) {
+            s.selected_element = s.selected_elements.iter().next().copied();
+        }
+        Ok(())
+    })
+}
+
+/// Clear all selection
+#[frb(sync)]
+pub fn clear_selection() -> Result<(), String> {
+    with_state(|s| {
+        s.selected_elements.clear();
+        s.selected_element = None;
+        Ok(())
+    })
+}
+
+/// Get all selected element IDs
+#[frb(sync)]
+pub fn get_selected_elements() -> Vec<i32> {
+    with_state(|s| s.selected_elements.iter().copied().collect())
+}
+
+/// Get selected element count
+#[frb(sync)]
+pub fn get_selection_count() -> usize {
+    with_state(|s| s.selected_elements.len())
+}
+
+/// Toggle element selection
+#[frb(sync)]
+pub fn toggle_element_selection(element_id: i32) -> bool {
+    with_state(|s| {
+        if s.selected_elements.contains(&element_id) {
+            s.selected_elements.remove(&element_id);
+            if s.selected_element == Some(element_id) {
+                s.selected_element = s.selected_elements.iter().next().copied();
+            }
+            false
+        } else {
+            s.selected_elements.insert(element_id);
+            s.selected_element = Some(element_id);
+            true
+        }
+    })
+}
+
+// ============================================================================
+// Hide / Show / Isolate API
+// ============================================================================
+
+/// Hide all currently selected elements
+#[frb(sync)]
+pub fn hide_selected() -> Result<i32, String> {
+    with_state(|s| {
+        let count = s.selected_elements.len() as i32;
+        s.hidden_elements.extend(s.selected_elements.iter());
+        s.selected_elements.clear();
+        s.selected_element = None;
+        Ok(count)
+    })
+}
+
+/// Show all hidden elements (clear hidden set)
+#[frb(sync)]
+pub fn show_all_elements() -> Result<(), String> {
+    with_state(|s| {
+        s.hidden_elements.clear();
+        s.isolated_storey = None;
+        Ok(())
+    })
+}
+
+/// Isolate selected elements (hide everything except selection)
+#[frb(sync)]
+pub fn isolate_selected() -> Result<i32, String> {
+    with_state(|s| {
+        if s.selected_elements.is_empty() {
+            return Err("No elements selected".to_string());
+        }
+
+        let selected = s.selected_elements.clone();
+        s.hidden_elements.clear();
+
+        // Hide all elements that are NOT in the selection
+        for (_id, reg_model) in s.registry.iter_visible() {
+            for elem in reg_model.elements() {
+                if !selected.contains(&elem.id) {
+                    s.hidden_elements.insert(elem.id);
+                }
+            }
+        }
+
+        Ok(selected.len() as i32)
+    })
+}
+
+/// Hide a specific element by ID
+#[frb(sync)]
+pub fn hide_element(element_id: i32) -> Result<(), String> {
+    with_state(|s| {
+        s.hidden_elements.insert(element_id);
+        s.selected_elements.remove(&element_id);
+        if s.selected_element == Some(element_id) {
+            s.selected_element = s.selected_elements.iter().next().copied();
+        }
+        Ok(())
+    })
+}
+
+/// Show a specific hidden element
+#[frb(sync)]
+pub fn show_element(element_id: i32) -> Result<(), String> {
+    with_state(|s| {
+        s.hidden_elements.remove(&element_id);
+        Ok(())
+    })
+}
+
+/// Get count of hidden elements
+#[frb(sync)]
+pub fn get_hidden_element_count() -> usize {
+    with_state(|s| s.hidden_elements.len())
+}
+
+// ============================================================================
+// Selection Sets (Named Groups)
+// ============================================================================
+
+/// Save current selection as a named set
+#[frb(sync)]
+pub fn save_selection_set(name: String) -> Result<usize, String> {
+    with_state(|s| {
+        let elements: Vec<i32> = s.selected_elements.iter().copied().collect();
+        let count = elements.len();
+        s.selection_sets.insert(name, elements);
+        Ok(count)
+    })
+}
+
+/// Restore a named selection set
+#[frb(sync)]
+pub fn restore_selection_set(name: String) -> Result<usize, String> {
+    with_state(|s| {
+        let elements = s.selection_sets.get(&name).ok_or("Selection set not found")?;
+        s.selected_elements = elements.iter().copied().collect();
+        s.selected_element = s.selected_elements.iter().next().copied();
+        Ok(s.selected_elements.len())
+    })
+}
+
+/// Get all selection set names
+#[frb(sync)]
+pub fn get_selection_set_names() -> Vec<String> {
+    with_state(|s| s.selection_sets.keys().cloned().collect())
+}
+
+/// Delete a selection set
+#[frb(sync)]
+pub fn delete_selection_set(name: String) -> Result<(), String> {
+    with_state(|s| {
+        s.selection_sets.remove(&name);
+        Ok(())
+    })
+}
+
+// ============================================================================
+// Search & Filter API
+// ============================================================================
+
+/// Search elements by name (case-insensitive substring match)
+#[frb(sync)]
+pub fn search_elements(query: String) -> Vec<ElementInfo> {
+    with_state(|s| {
+        let query_lower = query.to_lowercase();
+        let mut results = Vec::new();
+        for (_id, reg_model) in s.registry.iter_visible() {
+            for elem in reg_model.elements() {
+                if elem.name.to_lowercase().contains(&query_lower)
+                    || elem.element_type.to_lowercase().contains(&query_lower)
+                    || elem.global_id.to_lowercase().contains(&query_lower)
+                {
+                    results.push(elem.clone());
+                }
+            }
+        }
+        results
+    })
+}
+
+/// Filter elements by type
+#[frb(sync)]
+pub fn filter_elements_by_type(element_type: String) -> Vec<ElementInfo> {
+    with_state(|s| {
+        let mut results = Vec::new();
+        for (_id, reg_model) in s.registry.iter_visible() {
+            for elem in reg_model.elements() {
+                if elem.element_type.eq_ignore_ascii_case(&element_type) {
+                    results.push(elem.clone());
+                }
+            }
+        }
+        results
+    })
+}
+
+/// Select all elements matching a search query
+#[frb(sync)]
+pub fn select_by_search(query: String) -> usize {
+    with_state(|s| {
+        let query_lower = query.to_lowercase();
+        s.selected_elements.clear();
+        for (_id, reg_model) in s.registry.iter_visible() {
+            for elem in reg_model.elements() {
+                if elem.name.to_lowercase().contains(&query_lower)
+                    || elem.element_type.to_lowercase().contains(&query_lower)
+                {
+                    s.selected_elements.insert(elem.id);
+                }
+            }
+        }
+        s.selected_element = s.selected_elements.iter().next().copied();
+        s.selected_elements.len()
     })
 }
 
@@ -309,4 +592,420 @@ fn dms_to_decimal(dms: &[i32]) -> f64 {
 
     let sign = if degrees < 0.0 { -1.0 } else { 1.0 };
     sign * (degrees.abs() + minutes / 60.0 + seconds / 3600.0 + microseconds / 3600000000.0)
+}
+
+// ============================================================================
+// Smart Groups API
+// ============================================================================
+
+/// Create a smart group with filter criteria parsed from JSON.
+///
+/// `criteria_json` format: `[{"field": "type", "operator": "equals", "value": "IfcWall"}, ...]`
+#[frb(sync)]
+pub fn create_smart_group(name: String, criteria_json: String, match_all: bool) -> Result<(), String> {
+    let parsed: Vec<serde_json::Value> = serde_json::from_str(&criteria_json)
+        .map_err(|e| format!("Invalid JSON: {}", e))?;
+
+    let mut criteria = Vec::new();
+    for item in parsed {
+        let field = item.get("field")
+            .and_then(|v| v.as_str())
+            .ok_or("Each criterion must have a 'field' string")?
+            .to_string();
+        let operator = item.get("operator")
+            .and_then(|v| v.as_str())
+            .ok_or("Each criterion must have an 'operator' string")?
+            .to_string();
+        let value = item.get("value")
+            .and_then(|v| v.as_str())
+            .ok_or("Each criterion must have a 'value' string")?
+            .to_string();
+        criteria.push(FilterCriterion { field, operator, value });
+    }
+
+    if criteria.is_empty() {
+        return Err("Smart group must have at least one criterion".to_string());
+    }
+
+    let group = SmartGroup { name: name.clone(), criteria, match_all };
+    let mut groups = SMART_GROUPS.lock().unwrap();
+    // Replace if same name exists
+    groups.retain(|g| g.name != name);
+    groups.push(group);
+    Ok(())
+}
+
+/// Apply a smart group: find matching elements across all visible models and select them.
+/// Returns count of matched elements.
+#[frb(sync)]
+pub fn apply_smart_group(name: String) -> Result<usize, String> {
+    let group = {
+        let groups = SMART_GROUPS.lock().unwrap();
+        groups.iter().find(|g| g.name == name).cloned()
+            .ok_or_else(|| format!("Smart group '{}' not found", name))?
+    };
+
+    with_state(|s| {
+        let matched = evaluate_smart_group_on_state(s, &group);
+        for id in &matched {
+            s.selected_elements.insert(*id);
+        }
+        s.selected_element = s.selected_elements.iter().next().copied();
+        Ok(matched.len())
+    })
+}
+
+/// Get all smart group names.
+#[frb(sync)]
+pub fn get_smart_group_names() -> Vec<String> {
+    let groups = SMART_GROUPS.lock().unwrap();
+    groups.iter().map(|g| g.name.clone()).collect()
+}
+
+/// Delete a smart group by name.
+#[frb(sync)]
+pub fn delete_smart_group(name: String) -> Result<(), String> {
+    let mut groups = SMART_GROUPS.lock().unwrap();
+    let before = groups.len();
+    groups.retain(|g| g.name != name);
+    if groups.len() == before {
+        Err(format!("Smart group '{}' not found", name))
+    } else {
+        Ok(())
+    }
+}
+
+/// Preview the element count for a smart group without selecting.
+#[frb(sync)]
+pub fn get_smart_group_element_count(name: String) -> Result<usize, String> {
+    let group = {
+        let groups = SMART_GROUPS.lock().unwrap();
+        groups.iter().find(|g| g.name == name).cloned()
+            .ok_or_else(|| format!("Smart group '{}' not found", name))?
+    };
+
+    with_state(|s| {
+        let matched = evaluate_smart_group_on_state(s, &group);
+        Ok(matched.len())
+    })
+}
+
+/// Get the criteria JSON for a smart group.
+#[frb(sync)]
+pub fn get_smart_group_criteria_json(name: String) -> Result<String, String> {
+    let groups = SMART_GROUPS.lock().unwrap();
+    let group = groups.iter().find(|g| g.name == name)
+        .ok_or_else(|| format!("Smart group '{}' not found", name))?;
+
+    let criteria_values: Vec<serde_json::Value> = group.criteria.iter().map(|c| {
+        serde_json::json!({
+            "field": c.field,
+            "operator": c.operator,
+            "value": c.value,
+        })
+    }).collect();
+
+    serde_json::to_string(&criteria_values)
+        .map_err(|e| format!("Serialization error: {}", e))
+}
+
+// ============================================================================
+// Smart Group Evaluation Helpers (internal)
+// ============================================================================
+
+/// Evaluate a smart group against state, returning matching element IDs.
+fn evaluate_smart_group_on_state(
+    s: &super::state::AppState,
+    group: &SmartGroup,
+) -> Vec<i32> {
+    let mut matched = Vec::new();
+
+    for (_model_id, reg_model) in s.registry.iter_visible() {
+        let model = &reg_model.model;
+
+        // Pre-build storey name lookup
+        let storey_names: std::collections::HashMap<i32, String> = model
+            .storeys
+            .iter()
+            .map(|st| (st.id, st.name.clone()))
+            .collect();
+
+        for elem in reg_model.elements() {
+            let passes = if group.match_all {
+                // AND: all criteria must match
+                group.criteria.iter().all(|c| {
+                    criterion_matches(c, elem, model, &storey_names)
+                })
+            } else {
+                // OR: any criterion must match
+                group.criteria.iter().any(|c| {
+                    criterion_matches(c, elem, model, &storey_names)
+                })
+            };
+
+            if passes {
+                matched.push(elem.id);
+            }
+        }
+    }
+
+    matched
+}
+
+/// Check if a single criterion matches a given element.
+fn criterion_matches(
+    criterion: &FilterCriterion,
+    elem: &ElementInfo,
+    model: &crate::bim::model::BimModel,
+    storey_names: &std::collections::HashMap<i32, String>,
+) -> bool {
+    let field_value = resolve_field_value(&criterion.field, elem, model, storey_names);
+    match field_value {
+        Some(val) => apply_operator(&criterion.operator, &val, &criterion.value),
+        None => false,
+    }
+}
+
+/// Resolve the value of a field for a given element.
+fn resolve_field_value(
+    field: &str,
+    elem: &ElementInfo,
+    model: &crate::bim::model::BimModel,
+    storey_names: &std::collections::HashMap<i32, String>,
+) -> Option<String> {
+    match field {
+        "type" => Some(elem.element_type.clone()),
+        "name" => Some(elem.name.clone()),
+        "storey" => {
+            let storey_id = model.element_to_storey.get(&elem.id)?;
+            storey_names.get(storey_id).cloned()
+        }
+        "material" => {
+            let mat = model.element_materials.get(&elem.id)?;
+            Some(mat.name.clone())
+        }
+        _ if field.starts_with("property:") => {
+            let prop_name = &field["property:".len()..];
+            let psets = model.element_property_sets.get(&elem.id)?;
+            for pset in psets {
+                for (name, value) in &pset.properties {
+                    if name.eq_ignore_ascii_case(prop_name) {
+                        return Some(value.clone());
+                    }
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+/// Apply an operator to compare a field value against a criterion value.
+fn apply_operator(operator: &str, field_value: &str, criterion_value: &str) -> bool {
+    match operator {
+        "equals" => field_value.eq_ignore_ascii_case(criterion_value),
+        "contains" => field_value.to_lowercase().contains(&criterion_value.to_lowercase()),
+        "starts_with" => field_value.to_lowercase().starts_with(&criterion_value.to_lowercase()),
+        "greater_than" => {
+            match (field_value.parse::<f64>(), criterion_value.parse::<f64>()) {
+                (Ok(a), Ok(b)) => a > b,
+                _ => field_value > criterion_value,
+            }
+        }
+        "less_than" => {
+            match (field_value.parse::<f64>(), criterion_value.parse::<f64>()) {
+                (Ok(a), Ok(b)) => a < b,
+                _ => field_value < criterion_value,
+            }
+        }
+        _ => false,
+    }
+}
+
+// ============================================================================
+// Search Results Highlight API
+// ============================================================================
+
+/// Search across all visible models and select matches.
+/// Searches name, type, and global_id with case-insensitive substring matching.
+/// Marks BVH as dirty so mesh can be reloaded with highlights.
+/// Returns the count of matched elements.
+#[frb(sync)]
+pub fn search_and_select(query: String) -> Result<usize, String> {
+    with_state(|s| {
+        if s.registry.is_empty() {
+            return Err("No models loaded".to_string());
+        }
+
+        let query_lower = query.to_lowercase();
+        let mut count = 0usize;
+
+        for (_id, reg_model) in s.registry.iter_visible() {
+            for elem in reg_model.elements() {
+                if elem.name.to_lowercase().contains(&query_lower)
+                    || elem.element_type.to_lowercase().contains(&query_lower)
+                    || elem.global_id.to_lowercase().contains(&query_lower)
+                {
+                    s.selected_elements.insert(elem.id);
+                    count += 1;
+                }
+            }
+        }
+
+        s.selected_element = s.selected_elements.iter().next().copied();
+        s.mark_bvh_dirty();
+        Ok(count)
+    })
+}
+
+/// Search for elements where a specific property matches (case-insensitive substring).
+/// Returns matching ElementInfo objects.
+#[frb(sync)]
+pub fn search_elements_by_property(property_name: String, property_value: String) -> Vec<ElementInfo> {
+    with_state(|s| {
+        let value_lower = property_value.to_lowercase();
+        let mut results = Vec::new();
+
+        for (_model_id, reg_model) in s.registry.iter_visible() {
+            let model = &reg_model.model;
+            for elem in reg_model.elements() {
+                if let Some(psets) = model.element_property_sets.get(&elem.id) {
+                    let found = psets.iter().any(|pset| {
+                        pset.properties.iter().any(|(name, val)| {
+                            name.eq_ignore_ascii_case(&property_name)
+                                && val.to_lowercase().contains(&value_lower)
+                        })
+                    });
+                    if found {
+                        results.push(elem.clone());
+                    }
+                }
+            }
+        }
+
+        results
+    })
+}
+
+/// Select all elements matching a property value (case-insensitive substring).
+/// Returns the count of selected elements.
+#[frb(sync)]
+pub fn select_by_property(property_name: String, property_value: String) -> usize {
+    with_state(|s| {
+        let value_lower = property_value.to_lowercase();
+        let mut count = 0usize;
+
+        for (_model_id, reg_model) in s.registry.iter_visible() {
+            let model = &reg_model.model;
+            for elem in reg_model.elements() {
+                if let Some(psets) = model.element_property_sets.get(&elem.id) {
+                    let found = psets.iter().any(|pset| {
+                        pset.properties.iter().any(|(name, val)| {
+                            name.eq_ignore_ascii_case(&property_name)
+                                && val.to_lowercase().contains(&value_lower)
+                        })
+                    });
+                    if found {
+                        s.selected_elements.insert(elem.id);
+                        count += 1;
+                    }
+                }
+            }
+        }
+
+        s.selected_element = s.selected_elements.iter().next().copied();
+        count
+    })
+}
+
+// ============================================================================
+// Unit Tests
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_apply_operator_equals() {
+        assert!(apply_operator("equals", "IfcWall", "ifcwall"));
+        assert!(apply_operator("equals", "IfcWall", "IfcWall"));
+        assert!(!apply_operator("equals", "IfcWall", "IfcSlab"));
+    }
+
+    #[test]
+    fn test_apply_operator_contains() {
+        assert!(apply_operator("contains", "Basic Wall", "wall"));
+        assert!(apply_operator("contains", "Basic Wall", "BASIC"));
+        assert!(!apply_operator("contains", "Basic Wall", "slab"));
+    }
+
+    #[test]
+    fn test_apply_operator_starts_with() {
+        assert!(apply_operator("starts_with", "IfcWall", "ifc"));
+        assert!(apply_operator("starts_with", "IfcWall", "Ifc"));
+        assert!(!apply_operator("starts_with", "IfcWall", "Wall"));
+    }
+
+    #[test]
+    fn test_apply_operator_greater_than() {
+        assert!(apply_operator("greater_than", "10.5", "5.0"));
+        assert!(!apply_operator("greater_than", "3.0", "5.0"));
+    }
+
+    #[test]
+    fn test_apply_operator_less_than() {
+        assert!(apply_operator("less_than", "3.0", "5.0"));
+        assert!(!apply_operator("less_than", "10.5", "5.0"));
+    }
+
+    #[test]
+    fn test_apply_operator_unknown() {
+        assert!(!apply_operator("regex", "value", "pattern"));
+    }
+
+    #[test]
+    fn test_smart_group_storage() {
+        // Clean up from previous test runs
+        {
+            let mut groups = SMART_GROUPS.lock().unwrap();
+            groups.clear();
+        }
+
+        // Create a smart group
+        let json = r#"[{"field": "type", "operator": "equals", "value": "Wall"}]"#;
+        create_smart_group("walls".to_string(), json.to_string(), true).unwrap();
+
+        let names = get_smart_group_names();
+        assert!(names.contains(&"walls".to_string()));
+
+        // Get criteria JSON back
+        let criteria = get_smart_group_criteria_json("walls".to_string()).unwrap();
+        let parsed: Vec<serde_json::Value> = serde_json::from_str(&criteria).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0]["field"], "type");
+
+        // Delete
+        delete_smart_group("walls".to_string()).unwrap();
+        let names = get_smart_group_names();
+        assert!(!names.contains(&"walls".to_string()));
+    }
+
+    #[test]
+    fn test_create_smart_group_invalid_json() {
+        let result = create_smart_group("bad".to_string(), "not json".to_string(), true);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_create_smart_group_empty_criteria() {
+        let result = create_smart_group("empty".to_string(), "[]".to_string(), true);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_delete_nonexistent_smart_group() {
+        let result = delete_smart_group("nonexistent_group_xyz".to_string());
+        assert!(result.is_err());
+    }
 }

@@ -6,7 +6,42 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `is_area_quantity`, `is_length_quantity`, `is_volume_quantity`, `is_weight_quantity`, `try_parse_quantity_value`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `UnitState`, `UnitSystem`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+
+/// Set the display unit system. 0 = SI, 1 = Imperial.
+void setUnitSystem({required int system}) => RustLib.instance.api.crateApiPropertiesSetUnitSystem(system: system);
+
+/// Get the current display unit system. Returns 0 (SI) or 1 (Imperial).
+int getUnitSystem() => RustLib.instance.api.crateApiPropertiesGetUnitSystem();
+
+/// Convert a length value from IFC units to the current display units.
+///
+/// The conversion chain is: IFC value * length_factor -> meters -> display units.
+double convertLength({required double value}) => RustLib.instance.api.crateApiPropertiesConvertLength(value: value);
+
+/// Convert an area value from IFC units to the current display units.
+double convertArea({required double value}) => RustLib.instance.api.crateApiPropertiesConvertArea(value: value);
+
+/// Convert a volume value from IFC units to the current display units.
+double convertVolume({required double value}) => RustLib.instance.api.crateApiPropertiesConvertVolume(value: value);
+
+/// Get the label for the current length unit (e.g., "m", "mm", "ft").
+String getLengthUnitLabel() => RustLib.instance.api.crateApiPropertiesGetLengthUnitLabel();
+
+/// Get the label for the current area unit (e.g., "m\u{b2}", "ft\u{b2}").
+String getAreaUnitLabel() => RustLib.instance.api.crateApiPropertiesGetAreaUnitLabel();
+
+/// Get the label for the current volume unit (e.g., "m\u{b3}", "ft\u{b3}").
+String getVolumeUnitLabel() => RustLib.instance.api.crateApiPropertiesGetVolumeUnitLabel();
+
+/// Detect IFC units from the loaded model's entity map and set the conversion factors.
+///
+/// Reads IFCUNITASSIGNMENT entities to determine the length, area, and volume
+/// conversion factors. Returns a human-readable description of the detected units
+/// (e.g., "Length: mm, Area: mm\u{b2}, Volume: mm\u{b3}").
+String detectIfcUnits() => RustLib.instance.api.crateApiPropertiesDetectIfcUnits();
 
 /// Get property sets for a given element ID.
 /// Returns a list of property sets, each containing key-value pairs.
@@ -33,9 +68,32 @@ MaterialData? getElementMaterial({required int elementId}) =>
 TypeObjectData? getElementTypeInfo({required int elementId}) =>
     RustLib.instance.api.crateApiPropertiesGetElementTypeInfo(elementId: elementId);
 
+/// Get quantity summary grouped by element type.
+List<QuantitySummary> getQuantitySummaryByType() => RustLib.instance.api.crateApiPropertiesGetQuantitySummaryByType();
+
+/// Get quantity summary grouped by storey.
+List<QuantitySummary> getQuantitySummaryByStorey() =>
+    RustLib.instance.api.crateApiPropertiesGetQuantitySummaryByStorey();
+
 /// Get elements grouped by storey, as a flat map of storey_name → element_ids.
 /// Elements not assigned to any storey are grouped under "Unassigned".
 Map<String, Int32List> getElementsByStorey() => RustLib.instance.api.crateApiPropertiesGetElementsByStorey();
+
+/// Get elements grouped by element type, as a flat map of type_name -> element_ids.
+///
+/// Similar to `get_elements_by_storey()` but groups by element type instead of storey.
+/// Returns a map like: { "Wall": [1, 5, 9], "Slab": [2, 6], "Door": [3, 7] }
+Map<String, Int32List> getElementsGroupedByType() => RustLib.instance.api.crateApiPropertiesGetElementsGroupedByType();
+
+/// Get the IFC map conversion (georeferencing) data as JSON, if present.
+///
+/// Returns `Ok(Some(json))` if IFCMAPCONVERSION data was found in the model,
+/// or `Ok(None)` if no georeferencing data is present.
+///
+/// The JSON includes: eastings, northings, orthogonal_height, x_axis_abscissa,
+/// x_axis_ordinate, scale, crs_name, crs_description, geodetic_datum,
+/// vertical_datum, map_projection, map_zone.
+String? getMapConversion() => RustLib.instance.api.crateApiPropertiesGetMapConversion();
 
 /// Material information for an element.
 class MaterialData {
@@ -123,6 +181,46 @@ class PropertySetInfo {
           runtimeType == other.runtimeType &&
           name == other.name &&
           properties == other.properties;
+}
+
+/// Quantity summary entry (aggregated by type or storey)
+class QuantitySummary {
+  final String groupName;
+  final int elementCount;
+  final double totalArea;
+  final double totalVolume;
+  final double totalLength;
+  final double totalWeight;
+
+  const QuantitySummary({
+    required this.groupName,
+    required this.elementCount,
+    required this.totalArea,
+    required this.totalVolume,
+    required this.totalLength,
+    required this.totalWeight,
+  });
+
+  @override
+  int get hashCode =>
+      groupName.hashCode ^
+      elementCount.hashCode ^
+      totalArea.hashCode ^
+      totalVolume.hashCode ^
+      totalLength.hashCode ^
+      totalWeight.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is QuantitySummary &&
+          runtimeType == other.runtimeType &&
+          groupName == other.groupName &&
+          elementCount == other.elementCount &&
+          totalArea == other.totalArea &&
+          totalVolume == other.totalVolume &&
+          totalLength == other.totalLength &&
+          totalWeight == other.totalWeight;
 }
 
 /// A node in the spatial hierarchy tree.

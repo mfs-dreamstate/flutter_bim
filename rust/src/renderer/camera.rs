@@ -1,8 +1,20 @@
 //! Camera System
 //!
-//! Implements perspective camera with orbit controls.
+//! Implements perspective/orthographic camera with orbit, turntable,
+//! walkthrough, animation, and named viewpoint support.
 
 use glam::{Mat4, Vec3};
+
+/// A saved camera viewpoint (position, target, settings).
+#[derive(Debug, Clone)]
+pub struct CameraViewpoint {
+    pub name: String,
+    pub position: Vec3,
+    pub target: Vec3,
+    pub up: Vec3,
+    pub fov: f32,
+    pub orthographic: bool,
+}
 
 /// Camera for 3D scene viewing
 #[derive(Debug, Clone)]
@@ -21,6 +33,27 @@ pub struct Camera {
     near: f32,
     /// Far clipping plane
     far: f32,
+
+    // -- Orthographic projection --
+    /// When true, use orthographic projection instead of perspective
+    orthographic: bool,
+
+    // -- Walkthrough (first-person) mode --
+    /// When true, camera is in first-person walkthrough mode
+    walkthrough_mode: bool,
+
+    // -- Turntable orbit mode --
+    /// When true, orbit is constrained to turntable (Y-up) rotation
+    turntable_mode: bool,
+
+    // -- Smooth camera animation --
+    animation_active: bool,
+    animation_start_position: Vec3,
+    animation_start_target: Vec3,
+    animation_end_position: Vec3,
+    animation_end_target: Vec3,
+    animation_progress: f32,
+    animation_duration: f32,
 }
 
 impl Default for Camera {
@@ -33,6 +66,16 @@ impl Default for Camera {
             aspect_ratio: 16.0 / 9.0,
             near: 0.1,
             far: 1000.0,
+            orthographic: false,
+            walkthrough_mode: false,
+            turntable_mode: true,
+            animation_active: false,
+            animation_start_position: Vec3::ZERO,
+            animation_start_target: Vec3::ZERO,
+            animation_end_position: Vec3::ZERO,
+            animation_end_target: Vec3::ZERO,
+            animation_progress: 0.0,
+            animation_duration: 0.0,
         }
     }
 }
@@ -62,9 +105,20 @@ impl Camera {
         self.position.to_array()
     }
 
+    /// Get camera target as array
+    pub fn target(&self) -> [f32; 3] {
+        self.target.to_array()
+    }
+
     /// Set aspect ratio
     pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) {
         self.aspect_ratio = aspect_ratio;
+    }
+
+    /// Set near and far clipping planes (auto-adjusted when fitting to bounds)
+    pub fn set_clip_planes(&mut self, near: f32, far: f32) {
+        self.near = near;
+        self.far = far;
     }
 
     /// Get view matrix (transforms world space to camera space)
@@ -72,14 +126,28 @@ impl Camera {
         Mat4::look_at_rh(self.position, self.target, self.up)
     }
 
-    /// Get projection matrix (perspective)
+    /// Get projection matrix (perspective or orthographic)
     pub fn projection_matrix(&self) -> Mat4 {
-        Mat4::perspective_rh(
-            self.fov.to_radians(),
-            self.aspect_ratio,
-            self.near,
-            self.far,
-        )
+        if self.orthographic {
+            let distance = (self.position - self.target).length();
+            let half_height = distance * (self.fov / 2.0).to_radians().tan();
+            let half_width = half_height * self.aspect_ratio;
+            Mat4::orthographic_rh(
+                -half_width,
+                half_width,
+                -half_height,
+                half_height,
+                self.near,
+                self.far,
+            )
+        } else {
+            Mat4::perspective_rh(
+                self.fov.to_radians(),
+                self.aspect_ratio,
+                self.near,
+                self.far,
+            )
+        }
     }
 
     /// Get combined view-projection matrix
@@ -87,38 +155,118 @@ impl Camera {
         self.projection_matrix() * self.view_matrix()
     }
 
-    /// Orbit around target (rotate camera position)
+    // ----------------------------------------------------------------
+    // Orthographic projection
+    // ----------------------------------------------------------------
+
+    /// Enable or disable orthographic projection
+    pub fn set_orthographic(&mut self, enabled: bool) {
+        self.orthographic = enabled;
+    }
+
+    /// Check if orthographic projection is active
+    pub fn is_orthographic(&self) -> bool {
+        self.orthographic
+    }
+
+    // ----------------------------------------------------------------
+    // Orbit
+    // ----------------------------------------------------------------
+
+    /// Orbit around target (rotate camera position).
+    /// If turntable mode is active, delegates to `turntable_orbit`.
+    /// Orbit speed scales with distance for consistent feel at any zoom level.
     pub fn orbit(&mut self, delta_x: f32, delta_y: f32) {
+        if self.turntable_mode {
+            self.turntable_orbit(delta_x, delta_y);
+            return;
+        }
+
         let radius = (self.position - self.target).length();
         let mut theta = (self.position.z - self.target.z).atan2(self.position.x - self.target.x);
         let mut phi =
             ((self.position.y - self.target.y) / radius).clamp(-1.0, 1.0).acos();
 
-        theta -= delta_x * 0.01;
-        phi = (phi - delta_y * 0.01).clamp(0.1, std::f32::consts::PI - 0.1);
+        let speed = 0.003 + 0.002 * (radius * 0.001).atan();
+        theta -= delta_x * speed;
+        phi = (phi - delta_y * speed).clamp(0.1, std::f32::consts::PI - 0.1);
 
         self.position.x = self.target.x + radius * phi.sin() * theta.cos();
         self.position.y = self.target.y + radius * phi.cos();
         self.position.z = self.target.z + radius * phi.sin() * theta.sin();
     }
 
-    /// Pan camera (move target and position together)
+    // ----------------------------------------------------------------
+    // Turntable orbit (constrained Y-up rotation)
+    // ----------------------------------------------------------------
+
+    /// Enable or disable turntable orbit mode
+    pub fn set_turntable_mode(&mut self, enabled: bool) {
+        self.turntable_mode = enabled;
+    }
+
+    /// Check if turntable mode is active
+    pub fn is_turntable_mode(&self) -> bool {
+        self.turntable_mode
+    }
+
+    /// Turntable orbit: rotates around the world Y axis with clamped pitch.
+    /// `delta_x` controls azimuth (yaw), `delta_y` controls elevation (pitch).
+    /// Orbit speed scales with distance: slower when zoomed in, faster when zoomed out.
+    pub fn turntable_orbit(&mut self, delta_x: f32, delta_y: f32) {
+        let radius = (self.position - self.target).length();
+        let mut theta = (self.position.z - self.target.z).atan2(self.position.x - self.target.x);
+
+        // Compute current elevation angle (pitch) from Y axis
+        let current_elevation = ((self.position.y - self.target.y) / radius).clamp(-1.0, 1.0).asin();
+
+        // Scale orbit speed with distance: use atan so it's bounded and feels natural.
+        // At very close range the sensitivity is low, at far range it's higher.
+        // Base: 0.003 at distance=1, approaches ~0.005 at large distances.
+        let speed = 0.003 + 0.002 * (radius * 0.001).atan();
+
+        // Apply deltas
+        theta -= delta_x * speed;
+        // Clamp pitch to +/- 85 degrees to avoid gimbal lock / flipping
+        let max_pitch: f32 = 85.0_f32.to_radians();
+        let new_elevation = (current_elevation + delta_y * speed).clamp(-max_pitch, max_pitch);
+
+        let cos_elev = new_elevation.cos();
+        self.position.x = self.target.x + radius * cos_elev * theta.cos();
+        self.position.y = self.target.y + radius * new_elevation.sin();
+        self.position.z = self.target.z + radius * cos_elev * theta.sin();
+
+        // Keep up vector as world Y
+        self.up = Vec3::Y;
+    }
+
+    // ----------------------------------------------------------------
+    // Pan & Zoom
+    // ----------------------------------------------------------------
+
+    /// Pan camera (move target and position together).
+    /// Pan speed scales with distance so it feels consistent at any zoom level.
     pub fn pan(&mut self, delta_x: f32, delta_y: f32) {
         let forward = (self.target - self.position).normalize();
         let right = forward.cross(self.up).normalize();
         let up = right.cross(forward);
 
-        let offset = right * delta_x * 0.01 + up * delta_y * 0.01;
+        let distance = (self.position - self.target).length();
+        let speed = distance * 0.001;
+        let offset = right * delta_x * speed + up * delta_y * speed;
 
         self.position += offset;
         self.target += offset;
     }
 
     /// Zoom in/out (move camera closer/farther from target)
+    /// Uses proportional zoom so it works at any scale
     pub fn zoom(&mut self, delta: f32) {
         let direction = (self.target - self.position).normalize();
         let distance = (self.position - self.target).length();
-        let new_distance = (distance - delta * 0.1).max(0.1);
+        // Zoom proportional to current distance (feels consistent at any scale)
+        let factor = 1.0 - delta * 0.002;
+        let new_distance = (distance * factor).max(0.1);
 
         self.position = self.target - direction * new_distance;
     }
@@ -142,6 +290,160 @@ impl Camera {
             self.position = self.target + direction * distance;
         }
     }
+
+    // ----------------------------------------------------------------
+    // Walkthrough (first-person) mode
+    // ----------------------------------------------------------------
+
+    /// Enable or disable first-person walkthrough mode.
+    /// On enter, keeps current position; target is placed 1 unit in front.
+    pub fn set_walkthrough_mode(&mut self, enabled: bool) {
+        self.walkthrough_mode = enabled;
+        if enabled {
+            // Compute current forward direction, keep position, put target 1 unit ahead
+            let forward = (self.target - self.position).normalize();
+            self.target = self.position + forward;
+            self.up = Vec3::Y;
+        }
+    }
+
+    /// Check if walkthrough mode is active
+    pub fn is_walkthrough_mode(&self) -> bool {
+        self.walkthrough_mode
+    }
+
+    /// Move camera forward/backward along the view direction (walkthrough)
+    pub fn walk_forward(&mut self, amount: f32) {
+        let forward = (self.target - self.position).normalize();
+        let offset = forward * amount;
+        self.position += offset;
+        self.target += offset;
+    }
+
+    /// Strafe camera left/right (walkthrough)
+    pub fn walk_right(&mut self, amount: f32) {
+        let forward = (self.target - self.position).normalize();
+        let right = forward.cross(Vec3::Y).normalize();
+        let offset = right * amount;
+        self.position += offset;
+        self.target += offset;
+    }
+
+    /// Move camera up/down (walkthrough)
+    pub fn walk_up(&mut self, amount: f32) {
+        let offset = Vec3::Y * amount;
+        self.position += offset;
+        self.target += offset;
+    }
+
+    /// Rotate the view direction (yaw/pitch) without orbiting around target (walkthrough).
+    /// `delta_x` rotates yaw (left/right), `delta_y` rotates pitch (up/down).
+    pub fn look_around(&mut self, delta_x: f32, delta_y: f32) {
+        let forward = (self.target - self.position).normalize();
+
+        // Yaw: rotate around world Y axis
+        let yaw = -delta_x * 0.005;
+        let cos_yaw = yaw.cos();
+        let sin_yaw = yaw.sin();
+        let rotated_x = forward.x * cos_yaw - forward.z * sin_yaw;
+        let rotated_z = forward.x * sin_yaw + forward.z * cos_yaw;
+        let mut new_forward = Vec3::new(rotated_x, forward.y, rotated_z);
+
+        // Pitch: rotate around the local right axis, clamped to avoid flipping
+        let right = new_forward.cross(Vec3::Y).normalize();
+        let pitch = -delta_y * 0.005;
+        let current_pitch = new_forward.y.asin();
+        let max_pitch: f32 = 85.0_f32.to_radians();
+        let clamped_pitch = (current_pitch + pitch).clamp(-max_pitch, max_pitch);
+        let actual_pitch = clamped_pitch - current_pitch;
+
+        let cos_p = actual_pitch.cos();
+        let sin_p = actual_pitch.sin();
+        // Rodrigues' rotation formula around `right`
+        new_forward = new_forward * cos_p
+            + right.cross(new_forward) * sin_p
+            + right * right.dot(new_forward) * (1.0 - cos_p);
+
+        new_forward = new_forward.normalize();
+        self.target = self.position + new_forward;
+    }
+
+    // ----------------------------------------------------------------
+    // Named viewpoints (save / restore)
+    // ----------------------------------------------------------------
+
+    /// Capture the current camera state as a named viewpoint
+    pub fn save_viewpoint(&self, name: String) -> CameraViewpoint {
+        CameraViewpoint {
+            name,
+            position: self.position,
+            target: self.target,
+            up: self.up,
+            fov: self.fov,
+            orthographic: self.orthographic,
+        }
+    }
+
+    /// Restore camera state from a viewpoint
+    pub fn restore_viewpoint(&mut self, vp: &CameraViewpoint) {
+        self.position = vp.position;
+        self.target = vp.target;
+        self.up = vp.up;
+        self.fov = vp.fov;
+        self.orthographic = vp.orthographic;
+    }
+
+    // ----------------------------------------------------------------
+    // Smooth animated camera transitions
+    // ----------------------------------------------------------------
+
+    /// Begin a smooth transition to a new position/target over `duration` seconds.
+    pub fn start_transition(
+        &mut self,
+        target_position: Vec3,
+        target_target: Vec3,
+        duration: f32,
+    ) {
+        self.animation_start_position = self.position;
+        self.animation_start_target = self.target;
+        self.animation_end_position = target_position;
+        self.animation_end_target = target_target;
+        self.animation_progress = 0.0;
+        self.animation_duration = duration.max(0.001); // avoid division by zero
+        self.animation_active = true;
+    }
+
+    /// Advance the animation by `delta_time` seconds.
+    /// Returns `true` if the animation is still active after this tick.
+    pub fn tick_animation(&mut self, delta_time: f32) -> bool {
+        if !self.animation_active {
+            return false;
+        }
+
+        self.animation_progress += delta_time / self.animation_duration;
+        if self.animation_progress >= 1.0 {
+            self.animation_progress = 1.0;
+            self.animation_active = false;
+        }
+
+        // Smoothstep easing: t * t * (3 - 2t)
+        let t = self.animation_progress;
+        let smooth = t * t * (3.0 - 2.0 * t);
+
+        self.position = self.animation_start_position.lerp(self.animation_end_position, smooth);
+        self.target = self.animation_start_target.lerp(self.animation_end_target, smooth);
+
+        self.animation_active
+    }
+
+    /// Check if a camera animation is currently in progress
+    pub fn is_animating(&self) -> bool {
+        self.animation_active
+    }
+
+    // ----------------------------------------------------------------
+    // Ray casting
+    // ----------------------------------------------------------------
 
     /// Convert screen coordinates (0-1 range) to a world-space ray
     /// Returns (origin, direction)

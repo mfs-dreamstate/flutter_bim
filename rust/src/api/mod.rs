@@ -10,6 +10,9 @@ pub mod section;
 pub mod export;
 pub mod overlay;
 pub mod properties;
+pub mod bcf;
+pub mod clash;
+pub mod comparison;
 
 pub use system::*;
 pub use models::*;
@@ -22,3 +25,6 @@ pub use section::*;
 pub use export::*;
 pub use overlay::*;
 pub use properties::*;
+pub use bcf::*;
+pub use clash::*;
+pub use comparison::*;

@@ -168,3 +168,137 @@ impl DrawingOverlay {
         (vertices, indices)
     }
 }
+
+// ---------------------------------------------------------------------------
+// Annotation & Markup types
+// ---------------------------------------------------------------------------
+
+/// Types of annotations
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum AnnotationType {
+    Pin { label: String, color: [f32; 4] },
+    Callout { text: String, background_color: [f32; 4], border_color: [f32; 4] },
+    Redline { points: Vec<[f32; 3]>, color: [f32; 4], width: f32 },
+    DimensionLine { start: [f32; 3], end: [f32; 3], offset: f32, text_override: Option<String> },
+    LeaderLine { anchor: [f32; 3], label_position: [f32; 3], text: String },
+    CloudRegion { points: Vec<[f32; 3]>, color: [f32; 4] },
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Annotation {
+    pub id: String,
+    pub position: [f32; 3],
+    pub annotation_type: AnnotationType,
+    pub visible: bool,
+    pub created_at: u64, // unix timestamp millis
+}
+
+impl Annotation {
+    pub fn new(id: String, position: [f32; 3], annotation_type: AnnotationType) -> Self {
+        let created_at = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+        Self {
+            id,
+            position,
+            annotation_type,
+            visible: true,
+            created_at,
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AnnotationSet {
+    pub id: String,
+    pub name: String,
+    pub annotations: Vec<Annotation>,
+    pub visible: bool,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MarkupStore {
+    pub sets: Vec<AnnotationSet>,
+    pub active_set_id: Option<String>,
+}
+
+impl MarkupStore {
+    pub fn new() -> Self {
+        Self {
+            sets: Vec::new(),
+            active_set_id: None,
+        }
+    }
+
+    /// Create a new annotation set and return its ID.
+    pub fn create_set(&mut self, name: String) -> String {
+        let id = uuid::Uuid::new_v4().to_string();
+        self.sets.push(AnnotationSet {
+            id: id.clone(),
+            name,
+            annotations: Vec::new(),
+            visible: true,
+        });
+        id
+    }
+
+    /// Delete an annotation set by ID. Returns true if found and removed.
+    pub fn delete_set(&mut self, set_id: &str) -> bool {
+        let len_before = self.sets.len();
+        self.sets.retain(|s| s.id != set_id);
+        if self.active_set_id.as_deref() == Some(set_id) {
+            self.active_set_id = None;
+        }
+        self.sets.len() < len_before
+    }
+
+    /// Add an annotation to the specified set.
+    pub fn add_annotation(&mut self, set_id: &str, annotation: Annotation) -> Result<(), String> {
+        let set = self
+            .sets
+            .iter_mut()
+            .find(|s| s.id == set_id)
+            .ok_or_else(|| format!("Annotation set not found: {}", set_id))?;
+        set.annotations.push(annotation);
+        Ok(())
+    }
+
+    /// Remove an annotation by ID from the specified set. Returns true if found.
+    pub fn remove_annotation(&mut self, set_id: &str, annotation_id: &str) -> bool {
+        if let Some(set) = self.sets.iter_mut().find(|s| s.id == set_id) {
+            let len_before = set.annotations.len();
+            set.annotations.retain(|a| a.id != annotation_id);
+            set.annotations.len() < len_before
+        } else {
+            false
+        }
+    }
+
+    pub fn get_set(&self, set_id: &str) -> Option<&AnnotationSet> {
+        self.sets.iter().find(|s| s.id == set_id)
+    }
+
+    pub fn get_set_mut(&mut self, set_id: &str) -> Option<&mut AnnotationSet> {
+        self.sets.iter_mut().find(|s| s.id == set_id)
+    }
+
+    /// Serialize the entire markup store to pretty JSON.
+    pub fn to_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+    }
+
+    /// Deserialize a markup store from JSON.
+    pub fn from_json(json: &str) -> Result<Self, String> {
+        serde_json::from_str(json).map_err(|e| format!("Failed to parse markup JSON: {}", e))
+    }
+
+    /// Compute the 3D Euclidean distance between two points and format as "X.XX m".
+    pub fn compute_dimension_text(start: [f32; 3], end: [f32; 3]) -> String {
+        let dx = end[0] - start[0];
+        let dy = end[1] - start[1];
+        let dz = end[2] - start[2];
+        let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+        format!("{:.2} m", distance)
+    }
+}

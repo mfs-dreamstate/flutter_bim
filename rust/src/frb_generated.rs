@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -725148955;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1907537845;
 
 // Section: executor
 
@@ -2416,6 +2416,38 @@ fn wire__crate__api__camera__fit_camera_to_storey_impl(
             deserializer.end();
             transform_result_sse::<_, String>((move || {
                 let output_ok = crate::api::camera::fit_camera_to_storey(api_storey_name)?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__camera__fly_camera_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "fly_camera",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_forward = <f32>::sse_decode(&mut deserializer);
+            let api_right = <f32>::sse_decode(&mut deserializer);
+            let api_up = <f32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, String>((move || {
+                let output_ok = crate::api::camera::fly_camera(api_forward, api_right, api_up)?;
                 Ok(output_ok)
             })())
         },
@@ -7194,6 +7226,38 @@ fn wire__crate__api__section__set_multiple_section_planes_impl(
         },
     )
 }
+fn wire__crate__api__camera__set_orbit_center_from_screen_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "set_orbit_center_from_screen",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_screen_x = <f32>::sse_decode(&mut deserializer);
+            let api_screen_y = <f32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, String>((move || {
+                let output_ok =
+                    crate::api::camera::set_orbit_center_from_screen(api_screen_x, api_screen_y)?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__api__camera__set_orthographic_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -7452,6 +7516,36 @@ fn wire__crate__api__section__set_section_box_from_model_impl(
             deserializer.end();
             transform_result_sse::<_, String>((move || {
                 let output_ok = crate::api::section::set_section_box_from_model(api_padding)?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__section__set_section_fill_enabled_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "set_section_fill_enabled",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_enabled = <bool>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, String>((move || {
+                let output_ok = crate::api::section::set_section_fill_enabled(api_enabled)?;
                 Ok(output_ok)
             })())
         },
@@ -9398,27 +9492,27 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         33 => wire__crate__api__state__color_mode_default_impl(port, ptr, rust_vec_len, data_len),
         67 => wire__crate__api__export__export_screenshot_impl(port, ptr, rust_vec_len, data_len),
-        151 => wire__crate__api__models__import_glb_file_impl(port, ptr, rust_vec_len, data_len),
-        152 => wire__crate__api__models__import_gltf_file_impl(port, ptr, rust_vec_len, data_len),
-        154 => wire__crate__api__models__import_obj_file_impl(port, ptr, rust_vec_len, data_len),
-        155 => wire__crate__api__rendering__init_renderer_impl(port, ptr, rust_vec_len, data_len),
-        177 => wire__crate__api__models__load_ifc_file_impl(port, ptr, rust_vec_len, data_len),
-        178 => {
+        152 => wire__crate__api__models__import_glb_file_impl(port, ptr, rust_vec_len, data_len),
+        153 => wire__crate__api__models__import_gltf_file_impl(port, ptr, rust_vec_len, data_len),
+        155 => wire__crate__api__models__import_obj_file_impl(port, ptr, rust_vec_len, data_len),
+        156 => wire__crate__api__rendering__init_renderer_impl(port, ptr, rust_vec_len, data_len),
+        178 => wire__crate__api__models__load_ifc_file_impl(port, ptr, rust_vec_len, data_len),
+        179 => {
             wire__crate__api__models__load_ifc_file_async_impl(port, ptr, rust_vec_len, data_len)
         }
-        179 => wire__crate__api__models__load_model_impl(port, ptr, rust_vec_len, data_len),
-        182 => {
+        180 => wire__crate__api__models__load_model_impl(port, ptr, rust_vec_len, data_len),
+        183 => {
             wire__crate__api__system__memory_stats_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        189 => wire__crate__api__models__parse_ifc_content_impl(port, ptr, rust_vec_len, data_len),
-        191 => {
+        190 => wire__crate__api__models__parse_ifc_content_impl(port, ptr, rust_vec_len, data_len),
+        192 => {
             wire__crate__api__system__perf_counters_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        257 => wire__crate__api__system__test_async_impl(port, ptr, rust_vec_len, data_len),
-        259 => {
+        260 => wire__crate__api__system__test_async_impl(port, ptr, rust_vec_len, data_len),
+        262 => {
             wire__crate__api__rendering__test_renderer_init_impl(port, ptr, rust_vec_len, data_len)
         }
-        266 => wire__crate__api__overlay__upload_drawing_overlay_impl(
+        269 => wire__crate__api__overlay__upload_drawing_overlay_impl(
             port,
             ptr,
             rust_vec_len,
@@ -9527,300 +9621,307 @@ fn pde_ffi_dispatcher_sync_impl(
         73 => wire__crate__api__camera__fit_camera_to_model_impl(ptr, rust_vec_len, data_len),
         74 => wire__crate__api__camera__fit_camera_to_selected_impl(ptr, rust_vec_len, data_len),
         75 => wire__crate__api__camera__fit_camera_to_storey_impl(ptr, rust_vec_len, data_len),
-        76 => {
+        76 => wire__crate__api__camera__fly_camera_impl(ptr, rust_vec_len, data_len),
+        77 => {
             wire__crate__api__overlay__get_active_annotation_set_impl(ptr, rust_vec_len, data_len)
         }
-        77 => wire__crate__api__comparison__get_added_element_ids_impl(ptr, rust_vec_len, data_len),
-        78 => wire__crate__api__selection__get_all_elements_impl(ptr, rust_vec_len, data_len),
-        79 => wire__crate__api__selection__get_all_elements_from_all_models_impl(
+        78 => wire__crate__api__comparison__get_added_element_ids_impl(ptr, rust_vec_len, data_len),
+        79 => wire__crate__api__selection__get_all_elements_impl(ptr, rust_vec_len, data_len),
+        80 => wire__crate__api__selection__get_all_elements_from_all_models_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        80 => wire__crate__api__bcf__get_all_topics_impl(ptr, rust_vec_len, data_len),
-        81 => wire__crate__api__overlay__get_annotations_json_impl(ptr, rust_vec_len, data_len),
-        82 => wire__crate__api__properties__get_area_unit_label_impl(ptr, rust_vec_len, data_len),
-        83 => wire__crate__api__bcf__get_bcf_config_impl(ptr, rust_vec_len, data_len),
-        84 => wire__crate__api__camera__get_camera_position_impl(ptr, rust_vec_len, data_len),
-        85 => wire__crate__api__camera__get_camera_target_impl(ptr, rust_vec_len, data_len),
-        86 => wire__crate__api__clash__get_clash_count_impl(ptr, rust_vec_len, data_len),
-        87 => wire__crate__api__clash__get_clash_results_impl(ptr, rust_vec_len, data_len),
-        88 => wire__crate__api__clash__get_clashes_by_group_impl(ptr, rust_vec_len, data_len),
-        89 => wire__crate__api__selection__get_color_mode_impl(ptr, rust_vec_len, data_len),
-        90 => wire__crate__api__comparison__get_comparison_element_status_impl(
+        81 => wire__crate__api__bcf__get_all_topics_impl(ptr, rust_vec_len, data_len),
+        82 => wire__crate__api__overlay__get_annotations_json_impl(ptr, rust_vec_len, data_len),
+        83 => wire__crate__api__properties__get_area_unit_label_impl(ptr, rust_vec_len, data_len),
+        84 => wire__crate__api__bcf__get_bcf_config_impl(ptr, rust_vec_len, data_len),
+        85 => wire__crate__api__camera__get_camera_position_impl(ptr, rust_vec_len, data_len),
+        86 => wire__crate__api__camera__get_camera_target_impl(ptr, rust_vec_len, data_len),
+        87 => wire__crate__api__clash__get_clash_count_impl(ptr, rust_vec_len, data_len),
+        88 => wire__crate__api__clash__get_clash_results_impl(ptr, rust_vec_len, data_len),
+        89 => wire__crate__api__clash__get_clashes_by_group_impl(ptr, rust_vec_len, data_len),
+        90 => wire__crate__api__selection__get_color_mode_impl(ptr, rust_vec_len, data_len),
+        91 => wire__crate__api__comparison__get_comparison_element_status_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        91 => wire__crate__api__comparison__get_comparison_overlay_colors_impl(
+        92 => wire__crate__api__comparison__get_comparison_overlay_colors_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        92 => wire__crate__api__system__get_cpu_memory_bytes_impl(ptr, rust_vec_len, data_len),
-        93 => wire__crate__api__export__get_current_frame_rgba_impl(ptr, rust_vec_len, data_len),
-        94 => wire__crate__api__system__get_diagnostic_report_impl(ptr, rust_vec_len, data_len),
-        95 => wire__crate__api__selection__get_element_counts_impl(ptr, rust_vec_len, data_len),
-        96 => wire__crate__api__properties__get_element_material_impl(ptr, rust_vec_len, data_len),
-        97 => {
+        93 => wire__crate__api__system__get_cpu_memory_bytes_impl(ptr, rust_vec_len, data_len),
+        94 => wire__crate__api__export__get_current_frame_rgba_impl(ptr, rust_vec_len, data_len),
+        95 => wire__crate__api__system__get_diagnostic_report_impl(ptr, rust_vec_len, data_len),
+        96 => wire__crate__api__selection__get_element_counts_impl(ptr, rust_vec_len, data_len),
+        97 => wire__crate__api__properties__get_element_material_impl(ptr, rust_vec_len, data_len),
+        98 => {
             wire__crate__api__properties__get_element_properties_impl(ptr, rust_vec_len, data_len)
         }
-        98 => wire__crate__api__properties__get_element_properties_all_models_impl(
+        99 => wire__crate__api__properties__get_element_properties_all_models_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        99 => wire__crate__api__properties__get_element_storey_impl(ptr, rust_vec_len, data_len),
-        100 => {
+        100 => wire__crate__api__properties__get_element_storey_impl(ptr, rust_vec_len, data_len),
+        101 => {
             wire__crate__api__properties__get_element_type_info_impl(ptr, rust_vec_len, data_len)
         }
-        101 => {
+        102 => {
             wire__crate__api__properties__get_elements_by_storey_impl(ptr, rust_vec_len, data_len)
         }
-        102 => wire__crate__api__properties__get_elements_grouped_by_type_impl(
+        103 => wire__crate__api__properties__get_elements_grouped_by_type_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        103 => wire__crate__api__system__get_frame_count_impl(ptr, rust_vec_len, data_len),
-        104 => wire__crate__api__selection__get_geo_reference_impl(ptr, rust_vec_len, data_len),
-        105 => wire__crate__api__system__get_gpu_memory_bytes_impl(ptr, rust_vec_len, data_len),
-        106 => wire__crate__api__selection__get_grid_line_count_impl(ptr, rust_vec_len, data_len),
-        107 => wire__crate__api__selection__get_grid_lines_impl(ptr, rust_vec_len, data_len),
-        108 => {
+        104 => wire__crate__api__system__get_frame_count_impl(ptr, rust_vec_len, data_len),
+        105 => wire__crate__api__selection__get_geo_reference_impl(ptr, rust_vec_len, data_len),
+        106 => wire__crate__api__system__get_gpu_memory_bytes_impl(ptr, rust_vec_len, data_len),
+        107 => wire__crate__api__selection__get_grid_line_count_impl(ptr, rust_vec_len, data_len),
+        108 => wire__crate__api__selection__get_grid_lines_impl(ptr, rust_vec_len, data_len),
+        109 => {
             wire__crate__api__selection__get_hidden_element_count_impl(ptr, rust_vec_len, data_len)
         }
-        109 => {
+        110 => {
             wire__crate__api__selection__get_hidden_element_types_impl(ptr, rust_vec_len, data_len)
         }
-        110 => wire__crate__api__selection__get_isolated_storey_impl(ptr, rust_vec_len, data_len),
-        111 => {
+        111 => wire__crate__api__selection__get_isolated_storey_impl(ptr, rust_vec_len, data_len),
+        112 => {
             wire__crate__api__properties__get_length_unit_label_impl(ptr, rust_vec_len, data_len)
         }
-        112 => wire__crate__api__system__get_loading_progress_impl(ptr, rust_vec_len, data_len),
-        113 => wire__crate__api__models__get_loading_state_impl(ptr, rust_vec_len, data_len),
-        114 => wire__crate__api__properties__get_map_conversion_impl(ptr, rust_vec_len, data_len),
-        115 => wire__crate__api__measurement__get_measurement_point_count_impl(
+        113 => wire__crate__api__system__get_loading_progress_impl(ptr, rust_vec_len, data_len),
+        114 => wire__crate__api__models__get_loading_state_impl(ptr, rust_vec_len, data_len),
+        115 => wire__crate__api__properties__get_map_conversion_impl(ptr, rust_vec_len, data_len),
+        116 => wire__crate__api__measurement__get_measurement_point_count_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        116 => {
+        117 => {
             wire__crate__api__measurement__get_measurement_result_impl(ptr, rust_vec_len, data_len)
         }
-        117 => wire__crate__api__system__get_memory_stats_impl(ptr, rust_vec_len, data_len),
-        118 => wire__crate__api__system__get_memory_summary_impl(ptr, rust_vec_len, data_len),
-        119 => wire__crate__api__models__get_model_count_impl(ptr, rust_vec_len, data_len),
-        120 => wire__crate__api__models__get_model_info_impl(ptr, rust_vec_len, data_len),
-        121 => {
+        118 => wire__crate__api__system__get_memory_stats_impl(ptr, rust_vec_len, data_len),
+        119 => wire__crate__api__system__get_memory_summary_impl(ptr, rust_vec_len, data_len),
+        120 => wire__crate__api__models__get_model_count_impl(ptr, rust_vec_len, data_len),
+        121 => wire__crate__api__models__get_model_info_impl(ptr, rust_vec_len, data_len),
+        122 => {
             wire__crate__api__comparison__get_modified_element_ids_impl(ptr, rust_vec_len, data_len)
         }
-        122 => wire__crate__api__properties__get_quantity_summary_by_storey_impl(
+        123 => wire__crate__api__properties__get_quantity_summary_by_storey_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        123 => wire__crate__api__properties__get_quantity_summary_by_type_impl(
+        124 => wire__crate__api__properties__get_quantity_summary_by_type_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        124 => {
+        125 => {
             wire__crate__api__comparison__get_removed_element_ids_impl(ptr, rust_vec_len, data_len)
         }
-        125 => wire__crate__api__lighting__get_render_mode_impl(ptr, rust_vec_len, data_len),
-        126 => wire__crate__api__export__get_render_stats_impl(ptr, rust_vec_len, data_len),
-        127 => {
+        126 => wire__crate__api__lighting__get_render_mode_impl(ptr, rust_vec_len, data_len),
+        127 => wire__crate__api__export__get_render_stats_impl(ptr, rust_vec_len, data_len),
+        128 => {
             wire__crate__api__system__get_renderer_capabilities_impl(ptr, rust_vec_len, data_len)
         }
-        128 => wire__crate__api__rendering__get_scene_bounds_impl(ptr, rust_vec_len, data_len),
-        129 => wire__crate__api__export__get_screenshot_with_info_impl(ptr, rust_vec_len, data_len),
-        130 => wire__crate__api__section__get_section_plane_count_impl(ptr, rust_vec_len, data_len),
-        131 => wire__crate__api__selection__get_selected_elements_impl(ptr, rust_vec_len, data_len),
-        132 => wire__crate__api__selection__get_selection_count_impl(ptr, rust_vec_len, data_len),
-        133 => {
+        129 => wire__crate__api__rendering__get_scene_bounds_impl(ptr, rust_vec_len, data_len),
+        130 => wire__crate__api__export__get_screenshot_with_info_impl(ptr, rust_vec_len, data_len),
+        131 => wire__crate__api__section__get_section_plane_count_impl(ptr, rust_vec_len, data_len),
+        132 => wire__crate__api__selection__get_selected_elements_impl(ptr, rust_vec_len, data_len),
+        133 => wire__crate__api__selection__get_selection_count_impl(ptr, rust_vec_len, data_len),
+        134 => {
             wire__crate__api__selection__get_selection_set_names_impl(ptr, rust_vec_len, data_len)
         }
-        134 => wire__crate__api__selection__get_smart_group_criteria_json_impl(
+        135 => wire__crate__api__selection__get_smart_group_criteria_json_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        135 => wire__crate__api__selection__get_smart_group_element_count_impl(
+        136 => wire__crate__api__selection__get_smart_group_element_count_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        136 => wire__crate__api__selection__get_smart_group_names_impl(ptr, rust_vec_len, data_len),
-        137 => wire__crate__api__properties__get_spatial_tree_impl(ptr, rust_vec_len, data_len),
-        138 => wire__crate__api__system__get_system_info_impl(ptr, rust_vec_len, data_len),
-        139 => wire__crate__api__bcf__get_topic_count_impl(ptr, rust_vec_len, data_len),
-        140 => wire__crate__api__bcf__get_topic_detail_impl(ptr, rust_vec_len, data_len),
-        141 => wire__crate__api__properties__get_unit_system_impl(ptr, rust_vec_len, data_len),
-        142 => wire__crate__api__system__get_version_impl(ptr, rust_vec_len, data_len),
-        143 => wire__crate__api__overlay__get_view_mode_impl(ptr, rust_vec_len, data_len),
-        144 => wire__crate__api__export__get_viewpoint_share_data_impl(ptr, rust_vec_len, data_len),
-        145 => wire__crate__api__camera__get_viewpoints_impl(ptr, rust_vec_len, data_len),
-        146 => {
+        137 => wire__crate__api__selection__get_smart_group_names_impl(ptr, rust_vec_len, data_len),
+        138 => wire__crate__api__properties__get_spatial_tree_impl(ptr, rust_vec_len, data_len),
+        139 => wire__crate__api__system__get_system_info_impl(ptr, rust_vec_len, data_len),
+        140 => wire__crate__api__bcf__get_topic_count_impl(ptr, rust_vec_len, data_len),
+        141 => wire__crate__api__bcf__get_topic_detail_impl(ptr, rust_vec_len, data_len),
+        142 => wire__crate__api__properties__get_unit_system_impl(ptr, rust_vec_len, data_len),
+        143 => wire__crate__api__system__get_version_impl(ptr, rust_vec_len, data_len),
+        144 => wire__crate__api__overlay__get_view_mode_impl(ptr, rust_vec_len, data_len),
+        145 => wire__crate__api__export__get_viewpoint_share_data_impl(ptr, rust_vec_len, data_len),
+        146 => wire__crate__api__camera__get_viewpoints_impl(ptr, rust_vec_len, data_len),
+        147 => {
             wire__crate__api__properties__get_volume_unit_label_impl(ptr, rust_vec_len, data_len)
         }
-        147 => wire__crate__api__selection__hide_element_impl(ptr, rust_vec_len, data_len),
-        148 => wire__crate__api__selection__hide_selected_impl(ptr, rust_vec_len, data_len),
-        149 => wire__crate__api__bcf__import_bcf_from_bytes_impl(ptr, rust_vec_len, data_len),
-        150 => wire__crate__api__bcf__import_bcf_json_string_impl(ptr, rust_vec_len, data_len),
-        153 => wire__crate__api__overlay__import_markup_json_impl(ptr, rust_vec_len, data_len),
-        156 => wire__crate__api__system__initialize_impl(ptr, rust_vec_len, data_len),
-        157 => wire__crate__api__camera__is_camera_animating_impl(ptr, rust_vec_len, data_len),
-        158 => wire__crate__api__comparison__is_comparison_overlay_active_impl(
+        148 => wire__crate__api__selection__hide_element_impl(ptr, rust_vec_len, data_len),
+        149 => wire__crate__api__selection__hide_selected_impl(ptr, rust_vec_len, data_len),
+        150 => wire__crate__api__bcf__import_bcf_from_bytes_impl(ptr, rust_vec_len, data_len),
+        151 => wire__crate__api__bcf__import_bcf_json_string_impl(ptr, rust_vec_len, data_len),
+        154 => wire__crate__api__overlay__import_markup_json_impl(ptr, rust_vec_len, data_len),
+        157 => wire__crate__api__system__initialize_impl(ptr, rust_vec_len, data_len),
+        158 => wire__crate__api__camera__is_camera_animating_impl(ptr, rust_vec_len, data_len),
+        159 => wire__crate__api__comparison__is_comparison_overlay_active_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        159 => {
+        160 => {
             wire__crate__api__selection__is_element_type_visible_impl(ptr, rust_vec_len, data_len)
         }
-        160 => wire__crate__api__selection__is_grid_visible_impl(ptr, rust_vec_len, data_len),
-        161 => wire__crate__api__system__is_loading_impl(ptr, rust_vec_len, data_len),
-        162 => wire__crate__api__models__is_model_loaded_impl(ptr, rust_vec_len, data_len),
-        163 => wire__crate__api__camera__is_orthographic_impl(ptr, rust_vec_len, data_len),
-        164 => {
+        161 => wire__crate__api__selection__is_grid_visible_impl(ptr, rust_vec_len, data_len),
+        162 => wire__crate__api__system__is_loading_impl(ptr, rust_vec_len, data_len),
+        163 => wire__crate__api__models__is_model_loaded_impl(ptr, rust_vec_len, data_len),
+        164 => wire__crate__api__camera__is_orthographic_impl(ptr, rust_vec_len, data_len),
+        165 => {
             wire__crate__api__rendering__is_renderer_initialized_impl(ptr, rust_vec_len, data_len)
         }
-        165 => wire__crate__api__section__is_section_animating_impl(ptr, rust_vec_len, data_len),
-        166 => wire__crate__api__section__is_section_box_active_impl(ptr, rust_vec_len, data_len),
-        167 => wire__crate__api__section__is_section_plane_active_impl(ptr, rust_vec_len, data_len),
-        168 => wire__crate__api__camera__is_turntable_mode_impl(ptr, rust_vec_len, data_len),
-        169 => wire__crate__api__camera__is_walkthrough_mode_impl(ptr, rust_vec_len, data_len),
-        170 => wire__crate__api__lighting__is_wireframe_supported_impl(ptr, rust_vec_len, data_len),
-        171 => wire__crate__api__selection__isolate_selected_impl(ptr, rust_vec_len, data_len),
-        172 => wire__crate__api__selection__isolate_storey_impl(ptr, rust_vec_len, data_len),
-        173 => wire__crate__api__overlay__list_annotation_sets_impl(ptr, rust_vec_len, data_len),
-        174 => wire__crate__api__models__list_loaded_models_impl(ptr, rust_vec_len, data_len),
-        175 => wire__crate__api__models__list_loading_tasks_impl(ptr, rust_vec_len, data_len),
-        176 => wire__crate__api__rendering__load_all_models_into_renderer_impl(
+        166 => wire__crate__api__section__is_section_animating_impl(ptr, rust_vec_len, data_len),
+        167 => wire__crate__api__section__is_section_box_active_impl(ptr, rust_vec_len, data_len),
+        168 => wire__crate__api__section__is_section_plane_active_impl(ptr, rust_vec_len, data_len),
+        169 => wire__crate__api__camera__is_turntable_mode_impl(ptr, rust_vec_len, data_len),
+        170 => wire__crate__api__camera__is_walkthrough_mode_impl(ptr, rust_vec_len, data_len),
+        171 => wire__crate__api__lighting__is_wireframe_supported_impl(ptr, rust_vec_len, data_len),
+        172 => wire__crate__api__selection__isolate_selected_impl(ptr, rust_vec_len, data_len),
+        173 => wire__crate__api__selection__isolate_storey_impl(ptr, rust_vec_len, data_len),
+        174 => wire__crate__api__overlay__list_annotation_sets_impl(ptr, rust_vec_len, data_len),
+        175 => wire__crate__api__models__list_loaded_models_impl(ptr, rust_vec_len, data_len),
+        176 => wire__crate__api__models__list_loading_tasks_impl(ptr, rust_vec_len, data_len),
+        177 => wire__crate__api__rendering__load_all_models_into_renderer_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        180 => {
+        181 => {
             wire__crate__api__rendering__load_model_into_renderer_impl(ptr, rust_vec_len, data_len)
         }
-        181 => wire__crate__api__camera__look_camera_impl(ptr, rust_vec_len, data_len),
-        183 => wire__crate__api__clash__navigate_to_clash_impl(ptr, rust_vec_len, data_len),
-        184 => wire__crate__api__comparison__navigate_to_comparison_group_impl(
+        182 => wire__crate__api__camera__look_camera_impl(ptr, rust_vec_len, data_len),
+        184 => wire__crate__api__clash__navigate_to_clash_impl(ptr, rust_vec_len, data_len),
+        185 => wire__crate__api__comparison__navigate_to_comparison_group_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        185 => wire__crate__api__bcf__navigate_to_viewpoint_impl(ptr, rust_vec_len, data_len),
-        186 => wire__crate__api__camera__orbit_camera_impl(ptr, rust_vec_len, data_len),
-        187 => wire__crate__api__camera__pan_camera_impl(ptr, rust_vec_len, data_len),
-        188 => wire__crate__api__bcf__parse_comments_response_impl(ptr, rust_vec_len, data_len),
-        190 => wire__crate__api__bcf__parse_topics_response_impl(ptr, rust_vec_len, data_len),
-        192 => wire__crate__api__selection__pick_element_impl(ptr, rust_vec_len, data_len),
-        193 => wire__crate__api__bcf__prepare_topics_for_upload_impl(ptr, rust_vec_len, data_len),
-        194 => {
+        186 => wire__crate__api__bcf__navigate_to_viewpoint_impl(ptr, rust_vec_len, data_len),
+        187 => wire__crate__api__camera__orbit_camera_impl(ptr, rust_vec_len, data_len),
+        188 => wire__crate__api__camera__pan_camera_impl(ptr, rust_vec_len, data_len),
+        189 => wire__crate__api__bcf__parse_comments_response_impl(ptr, rust_vec_len, data_len),
+        191 => wire__crate__api__bcf__parse_topics_response_impl(ptr, rust_vec_len, data_len),
+        193 => wire__crate__api__selection__pick_element_impl(ptr, rust_vec_len, data_len),
+        194 => wire__crate__api__bcf__prepare_topics_for_upload_impl(ptr, rust_vec_len, data_len),
+        195 => {
             wire__crate__api__rendering__reload_all_models_mesh_impl(ptr, rust_vec_len, data_len)
         }
-        195 => wire__crate__api__rendering__reload_model_mesh_impl(ptr, rust_vec_len, data_len),
-        196 => wire__crate__api__overlay__remove_annotation_impl(ptr, rust_vec_len, data_len),
-        197 => wire__crate__api__overlay__remove_overlay_impl(ptr, rust_vec_len, data_len),
-        198 => wire__crate__api__section__remove_section_plane_at_impl(ptr, rust_vec_len, data_len),
-        199 => wire__crate__api__rendering__render_frame_impl(ptr, rust_vec_len, data_len),
-        200 => wire__crate__api__lighting__reset_element_colors_impl(ptr, rust_vec_len, data_len),
-        201 => {
+        196 => wire__crate__api__rendering__reload_model_mesh_impl(ptr, rust_vec_len, data_len),
+        197 => wire__crate__api__overlay__remove_annotation_impl(ptr, rust_vec_len, data_len),
+        198 => wire__crate__api__overlay__remove_overlay_impl(ptr, rust_vec_len, data_len),
+        199 => wire__crate__api__section__remove_section_plane_at_impl(ptr, rust_vec_len, data_len),
+        200 => wire__crate__api__rendering__render_frame_impl(ptr, rust_vec_len, data_len),
+        201 => wire__crate__api__lighting__reset_element_colors_impl(ptr, rust_vec_len, data_len),
+        202 => {
             wire__crate__api__system__reset_performance_counters_impl(ptr, rust_vec_len, data_len)
         }
-        202 => wire__crate__api__selection__restore_selection_set_impl(ptr, rust_vec_len, data_len),
-        203 => wire__crate__api__camera__restore_viewpoint_impl(ptr, rust_vec_len, data_len),
-        204 => wire__crate__api__clash__run_clash_detection_impl(ptr, rust_vec_len, data_len),
-        205 => {
+        203 => wire__crate__api__selection__restore_selection_set_impl(ptr, rust_vec_len, data_len),
+        204 => wire__crate__api__camera__restore_viewpoint_impl(ptr, rust_vec_len, data_len),
+        205 => wire__crate__api__clash__run_clash_detection_impl(ptr, rust_vec_len, data_len),
+        206 => {
             wire__crate__api__clash__run_clash_detection_filtered_impl(ptr, rust_vec_len, data_len)
         }
-        206 => wire__crate__api__selection__save_selection_set_impl(ptr, rust_vec_len, data_len),
-        207 => wire__crate__api__camera__save_viewpoint_impl(ptr, rust_vec_len, data_len),
-        208 => wire__crate__api__selection__search_and_select_impl(ptr, rust_vec_len, data_len),
-        209 => wire__crate__api__selection__search_elements_impl(ptr, rust_vec_len, data_len),
-        210 => wire__crate__api__selection__search_elements_by_property_impl(
+        207 => wire__crate__api__selection__save_selection_set_impl(ptr, rust_vec_len, data_len),
+        208 => wire__crate__api__camera__save_viewpoint_impl(ptr, rust_vec_len, data_len),
+        209 => wire__crate__api__selection__search_and_select_impl(ptr, rust_vec_len, data_len),
+        210 => wire__crate__api__selection__search_elements_impl(ptr, rust_vec_len, data_len),
+        211 => wire__crate__api__selection__search_elements_by_property_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        211 => wire__crate__api__selection__select_by_property_impl(ptr, rust_vec_len, data_len),
-        212 => wire__crate__api__selection__select_by_search_impl(ptr, rust_vec_len, data_len),
-        213 => wire__crate__api__selection__select_element_impl(ptr, rust_vec_len, data_len),
-        214 => {
+        212 => wire__crate__api__selection__select_by_property_impl(ptr, rust_vec_len, data_len),
+        213 => wire__crate__api__selection__select_by_search_impl(ptr, rust_vec_len, data_len),
+        214 => wire__crate__api__selection__select_element_impl(ptr, rust_vec_len, data_len),
+        215 => {
             wire__crate__api__overlay__set_active_annotation_set_impl(ptr, rust_vec_len, data_len)
         }
-        215 => wire__crate__api__lighting__set_ambient_color_impl(ptr, rust_vec_len, data_len),
-        216 => {
+        216 => wire__crate__api__lighting__set_ambient_color_impl(ptr, rust_vec_len, data_len),
+        217 => {
             wire__crate__api__overlay__set_annotation_set_visible_impl(ptr, rust_vec_len, data_len)
         }
-        217 => wire__crate__api__bcf__set_bcf_auth_token_impl(ptr, rust_vec_len, data_len),
-        218 => wire__crate__api__bcf__set_bcf_project_impl(ptr, rust_vec_len, data_len),
-        219 => wire__crate__api__camera__set_camera_position_impl(ptr, rust_vec_len, data_len),
-        220 => wire__crate__api__camera__set_camera_target_impl(ptr, rust_vec_len, data_len),
-        221 => wire__crate__api__selection__set_color_mode_impl(ptr, rust_vec_len, data_len),
-        222 => wire__crate__api__selection__set_color_property_impl(ptr, rust_vec_len, data_len),
-        223 => {
+        218 => wire__crate__api__bcf__set_bcf_auth_token_impl(ptr, rust_vec_len, data_len),
+        219 => wire__crate__api__bcf__set_bcf_project_impl(ptr, rust_vec_len, data_len),
+        220 => wire__crate__api__camera__set_camera_position_impl(ptr, rust_vec_len, data_len),
+        221 => wire__crate__api__camera__set_camera_target_impl(ptr, rust_vec_len, data_len),
+        222 => wire__crate__api__selection__set_color_mode_impl(ptr, rust_vec_len, data_len),
+        223 => wire__crate__api__selection__set_color_property_impl(ptr, rust_vec_len, data_len),
+        224 => {
             wire__crate__api__comparison__set_comparison_overlay_impl(ptr, rust_vec_len, data_len)
         }
-        224 => wire__crate__api__lighting__set_element_color_impl(ptr, rust_vec_len, data_len),
-        225 => {
+        225 => wire__crate__api__lighting__set_element_color_impl(ptr, rust_vec_len, data_len),
+        226 => {
             wire__crate__api__selection__set_element_type_visible_impl(ptr, rust_vec_len, data_len)
         }
-        226 => wire__crate__api__selection__set_grid_visible_impl(ptr, rust_vec_len, data_len),
-        227 => {
+        227 => wire__crate__api__selection__set_grid_visible_impl(ptr, rust_vec_len, data_len),
+        228 => {
             wire__crate__api__rendering__set_interaction_active_impl(ptr, rust_vec_len, data_len)
         }
-        228 => wire__crate__api__lighting__set_light_color_impl(ptr, rust_vec_len, data_len),
-        229 => wire__crate__api__lighting__set_light_direction_impl(ptr, rust_vec_len, data_len),
-        230 => wire__crate__api__lighting__set_light_intensity_impl(ptr, rust_vec_len, data_len),
-        231 => wire__crate__api__models__set_model_visible_impl(ptr, rust_vec_len, data_len),
-        232 => {
+        229 => wire__crate__api__lighting__set_light_color_impl(ptr, rust_vec_len, data_len),
+        230 => wire__crate__api__lighting__set_light_direction_impl(ptr, rust_vec_len, data_len),
+        231 => wire__crate__api__lighting__set_light_intensity_impl(ptr, rust_vec_len, data_len),
+        232 => wire__crate__api__models__set_model_visible_impl(ptr, rust_vec_len, data_len),
+        233 => {
             wire__crate__api__section__set_multiple_section_planes_impl(ptr, rust_vec_len, data_len)
         }
-        233 => wire__crate__api__camera__set_orthographic_impl(ptr, rust_vec_len, data_len),
-        234 => wire__crate__api__overlay__set_overlay_opacity_impl(ptr, rust_vec_len, data_len),
-        235 => wire__crate__api__overlay__set_overlay_transform_impl(ptr, rust_vec_len, data_len),
-        236 => wire__crate__api__overlay__set_overlay_visible_impl(ptr, rust_vec_len, data_len),
-        237 => wire__crate__api__models__set_primary_model_impl(ptr, rust_vec_len, data_len),
-        238 => wire__crate__api__lighting__set_render_mode_impl(ptr, rust_vec_len, data_len),
-        239 => wire__crate__api__section__set_section_box_impl(ptr, rust_vec_len, data_len),
-        240 => {
+        234 => {
+            wire__crate__api__camera__set_orbit_center_from_screen_impl(ptr, rust_vec_len, data_len)
+        }
+        235 => wire__crate__api__camera__set_orthographic_impl(ptr, rust_vec_len, data_len),
+        236 => wire__crate__api__overlay__set_overlay_opacity_impl(ptr, rust_vec_len, data_len),
+        237 => wire__crate__api__overlay__set_overlay_transform_impl(ptr, rust_vec_len, data_len),
+        238 => wire__crate__api__overlay__set_overlay_visible_impl(ptr, rust_vec_len, data_len),
+        239 => wire__crate__api__models__set_primary_model_impl(ptr, rust_vec_len, data_len),
+        240 => wire__crate__api__lighting__set_render_mode_impl(ptr, rust_vec_len, data_len),
+        241 => wire__crate__api__section__set_section_box_impl(ptr, rust_vec_len, data_len),
+        242 => {
             wire__crate__api__section__set_section_box_from_model_impl(ptr, rust_vec_len, data_len)
         }
-        241 => wire__crate__api__section__set_section_plane_impl(ptr, rust_vec_len, data_len),
-        242 => {
+        243 => {
+            wire__crate__api__section__set_section_fill_enabled_impl(ptr, rust_vec_len, data_len)
+        }
+        244 => wire__crate__api__section__set_section_plane_impl(ptr, rust_vec_len, data_len),
+        245 => {
             wire__crate__api__section__set_section_plane_enabled_impl(ptr, rust_vec_len, data_len)
         }
-        243 => {
+        246 => {
             wire__crate__api__section__set_section_plane_from_axis_impl(ptr, rust_vec_len, data_len)
         }
-        244 => wire__crate__api__selection__set_selected_element_impl(ptr, rust_vec_len, data_len),
-        245 => wire__crate__api__bcf__set_topic_assigned_to_impl(ptr, rust_vec_len, data_len),
-        246 => wire__crate__api__bcf__set_topic_priority_impl(ptr, rust_vec_len, data_len),
-        247 => wire__crate__api__bcf__set_topic_status_impl(ptr, rust_vec_len, data_len),
-        248 => wire__crate__api__camera__set_turntable_mode_impl(ptr, rust_vec_len, data_len),
-        249 => wire__crate__api__properties__set_unit_system_impl(ptr, rust_vec_len, data_len),
-        250 => wire__crate__api__overlay__set_view_mode_impl(ptr, rust_vec_len, data_len),
-        251 => wire__crate__api__camera__set_walkthrough_mode_impl(ptr, rust_vec_len, data_len),
-        252 => wire__crate__api__selection__show_all_elements_impl(ptr, rust_vec_len, data_len),
-        253 => wire__crate__api__selection__show_all_storeys_impl(ptr, rust_vec_len, data_len),
-        254 => wire__crate__api__selection__show_element_impl(ptr, rust_vec_len, data_len),
-        255 => wire__crate__api__measurement__start_measurement_impl(ptr, rust_vec_len, data_len),
-        256 => wire__crate__api__bcf__sync_topics_from_response_impl(ptr, rust_vec_len, data_len),
-        258 => wire__crate__api__system__test_error_handling_impl(ptr, rust_vec_len, data_len),
-        260 => wire__crate__api__camera__tick_camera_animation_impl(ptr, rust_vec_len, data_len),
-        261 => wire__crate__api__section__tick_section_animation_impl(ptr, rust_vec_len, data_len),
-        262 => {
+        247 => wire__crate__api__selection__set_selected_element_impl(ptr, rust_vec_len, data_len),
+        248 => wire__crate__api__bcf__set_topic_assigned_to_impl(ptr, rust_vec_len, data_len),
+        249 => wire__crate__api__bcf__set_topic_priority_impl(ptr, rust_vec_len, data_len),
+        250 => wire__crate__api__bcf__set_topic_status_impl(ptr, rust_vec_len, data_len),
+        251 => wire__crate__api__camera__set_turntable_mode_impl(ptr, rust_vec_len, data_len),
+        252 => wire__crate__api__properties__set_unit_system_impl(ptr, rust_vec_len, data_len),
+        253 => wire__crate__api__overlay__set_view_mode_impl(ptr, rust_vec_len, data_len),
+        254 => wire__crate__api__camera__set_walkthrough_mode_impl(ptr, rust_vec_len, data_len),
+        255 => wire__crate__api__selection__show_all_elements_impl(ptr, rust_vec_len, data_len),
+        256 => wire__crate__api__selection__show_all_storeys_impl(ptr, rust_vec_len, data_len),
+        257 => wire__crate__api__selection__show_element_impl(ptr, rust_vec_len, data_len),
+        258 => wire__crate__api__measurement__start_measurement_impl(ptr, rust_vec_len, data_len),
+        259 => wire__crate__api__bcf__sync_topics_from_response_impl(ptr, rust_vec_len, data_len),
+        261 => wire__crate__api__system__test_error_handling_impl(ptr, rust_vec_len, data_len),
+        263 => wire__crate__api__camera__tick_camera_animation_impl(ptr, rust_vec_len, data_len),
+        264 => wire__crate__api__section__tick_section_animation_impl(ptr, rust_vec_len, data_len),
+        265 => {
             wire__crate__api__selection__toggle_element_selection_impl(ptr, rust_vec_len, data_len)
         }
-        263 => wire__crate__api__selection__toggle_grid_visible_impl(ptr, rust_vec_len, data_len),
-        264 => wire__crate__api__models__unload_model_impl(ptr, rust_vec_len, data_len),
-        265 => wire__crate__api__models__unload_model_by_id_impl(ptr, rust_vec_len, data_len),
-        267 => wire__crate__api__camera__walk_camera_impl(ptr, rust_vec_len, data_len),
-        268 => wire__crate__api__camera__zoom_camera_impl(ptr, rust_vec_len, data_len),
+        266 => wire__crate__api__selection__toggle_grid_visible_impl(ptr, rust_vec_len, data_len),
+        267 => wire__crate__api__models__unload_model_impl(ptr, rust_vec_len, data_len),
+        268 => wire__crate__api__models__unload_model_by_id_impl(ptr, rust_vec_len, data_len),
+        270 => wire__crate__api__camera__walk_camera_impl(ptr, rust_vec_len, data_len),
+        271 => wire__crate__api__camera__zoom_camera_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

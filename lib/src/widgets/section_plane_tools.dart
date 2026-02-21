@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/bridge/api.dart' as rust;
+import '../core/bridge/api/rendering.dart' as rendering;
 
 /// Section plane tools widget
 /// Provides UI for creating and controlling section planes
@@ -19,13 +20,43 @@ class _SectionPlaneToolsState extends State<SectionPlaneTools> {
   int _selectedAxis = 1; // 0=X, 1=Y, 2=Z
   double _position = 0.0;
   bool _planeActive = false;
-  final double _minPosition = -50.0;
-  final double _maxPosition = 50.0;
+
+  // Dynamic bounds from actual model geometry
+  double _minPosition = -50.0;
+  double _maxPosition = 50.0;
+  // Per-axis bounds: [minX, minY, minZ, maxX, maxY, maxZ]
+  List<double>? _sceneBounds;
 
   @override
   void initState() {
     super.initState();
+    _loadSceneBounds();
     _checkPlaneStatus();
+  }
+
+  void _loadSceneBounds() {
+    try {
+      final bounds = rendering.getSceneBounds();
+      if (bounds.length >= 6) {
+        _sceneBounds = List<double>.from(bounds);
+        _updateSliderRange();
+      }
+    } catch (e) {
+      debugPrint('[SECTION] Failed to get scene bounds: $e');
+    }
+  }
+
+  /// Update slider min/max based on the selected axis and model bounds.
+  void _updateSliderRange() {
+    if (_sceneBounds == null) return;
+    final min = _sceneBounds![_selectedAxis];
+    final max = _sceneBounds![_selectedAxis + 3];
+    // Add 10% padding on each side for some room
+    final padding = (max - min) * 0.1;
+    _minPosition = min - padding;
+    _maxPosition = max + padding;
+    // Clamp current position to new range, default to midpoint
+    _position = _position.clamp(_minPosition, _maxPosition);
   }
 
   void _checkPlaneStatus() {
@@ -164,6 +195,9 @@ class _SectionPlaneToolsState extends State<SectionPlaneTools> {
                     onTap: () {
                       setState(() {
                         _selectedAxis = i;
+                        _updateSliderRange();
+                        // Start at the midpoint of the new axis
+                        _position = (_minPosition + _maxPosition) / 2;
                       });
                     },
                   ),

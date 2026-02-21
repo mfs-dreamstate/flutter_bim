@@ -210,6 +210,48 @@ pub fn is_walkthrough_mode() -> bool {
     })
 }
 
+/// Fly-mode movement: constant speed derived from scene scale.
+/// `forward` = forward/backward, `right` = strafe, `up` = vertical.
+#[frb(sync)]
+pub fn fly_camera(forward: f32, right: f32, up: f32) -> Result<(), String> {
+    with_state(|s| {
+        let r = s.renderer()?;
+        r.camera.fly_move(forward, right, up);
+        Ok(())
+    })
+}
+
+/// Set the orbit center by picking a point on the model from screen coords.
+/// Returns true if a surface was hit and the orbit center was updated.
+#[frb(sync)]
+pub fn set_orbit_center_from_screen(screen_x: f32, screen_y: f32) -> Result<bool, String> {
+    with_state(|s| {
+        // Cast ray from screen point
+        let (origin, dir) = {
+            let r = s.renderer()?;
+            r.camera.screen_to_ray(screen_x, screen_y)
+        };
+
+        // Ensure BVH is fresh
+        s.ensure_bvh_fresh();
+
+        // Find nearest hit using BVH
+        let acc = &s.pick_accelerator;
+        if let Some(ref bvh) = acc.bvh {
+            let mut closest_t = f32::MAX;
+            if bvh.ray_query(origin, dir, &mut closest_t).is_some() {
+                // Set orbit center to the hit point on the AABB surface
+                let hit_point = origin + dir * closest_t;
+                let r = s.renderer()?;
+                r.camera.set_orbit_target(hit_point);
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    })
+}
+
 // ----------------------------------------------------------------
 // Named viewpoints (save / restore)
 // ----------------------------------------------------------------

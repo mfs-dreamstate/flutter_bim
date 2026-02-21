@@ -226,6 +226,23 @@ pub fn set_multiple_section_planes(planes_json: String) -> Result<(), String> {
 }
 
 // =============================================================================
+// Section Fill (cap rendering at cut plane)
+// =============================================================================
+
+/// Enable or disable the section fill (solid cap at section plane intersections)
+#[frb(sync)]
+pub fn set_section_fill_enabled(enabled: bool) -> Result<(), String> {
+    with_state(|s| {
+        if let Some(r) = s.renderer.as_mut() {
+            if let Some(scene) = r.scene.as_mut() {
+                scene.set_section_fill_enabled(enabled);
+            }
+        }
+        Ok(())
+    })
+}
+
+// =============================================================================
 // Section Animation
 // =============================================================================
 

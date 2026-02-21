@@ -2679,6 +2679,17 @@ pub struct ComputeCullResources {
 /// Returns `None` if the device does not support compute shaders
 /// (e.g. WebGL2 backend or missing feature).
 pub fn create_compute_cull_pipeline(device: &wgpu::Device) -> Option<ComputeCullResources> {
+    // Check if the device supports storage buffers in compute shaders.
+    // Emulators (e.g., Android x86_64 with Mesa) may report 0 here.
+    let limits = device.limits();
+    if limits.max_storage_buffers_per_shader_stage < 2 {
+        tracing::info!(
+            "Compute culling unavailable: max_storage_buffers_per_shader_stage = {}",
+            limits.max_storage_buffers_per_shader_stage
+        );
+        return None;
+    }
+
     // Attempt to create the shader module; if compute is not supported
     // the shader compilation may fail, so we handle that gracefully.
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {

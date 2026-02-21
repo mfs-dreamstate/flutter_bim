@@ -125,4 +125,41 @@ class RustRendererService implements IRendererService {
       return [-50, -50, -50, 50, 50, 50];
     }
   }
+
+  @override
+  void flyCamera({required double forward, required double right, required double up}) {
+    try {
+      rust.flyCamera(forward: forward, right: right, up: up);
+    } catch (e) {
+      debugPrint('[RustRendererService] flyCamera failed: $e');
+    }
+  }
+
+  @override
+  void lookCamera({required double deltaX, required double deltaY}) {
+    try {
+      rust.lookCamera(deltaX: deltaX, deltaY: deltaY);
+    } catch (e) {
+      debugPrint('[RustRendererService] lookCamera failed: $e');
+    }
+  }
+
+  @override
+  void setWalkthroughMode({required bool enabled}) {
+    try {
+      rust.setWalkthroughMode(enabled: enabled);
+    } catch (e) {
+      debugPrint('[RustRendererService] setWalkthroughMode failed: $e');
+    }
+  }
+
+  @override
+  bool setOrbitCenterFromScreen({required double screenX, required double screenY}) {
+    try {
+      return rust.setOrbitCenterFromScreen(screenX: screenX, screenY: screenY);
+    } catch (e) {
+      debugPrint('[RustRendererService] setOrbitCenterFromScreen failed: $e');
+      return false;
+    }
+  }
 }

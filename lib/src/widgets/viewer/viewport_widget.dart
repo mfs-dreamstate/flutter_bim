@@ -12,7 +12,7 @@ import '../../core/providers/selection_state.dart';
 import '../../core/providers/service_providers.dart';
 
 /// Interaction mode for single-finger gestures.
-enum InteractionMode { orbit, pan }
+enum InteractionMode { orbit, pan, fly }
 
 /// Provider for the current interaction mode.
 final interactionModeProvider = StateProvider<InteractionMode>(
@@ -198,7 +198,34 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     final delta = details.focalPointDelta;
     final mode = ref.read(interactionModeProvider);
 
-    if (_pointerCount == 2) {
+    if (mode == InteractionMode.fly) {
+      // Fly mode: single finger = look around, pinch = fly forward/back,
+      // two-finger pan = strafe
+      if (_pointerCount == 2) {
+        final isScaling = (details.scale - 1.0).abs() >= 0.02;
+        if (isScaling) {
+          final scaleDelta = details.scale - _lastScale;
+          _lastScale = details.scale;
+          renderer.flyCamera(
+            forward: scaleDelta * RenderConfig.pinchZoomSensitivity,
+            right: 0,
+            up: 0,
+          );
+        } else {
+          renderer.flyCamera(
+            forward: 0,
+            right: -delta.dx * RenderConfig.panSensitivity,
+            up: delta.dy * RenderConfig.panSensitivity,
+          );
+        }
+      } else {
+        // Single finger: look around (yaw/pitch)
+        renderer.lookCamera(
+          deltaX: -delta.dx * RenderConfig.orbitSensitivity,
+          deltaY: delta.dy * RenderConfig.orbitSensitivity,
+        );
+      }
+    } else if (_pointerCount == 2) {
       final isScaling = (details.scale - 1.0).abs() >= 0.02;
       if (isScaling) {
         // Pinch zoom
@@ -260,16 +287,57 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     _markDirty();
   }
 
+  Offset? _doubleTapPosition;
+
+  void _onDoubleTapDown(TapDownDetails details) {
+    _doubleTapPosition = details.localPosition;
+  }
+
+  void _onDoubleTap(BoxConstraints constraints) {
+    final modelState = ref.read(modelStateProvider);
+    if (!modelState.modelLoaded || _doubleTapPosition == null) return;
+
+    final screenX = _doubleTapPosition!.dx / constraints.maxWidth;
+    final screenY = _doubleTapPosition!.dy / constraints.maxHeight;
+
+    final renderer = ref.read(rendererServiceProvider);
+    final hit = renderer.setOrbitCenterFromScreen(
+      screenX: screenX,
+      screenY: screenY,
+    );
+
+    if (hit) {
+      debugPrint('[Viewport] Orbit center set to tapped point');
+    }
+    _markDirty();
+  }
+
+  /// Sync walkthrough mode on the Rust side when interaction mode changes.
+  void _onModeChanged(InteractionMode? prev, InteractionMode next) {
+    final renderer = ref.read(rendererServiceProvider);
+    if (next == InteractionMode.fly) {
+      renderer.setWalkthroughMode(enabled: true);
+    } else if (prev == InteractionMode.fly) {
+      renderer.setWalkthroughMode(enabled: false);
+    }
+  }
+
   void _toggleLevelCut() {
     setState(() {
       _levelCutEnabled = !_levelCutEnabled;
       if (_levelCutEnabled) {
         _updateSceneBounds();
         _levelCutValue = 1.0; // Start fully open (no cut)
+        // Disable section fill (stencil caps) during level cut — it produces
+        // visual artifacts with placeholder box geometry.
+        try {
+          rust.setSectionFillEnabled(enabled: false);
+        } catch (_) {}
       } else {
-        // Clear section plane when disabling
+        // Clear section plane and re-enable section fill when disabling
         try {
           rust.clearSectionPlane();
+          rust.setSectionFillEnabled(enabled: true);
         } catch (_) {}
         _markDirty();
       }
@@ -308,6 +376,9 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     final mode = ref.watch(interactionModeProvider);
     final modelState = ref.watch(modelStateProvider);
 
+    // Sync walkthrough mode on the Rust side when interaction mode changes
+    ref.listen<InteractionMode>(interactionModeProvider, _onModeChanged);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
@@ -321,6 +392,8 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
                   onScaleUpdate: _onScaleUpdate,
                   onScaleEnd: _onScaleEnd,
                   onTapUp: (details) => _onTapUp(details, constraints),
+                  onDoubleTapDown: _onDoubleTapDown,
+                  onDoubleTap: () => _onDoubleTap(constraints),
                   child: Container(
                     color: const Color(RenderConfig.viewportBackgroundColor),
                     child: _frameImage != null
@@ -402,6 +475,14 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
                     active: mode == InteractionMode.orbit,
                     onPressed: () => ref.read(interactionModeProvider.notifier).state =
                         InteractionMode.orbit,
+                  ),
+                  const SizedBox(height: 8),
+                  _ModeButton(
+                    icon: Icons.flight,
+                    label: 'Fly',
+                    active: mode == InteractionMode.fly,
+                    onPressed: () => ref.read(interactionModeProvider.notifier).state =
+                        InteractionMode.fly,
                   ),
                 ],
               ),

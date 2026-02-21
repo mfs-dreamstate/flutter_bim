@@ -46,6 +46,11 @@ pub struct Camera {
     /// When true, orbit is constrained to turntable (Y-up) rotation
     turntable_mode: bool,
 
+    // -- Scene scale (set from fit_to_bounds, used for speed floors) --
+    /// Diagonal size of the loaded scene. Used to set minimum pan/zoom speeds
+    /// so movement never stalls regardless of camera-to-target distance.
+    scene_scale: f32,
+
     // -- Smooth camera animation --
     animation_active: bool,
     animation_start_position: Vec3,
@@ -69,6 +74,7 @@ impl Default for Camera {
             orthographic: false,
             walkthrough_mode: false,
             turntable_mode: true,
+            scene_scale: 100.0, // sensible default, updated on fit_to_bounds
             animation_active: false,
             animation_start_position: Vec3::ZERO,
             animation_start_target: Vec3::ZERO,
@@ -245,30 +251,49 @@ impl Camera {
     // ----------------------------------------------------------------
 
     /// Pan camera (move target and position together).
-    /// Pan speed scales with distance so it feels consistent at any zoom level.
+    /// Speed uses the larger of distance-based and scene-scale-based values,
+    /// so panning is always usable — even after flying deep inside a building.
     pub fn pan(&mut self, delta_x: f32, delta_y: f32) {
         let forward = (self.target - self.position).normalize();
         let right = forward.cross(self.up).normalize();
         let up = right.cross(forward);
 
         let distance = (self.position - self.target).length();
-        let speed = distance * 0.001;
+        // Floor derived from scene diagonal — ~0.5% of scene per full-drag
+        let min_speed = self.scene_scale * 0.00005;
+        let speed = (distance * 0.001).max(min_speed);
         let offset = right * delta_x * speed + up * delta_y * speed;
 
         self.position += offset;
         self.target += offset;
     }
 
-    /// Zoom in/out (move camera closer/farther from target)
-    /// Uses proportional zoom so it works at any scale
+    /// Zoom in/out — constant-speed fly along the view direction.
+    /// Speed is derived from scene scale so it feels the same at any distance.
+    /// When the camera reaches the orbit target, the target is pushed forward
+    /// so you fly straight through walls and into buildings.
     pub fn zoom(&mut self, delta: f32) {
         let direction = (self.target - self.position).normalize();
         let distance = (self.position - self.target).length();
-        // Zoom proportional to current distance (feels consistent at any scale)
-        let factor = 1.0 - delta * 0.002;
-        let new_distance = (distance * factor).max(0.1);
 
-        self.position = self.target - direction * new_distance;
+        // Proportional at long range (responsive overview), constant floor at
+        // close range (never stalls). Floor = 0.1% of scene diagonal so it
+        // kicks in when you're roughly 1/3 of the way in.
+        let speed = (distance * 0.002).max(self.scene_scale * 0.001);
+        let move_amount = delta * speed;
+
+        // Always move camera along the view direction
+        self.position += direction * move_amount;
+
+        // Check if camera passed through or is very close to the target
+        let new_vec = self.target - self.position;
+        let still_ahead = new_vec.dot(direction) > 0.0;
+        let min_target_dist = self.scene_scale * 0.02;
+
+        if !still_ahead || new_vec.length() < min_target_dist {
+            // Reposition target ahead of camera so orbit center follows us
+            self.target = self.position + direction * distance.max(min_target_dist);
+        }
     }
 
     /// Fit view to bounding box
@@ -278,6 +303,7 @@ impl Camera {
 
         self.target = center;
         self.position = center + Vec3::new(1.0, 1.0, 1.0).normalize() * size * 1.5;
+        self.scene_scale = size;
     }
 
     /// Set camera distance from target (preserving direction)
@@ -334,6 +360,26 @@ impl Camera {
         let offset = Vec3::Y * amount;
         self.position += offset;
         self.target += offset;
+    }
+
+    /// Fly-mode movement: constant speed based on scene scale.
+    /// `forward`/`right`/`up` are raw gesture deltas (e.g. pinch scale delta,
+    /// two-finger pan dx/dy). Speed is derived from scene_scale so it feels
+    /// consistent regardless of where the camera is.
+    pub fn fly_move(&mut self, forward: f32, right: f32, up: f32) {
+        let speed = self.scene_scale * 0.001;
+        let dir = (self.target - self.position).normalize();
+        let right_vec = dir.cross(Vec3::Y).normalize();
+
+        let offset = dir * forward * speed + right_vec * right * speed + Vec3::Y * up * speed;
+        self.position += offset;
+        self.target += offset;
+    }
+
+    /// Set the orbit center (target) to a specific world-space point,
+    /// keeping camera position unchanged.
+    pub fn set_orbit_target(&mut self, target: Vec3) {
+        self.target = target;
     }
 
     /// Rotate the view direction (yaw/pitch) without orbiting around target (walkthrough).

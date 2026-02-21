@@ -50,6 +50,18 @@ class MockRendererService implements IRendererService {
 
   @override
   List<double> getSceneBounds() => [-50, -50, -50, 50, 50, 50];
+
+  @override
+  void flyCamera({required double forward, required double right, required double up}) {}
+
+  @override
+  void lookCamera({required double deltaX, required double deltaY}) {}
+
+  @override
+  void setWalkthroughMode({required bool enabled}) {}
+
+  @override
+  bool setOrbitCenterFromScreen({required double screenX, required double screenY}) => false;
 }
 
 /// Mock model service with in-memory model tracking.

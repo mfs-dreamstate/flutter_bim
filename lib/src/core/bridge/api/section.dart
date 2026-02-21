@@ -59,6 +59,10 @@ void clearAllSectionPlanes() => RustLib.instance.api.crateApiSectionClearAllSect
 void setMultipleSectionPlanes({required String planesJson}) =>
     RustLib.instance.api.crateApiSectionSetMultipleSectionPlanes(planesJson: planesJson);
 
+/// Enable or disable the section fill (solid cap at section plane intersections)
+void setSectionFillEnabled({required bool enabled}) =>
+    RustLib.instance.api.crateApiSectionSetSectionFillEnabled(enabled: enabled);
+
 /// Start a section plane animation along an axis
 void animateSectionPlane(
         {required int axis, required double startPos, required double endPos, required double durationSecs}) =>

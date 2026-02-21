@@ -74,12 +74,22 @@ impl AppState {
     }
 
     /// Rebuild the BVH pick accelerator from all visible model elements.
+    /// Element bounds are stored in IFC Z-up coordinates, but the camera ray
+    /// is in Y-up world space, so we must transform bounds before building the BVH.
     pub fn rebuild_pick_bvh(&mut self) {
         // Pre-allocate with total visible element count
         let total: usize = self.registry.iter_visible().map(|(_, m)| m.elements().len()).sum();
         let mut all_elements = Vec::with_capacity(total);
         for (_id, reg_model) in self.registry.iter_visible() {
-            all_elements.extend_from_slice(reg_model.elements());
+            for e in reg_model.elements() {
+                let mut el = e.clone();
+                // Transform bounds from IFC Z-up to Y-up: [x,y,z] → [x,z,-y]
+                let old_min = el.bounds.min;
+                let old_max = el.bounds.max;
+                el.bounds.min = [old_min[0], old_min[2], -old_max[1]];
+                el.bounds.max = [old_max[0], old_max[2], -old_min[1]];
+                all_elements.push(el);
+            }
         }
         self.pick_accelerator = PickAccelerator::build(all_elements);
         self.pick_bvh_dirty = false;

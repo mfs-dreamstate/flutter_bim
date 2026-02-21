@@ -40,4 +40,17 @@ abstract interface class IRendererService {
 
   /// Get scene bounding box in world coordinates [minX, minY, minZ, maxX, maxY, maxZ].
   List<double> getSceneBounds();
+
+  /// Fly-mode movement: constant speed derived from scene scale.
+  void flyCamera({required double forward, required double right, required double up});
+
+  /// Rotate the camera view direction (yaw/pitch) for fly/walkthrough mode.
+  void lookCamera({required double deltaX, required double deltaY});
+
+  /// Enable or disable walkthrough (fly) mode.
+  void setWalkthroughMode({required bool enabled});
+
+  /// Set orbit center by picking a surface point from screen coordinates.
+  /// Returns true if a surface was hit.
+  bool setOrbitCenterFromScreen({required double screenX, required double screenY});
 }

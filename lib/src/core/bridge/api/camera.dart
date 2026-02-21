@@ -68,6 +68,16 @@ void lookCamera({required double deltaX, required double deltaY}) =>
 /// Check if walkthrough mode is active
 bool isWalkthroughMode() => RustLib.instance.api.crateApiCameraIsWalkthroughMode();
 
+/// Fly-mode movement: constant speed derived from scene scale.
+/// `forward` = forward/backward, `right` = strafe, `up` = vertical.
+void flyCamera({required double forward, required double right, required double up}) =>
+    RustLib.instance.api.crateApiCameraFlyCamera(forward: forward, right: right, up: up);
+
+/// Set the orbit center by picking a point on the model from screen coords.
+/// Returns true if a surface was hit and the orbit center was updated.
+bool setOrbitCenterFromScreen({required double screenX, required double screenY}) =>
+    RustLib.instance.api.crateApiCameraSetOrbitCenterFromScreen(screenX: screenX, screenY: screenY);
+
 /// Save the current camera state as a named viewpoint
 ViewpointData saveViewpoint({required String name}) => RustLib.instance.api.crateApiCameraSaveViewpoint(name: name);
 

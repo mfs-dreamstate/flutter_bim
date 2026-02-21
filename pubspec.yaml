@@ -32,6 +32,7 @@ dependencies:
 
   # Image processing (for drawing overlays)
   image: ^4.0.17
+  freezed_annotation: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +42,8 @@ dev_dependencies:
   # Integration testing
   integration_test:
     sdk: flutter
+  freezed: ^3.2.5
+  build_runner: ^2.11.1
 
 # Important: Configure as FFI plugin for native library support
 flutter:

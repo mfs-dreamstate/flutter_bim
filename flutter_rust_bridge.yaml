@@ -8,7 +8,7 @@ rust_root: rust/
 rust_input: crate::api
 
 # Dart output location
-dart_output: lib/core/bridge/
+dart_output: lib/src/core/bridge/
 
 # C header output for iOS
 c_output: ios/Runner/bridge_generated.h

@@ -3,7 +3,18 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api.dart';
+import 'api/camera.dart';
+import 'api/export.dart';
+import 'api/lighting.dart';
+import 'api/measurement.dart';
+import 'api/models.dart';
+import 'api/overlay.dart';
+import 'api/properties.dart';
+import 'api/rendering.dart';
+import 'api/section.dart';
+import 'api/selection.dart';
+import 'api/state.dart';
+import 'api/system.dart';
 import 'bim/entities.dart';
 import 'bim/geometry.dart';
 import 'bim/model.dart';
@@ -24,6 +35,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   @protected
+  Map<String, Int32List> dco_decode_Map_String_list_prim_i_32_strict_None(dynamic raw);
+
+  @protected
   Map<String, BigInt> dco_decode_Map_String_usize_None(dynamic raw);
 
   @protected
@@ -39,10 +53,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ElementInfo dco_decode_box_autoadd_element_info(dynamic raw);
 
   @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
   GeoReference dco_decode_box_autoadd_geo_reference(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  MaterialData dco_decode_box_autoadd_material_data(dynamic raw);
+
+  @protected
+  TypeObjectData dco_decode_box_autoadd_type_object_data(dynamic raw);
+
+  @protected
+  ColorMode dco_decode_color_mode(dynamic raw);
 
   @protected
   ElementInfo dco_decode_element_info(dynamic raw);
@@ -75,10 +101,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<GridLine> dco_decode_list_grid_line(dynamic raw);
 
   @protected
+  List<MaterialLayerData> dco_decode_list_material_layer_data(dynamic raw);
+
+  @protected
   List<MeasurementPoint> dco_decode_list_measurement_point(dynamic raw);
 
   @protected
   Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
+
+  @protected
+  Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -87,10 +119,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<PropertyInfo> dco_decode_list_property_info(dynamic raw);
+
+  @protected
+  List<PropertySetInfo> dco_decode_list_property_set_info(dynamic raw);
+
+  @protected
+  List<(String, Int32List)> dco_decode_list_record_string_list_prim_i_32_strict(dynamic raw);
+
+  @protected
   List<(String, BigInt)> dco_decode_list_record_string_usize(dynamic raw);
 
   @protected
   List<RegisteredModelInfo> dco_decode_list_registered_model_info(dynamic raw);
+
+  @protected
+  List<SpatialNode> dco_decode_list_spatial_node(dynamic raw);
+
+  @protected
+  MaterialData dco_decode_material_data(dynamic raw);
+
+  @protected
+  MaterialLayerData dco_decode_material_layer_data(dynamic raw);
 
   @protected
   MeasurementPoint dco_decode_measurement_point(dynamic raw);
@@ -111,10 +161,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ElementInfo? dco_decode_opt_box_autoadd_element_info(dynamic raw);
 
   @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
   GeoReference? dco_decode_opt_box_autoadd_geo_reference(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  MaterialData? dco_decode_opt_box_autoadd_material_data(dynamic raw);
+
+  @protected
+  TypeObjectData? dco_decode_opt_box_autoadd_type_object_data(dynamic raw);
+
+  @protected
+  PropertyInfo dco_decode_property_info(dynamic raw);
+
+  @protected
+  PropertySetInfo dco_decode_property_set_info(dynamic raw);
+
+  @protected
+  (String, Int32List) dco_decode_record_string_list_prim_i_32_strict(dynamic raw);
 
   @protected
   (String, BigInt) dco_decode_record_string_usize(dynamic raw);
@@ -124,6 +192,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RenderStats dco_decode_render_stats(dynamic raw);
+
+  @protected
+  SpatialNode dco_decode_spatial_node(dynamic raw);
+
+  @protected
+  TypeObjectData dco_decode_type_object_data(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -136,6 +210,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  Map<String, Int32List> sse_decode_Map_String_list_prim_i_32_strict_None(SseDeserializer deserializer);
 
   @protected
   Map<String, BigInt> sse_decode_Map_String_usize_None(SseDeserializer deserializer);
@@ -153,10 +230,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ElementInfo sse_decode_box_autoadd_element_info(SseDeserializer deserializer);
 
   @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
   GeoReference sse_decode_box_autoadd_geo_reference(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  MaterialData sse_decode_box_autoadd_material_data(SseDeserializer deserializer);
+
+  @protected
+  TypeObjectData sse_decode_box_autoadd_type_object_data(SseDeserializer deserializer);
+
+  @protected
+  ColorMode sse_decode_color_mode(SseDeserializer deserializer);
 
   @protected
   ElementInfo sse_decode_element_info(SseDeserializer deserializer);
@@ -189,10 +278,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<GridLine> sse_decode_list_grid_line(SseDeserializer deserializer);
 
   @protected
+  List<MaterialLayerData> sse_decode_list_material_layer_data(SseDeserializer deserializer);
+
+  @protected
   List<MeasurementPoint> sse_decode_list_measurement_point(SseDeserializer deserializer);
 
   @protected
   Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
+
+  @protected
+  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -201,10 +296,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<PropertyInfo> sse_decode_list_property_info(SseDeserializer deserializer);
+
+  @protected
+  List<PropertySetInfo> sse_decode_list_property_set_info(SseDeserializer deserializer);
+
+  @protected
+  List<(String, Int32List)> sse_decode_list_record_string_list_prim_i_32_strict(SseDeserializer deserializer);
+
+  @protected
   List<(String, BigInt)> sse_decode_list_record_string_usize(SseDeserializer deserializer);
 
   @protected
   List<RegisteredModelInfo> sse_decode_list_registered_model_info(SseDeserializer deserializer);
+
+  @protected
+  List<SpatialNode> sse_decode_list_spatial_node(SseDeserializer deserializer);
+
+  @protected
+  MaterialData sse_decode_material_data(SseDeserializer deserializer);
+
+  @protected
+  MaterialLayerData sse_decode_material_layer_data(SseDeserializer deserializer);
 
   @protected
   MeasurementPoint sse_decode_measurement_point(SseDeserializer deserializer);
@@ -225,10 +338,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ElementInfo? sse_decode_opt_box_autoadd_element_info(SseDeserializer deserializer);
 
   @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
   GeoReference? sse_decode_opt_box_autoadd_geo_reference(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  MaterialData? sse_decode_opt_box_autoadd_material_data(SseDeserializer deserializer);
+
+  @protected
+  TypeObjectData? sse_decode_opt_box_autoadd_type_object_data(SseDeserializer deserializer);
+
+  @protected
+  PropertyInfo sse_decode_property_info(SseDeserializer deserializer);
+
+  @protected
+  PropertySetInfo sse_decode_property_set_info(SseDeserializer deserializer);
+
+  @protected
+  (String, Int32List) sse_decode_record_string_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
   (String, BigInt) sse_decode_record_string_usize(SseDeserializer deserializer);
@@ -238,6 +369,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RenderStats sse_decode_render_stats(SseDeserializer deserializer);
+
+  @protected
+  SpatialNode sse_decode_spatial_node(SseDeserializer deserializer);
+
+  @protected
+  TypeObjectData sse_decode_type_object_data(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -250,6 +387,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  void sse_encode_Map_String_list_prim_i_32_strict_None(Map<String, Int32List> self, SseSerializer serializer);
 
   @protected
   void sse_encode_Map_String_usize_None(Map<String, BigInt> self, SseSerializer serializer);
@@ -267,10 +407,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_element_info(ElementInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_geo_reference(GeoReference self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_material_data(MaterialData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_type_object_data(TypeObjectData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_color_mode(ColorMode self, SseSerializer serializer);
 
   @protected
   void sse_encode_element_info(ElementInfo self, SseSerializer serializer);
@@ -303,10 +455,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_grid_line(List<GridLine> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_material_layer_data(List<MaterialLayerData> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_measurement_point(List<MeasurementPoint> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_f_32_strict(Float32List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_i_32_strict(Int32List self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
@@ -315,10 +473,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_property_info(List<PropertyInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_property_set_info(List<PropertySetInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_record_string_list_prim_i_32_strict(List<(String, Int32List)> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_record_string_usize(List<(String, BigInt)> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_registered_model_info(List<RegisteredModelInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_spatial_node(List<SpatialNode> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_material_data(MaterialData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_material_layer_data(MaterialLayerData self, SseSerializer serializer);
 
   @protected
   void sse_encode_measurement_point(MeasurementPoint self, SseSerializer serializer);
@@ -339,10 +515,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_element_info(ElementInfo? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_geo_reference(GeoReference? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_material_data(MaterialData? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_type_object_data(TypeObjectData? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_property_info(PropertyInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_property_set_info(PropertySetInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_string_list_prim_i_32_strict((String, Int32List) self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_string_usize((String, BigInt) self, SseSerializer serializer);
@@ -352,6 +546,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_render_stats(RenderStats self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_spatial_node(SpatialNode self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_type_object_data(TypeObjectData self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);

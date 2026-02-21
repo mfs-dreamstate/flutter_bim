@@ -8,6 +8,9 @@ pub mod geometry;
 pub mod ifc_parser;
 pub mod model;
 pub mod model_registry;
+pub mod placement;
+pub mod tessellation;
+pub mod triangulate;
 
 pub use entities::*;
 pub use geometry::*;

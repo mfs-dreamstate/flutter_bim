@@ -61,11 +61,15 @@ class ModelNotifier extends Notifier<ModelState> {
   void onModelsChanged() {
     refreshModelCount();
     if (state.modelLoaded) {
-      try {
-        _service.loadAllModelsIntoRenderer();
-      } catch (e) {
-        debugPrint('[ModelNotifier] Error reloading models: $e');
-      }
+      // Defer heavy renderer reload to next microtask so the caller's
+      // frame isn't blocked by the sync FFI call
+      Future.microtask(() {
+        try {
+          _service.loadAllModelsIntoRenderer();
+        } catch (e) {
+          debugPrint('[ModelNotifier] Error reloading models: $e');
+        }
+      });
     }
   }
 }

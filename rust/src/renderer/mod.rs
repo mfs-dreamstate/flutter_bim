@@ -3,6 +3,7 @@
 //! High-performance 3D rendering using wgpu (WebGPU/Vulkan/Metal).
 //! Handles scene rendering, camera management, and GPU resource management.
 
+pub mod bvh;
 pub mod camera;
 pub mod gpu;
 pub mod overlay;
@@ -10,12 +11,13 @@ pub mod pipeline;
 pub mod scene;
 pub mod vertex;
 
-pub use camera::{Camera, ray_aabb_intersect};
+pub use bvh::BvhNode;
+pub use camera::{Camera, Frustum, ray_aabb_intersect};
 pub use gpu::GpuContext;
 pub use overlay::DrawingOverlay;
 pub use pipeline::{RenderMode, RenderPipeline};
-pub use scene::SceneRenderer;
-pub use vertex::{generate_test_cube, Vertex};
+pub use scene::{ElementDrawRange, SceneRenderer};
+pub use vertex::{generate_test_cube, BoxVertex, InstanceData, Vertex};
 
 /// Renderer state and configuration
 pub struct Renderer {
@@ -66,10 +68,10 @@ impl Renderer {
     }
 
     /// Render a frame and return pixel data as RGBA
-    pub fn render_frame(&self) -> Result<Vec<u8>, String> {
+    pub fn render_frame(&mut self) -> Result<Vec<u8>, String> {
         let device = self.gpu.device().ok_or("GPU not initialized")?;
         let queue = self.gpu.queue().ok_or("GPU queue not initialized")?;
-        let scene = self.scene.as_ref().ok_or("Scene not initialized")?;
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
 
         let pixels = scene.render_frame(device, queue, &self.camera);
         Ok(pixels)
@@ -108,6 +110,21 @@ impl Renderer {
         let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
 
         scene.upload_mesh_from_arrays(device, vertices, normals, colors, indices);
+        Ok(())
+    }
+
+    /// Set per-element draw ranges for frustum culling (non-instanced fallback)
+    pub fn set_element_draw_ranges(&mut self, ranges: Vec<ElementDrawRange>) -> Result<(), String> {
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.set_element_draw_ranges(ranges);
+        Ok(())
+    }
+
+    /// Set per-instance data for GPU instancing (replaces mesh path for BIM models)
+    pub fn set_instances(&mut self, instances: Vec<InstanceData>) -> Result<(), String> {
+        let device = self.gpu.device().ok_or("GPU not initialized")?;
+        let scene = self.scene.as_mut().ok_or("Scene not initialized")?;
+        scene.set_instances(device, instances);
         Ok(())
     }
 

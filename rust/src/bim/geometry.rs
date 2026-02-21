@@ -82,31 +82,22 @@ impl Mesh {
 
     /// Add a vertex
     pub fn add_vertex(&mut self, x: f32, y: f32, z: f32) {
-        self.vertices.push(x);
-        self.vertices.push(y);
-        self.vertices.push(z);
+        self.vertices.extend_from_slice(&[x, y, z]);
     }
 
     /// Add a normal
     pub fn add_normal(&mut self, x: f32, y: f32, z: f32) {
-        self.normals.push(x);
-        self.normals.push(y);
-        self.normals.push(z);
+        self.normals.extend_from_slice(&[x, y, z]);
     }
 
     /// Add a color
     pub fn add_color(&mut self, r: f32, g: f32, b: f32, a: f32) {
-        self.colors.push(r);
-        self.colors.push(g);
-        self.colors.push(b);
-        self.colors.push(a);
+        self.colors.extend_from_slice(&[r, g, b, a]);
     }
 
     /// Add a triangle
     pub fn add_triangle(&mut self, i0: u32, i1: u32, i2: u32) {
-        self.indices.push(i0);
-        self.indices.push(i1);
-        self.indices.push(i2);
+        self.indices.extend_from_slice(&[i0, i1, i2]);
     }
 }
 
@@ -157,56 +148,38 @@ impl BoundingBox {
     }
 }
 
-/// Get color for IFC element type
+/// Case-insensitive ASCII substring match without allocation.
+fn ascii_contains_ci(haystack: &str, needle: &str) -> bool {
+    let n = needle.as_bytes();
+    haystack.as_bytes().windows(n.len()).any(|w| w.eq_ignore_ascii_case(n))
+}
+
+/// Get color for IFC element type (zero-alloc — no .to_uppercase())
 pub fn color_for_element_type(element_type: &str) -> [f32; 4] {
-    match element_type.to_uppercase().as_str() {
-        // === ARCHITECTURAL ===
-        // Walls - light gray/beige
-        s if s.contains("WALL") => [0.85, 0.82, 0.75, 1.0],
-        // Slabs/floors - darker gray
-        s if s.contains("SLAB") || s.contains("FLOOR") => [0.6, 0.6, 0.65, 1.0],
-        // Doors - brown
-        s if s.contains("DOOR") => [0.6, 0.45, 0.3, 1.0],
-        // Windows - light blue (glass)
-        s if s.contains("WINDOW") => [0.7, 0.85, 0.95, 0.7],
-        // Roofs - terracotta
-        s if s.contains("ROOF") => [0.75, 0.5, 0.4, 1.0],
-        // Stairs - concrete gray
-        s if s.contains("STAIR") => [0.65, 0.65, 0.65, 1.0],
-        // Railings - dark gray
-        s if s.contains("RAILING") => [0.4, 0.4, 0.4, 1.0],
-        // Furniture - wood tone
-        s if s.contains("FURNITURE") => [0.65, 0.5, 0.35, 1.0],
-
-        // === STRUCTURAL ===
-        // Columns - steel blue
-        s if s.contains("COLUMN") => [0.5, 0.55, 0.7, 1.0],
-        // Beams - steel gray
-        s if s.contains("BEAM") => [0.55, 0.55, 0.6, 1.0],
-        // Footings - concrete
-        s if s.contains("FOOTING") || s.contains("FOUNDATION") => [0.5, 0.5, 0.5, 1.0],
-
-        // === MEP (Mechanical/Electrical/Plumbing) ===
-        // Pipes - copper/green for water
-        s if s.contains("PIPE") => [0.2, 0.7, 0.5, 1.0],
-        // Ducts - silver/metal
-        s if s.contains("DUCT") => [0.7, 0.75, 0.8, 1.0],
-        // Flow terminals (vents, outlets) - light metal
-        s if s.contains("FLOWTERMINAL") || s.contains("TERMINAL") => [0.6, 0.65, 0.7, 1.0],
-
-        // === ELECTRICAL ===
-        // Cable carriers/trays - orange
-        s if s.contains("CABLE") || s.contains("CONDUIT") => [0.9, 0.5, 0.2, 1.0],
-        // Electrical equipment - yellow
-        s if s.contains("ELECTRIC") => [0.9, 0.8, 0.2, 1.0],
-
-        // === GENERIC ===
-        // Building element proxy - purple tint
-        s if s.contains("PROXY") => [0.6, 0.5, 0.7, 1.0],
-
-        // Default - neutral gray
-        _ => [0.7, 0.7, 0.7, 1.0],
-    }
+    // === ARCHITECTURAL ===
+    if ascii_contains_ci(element_type, "WALL") { return [0.85, 0.82, 0.75, 1.0]; }
+    if ascii_contains_ci(element_type, "SLAB") || ascii_contains_ci(element_type, "FLOOR") { return [0.6, 0.6, 0.65, 1.0]; }
+    if ascii_contains_ci(element_type, "DOOR") { return [0.6, 0.45, 0.3, 1.0]; }
+    if ascii_contains_ci(element_type, "WINDOW") { return [0.7, 0.85, 0.95, 0.7]; }
+    if ascii_contains_ci(element_type, "ROOF") { return [0.75, 0.5, 0.4, 1.0]; }
+    if ascii_contains_ci(element_type, "STAIR") { return [0.65, 0.65, 0.65, 1.0]; }
+    if ascii_contains_ci(element_type, "RAILING") { return [0.4, 0.4, 0.4, 1.0]; }
+    if ascii_contains_ci(element_type, "FURNITURE") { return [0.65, 0.5, 0.35, 1.0]; }
+    // === STRUCTURAL ===
+    if ascii_contains_ci(element_type, "COLUMN") { return [0.5, 0.55, 0.7, 1.0]; }
+    if ascii_contains_ci(element_type, "BEAM") { return [0.55, 0.55, 0.6, 1.0]; }
+    if ascii_contains_ci(element_type, "FOOTING") || ascii_contains_ci(element_type, "FOUNDATION") { return [0.5, 0.5, 0.5, 1.0]; }
+    // === MEP ===
+    if ascii_contains_ci(element_type, "PIPE") { return [0.2, 0.7, 0.5, 1.0]; }
+    if ascii_contains_ci(element_type, "DUCT") { return [0.7, 0.75, 0.8, 1.0]; }
+    if ascii_contains_ci(element_type, "FLOWTERMINAL") || ascii_contains_ci(element_type, "TERMINAL") { return [0.6, 0.65, 0.7, 1.0]; }
+    // === ELECTRICAL ===
+    if ascii_contains_ci(element_type, "CABLE") || ascii_contains_ci(element_type, "CONDUIT") { return [0.9, 0.5, 0.2, 1.0]; }
+    if ascii_contains_ci(element_type, "ELECTRIC") { return [0.9, 0.8, 0.2, 1.0]; }
+    // === GENERIC ===
+    if ascii_contains_ci(element_type, "PROXY") { return [0.6, 0.5, 0.7, 1.0]; }
+    // Default
+    [0.7, 0.7, 0.7, 1.0]
 }
 
 /// Generate a box mesh with proper normals per face
@@ -306,22 +279,58 @@ pub fn generate_box_with_normals(
     mesh
 }
 
+/// Append source mesh into target mesh with correct index offsets.
+pub fn append_mesh(target: &mut Mesh, source: &Mesh) {
+    let base = target.vertex_count() as u32;
+    target.vertices.extend_from_slice(&source.vertices);
+    target.normals.extend_from_slice(&source.normals);
+    target.colors.extend_from_slice(&source.colors);
+    target.indices.extend(source.indices.iter().map(|i| i + base));
+}
+
+/// Transform all vertices and normals in a mesh by a 4x4 matrix.
+pub fn transform_mesh(mesh: &mut Mesh, matrix: &glam::Mat4) {
+    let normal_matrix = matrix.inverse().transpose();
+    for i in (0..mesh.vertices.len()).step_by(3) {
+        let pos = glam::Vec3::new(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+        let transformed = matrix.transform_point3(pos);
+        mesh.vertices[i] = transformed.x;
+        mesh.vertices[i + 1] = transformed.y;
+        mesh.vertices[i + 2] = transformed.z;
+    }
+    for i in (0..mesh.normals.len()).step_by(3) {
+        let n = glam::Vec3::new(mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]);
+        let tn = normal_matrix.transform_vector3(n).normalize_or_zero();
+        mesh.normals[i] = tn.x;
+        mesh.normals[i + 1] = tn.y;
+        mesh.normals[i + 2] = tn.z;
+    }
+}
+
 /// Merge multiple meshes into one
 pub fn merge_meshes(meshes: Vec<Mesh>) -> Mesh {
-    let mut result = Mesh::new();
+    // Pre-allocate totals
+    let total_verts: usize = meshes.iter().map(|m| m.vertices.len()).sum();
+    let total_indices: usize = meshes.iter().map(|m| m.indices.len()).sum();
+    let total_normals: usize = meshes.iter().map(|m| m.normals.len()).sum();
+    let total_colors: usize = meshes.iter().map(|m| m.colors.len()).sum();
+
+    let mut result = Mesh {
+        vertices: Vec::with_capacity(total_verts),
+        indices: Vec::with_capacity(total_indices),
+        normals: Vec::with_capacity(total_normals),
+        colors: Vec::with_capacity(total_colors),
+    };
 
     for mesh in meshes {
         let base = result.vertex_count() as u32;
 
-        // Add vertices
-        result.vertices.extend(&mesh.vertices);
-        result.normals.extend(&mesh.normals);
-        result.colors.extend(&mesh.colors);
+        result.vertices.extend_from_slice(&mesh.vertices);
+        result.normals.extend_from_slice(&mesh.normals);
+        result.colors.extend_from_slice(&mesh.colors);
 
-        // Add indices with offset
-        for idx in &mesh.indices {
-            result.indices.push(idx + base);
-        }
+        // Add indices with offset — single extend avoids per-element push
+        result.indices.extend(mesh.indices.iter().map(|idx| idx + base));
     }
 
     result

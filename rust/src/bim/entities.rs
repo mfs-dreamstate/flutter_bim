@@ -39,7 +39,7 @@ pub struct IfcProduct {
     pub name: Option<String>,
     pub description: Option<String>,
     pub object_type: Option<String>,
-    pub properties: HashMap<String, String>,
+    pub properties: Option<HashMap<String, String>>,
 }
 
 /// IFC Wall

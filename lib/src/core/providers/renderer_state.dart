@@ -12,7 +12,7 @@ class RendererState {
   final String status;
   final String? error;
   final bool wireframeSupported;
-  final int renderMode; // 0 = Shaded, 1 = Wireframe
+  final int renderMode; // 0 = Shaded, 1 = Wireframe, 2 = X-Ray
 
   const RendererState({
     this.isInitializing = true,
@@ -81,6 +81,11 @@ class RendererNotifier extends Notifier<RendererState> {
     final newMode = state.renderMode == 0 ? 1 : 0;
     _service.setRenderMode(mode: newMode);
     state = state.copyWith(renderMode: newMode);
+  }
+
+  void setRenderMode(int mode) {
+    _service.setRenderMode(mode: mode);
+    state = state.copyWith(renderMode: mode);
   }
 
   void setStatus(String status) {

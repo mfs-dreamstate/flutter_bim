@@ -3,7 +3,18 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api.dart';
+import 'api/camera.dart';
+import 'api/export.dart';
+import 'api/lighting.dart';
+import 'api/measurement.dart';
+import 'api/models.dart';
+import 'api/overlay.dart';
+import 'api/properties.dart';
+import 'api/rendering.dart';
+import 'api/section.dart';
+import 'api/selection.dart';
+import 'api/state.dart';
+import 'api/system.dart';
 import 'bim/entities.dart';
 import 'bim/geometry.dart';
 import 'bim/model.dart';
@@ -69,7 +80,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 219948847;
+  int get rustContentHash => 1514695416;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'rust',
@@ -79,117 +90,141 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  int crateApiAddMeasurementPoint({required double x, required double y, required double z});
+  int crateApiMeasurementAddMeasurementPoint({required double x, required double y, required double z});
 
-  void crateApiClearAllModels();
+  void crateApiModelsClearAllModels();
 
-  void crateApiClearMeasurement();
+  void crateApiMeasurementClearMeasurement();
 
-  void crateApiClearSectionPlane();
+  void crateApiSectionClearSectionPlane();
 
-  void crateApiColorByType();
+  void crateApiLightingColorByType();
 
-  Future<void> crateApiExportScreenshot({required String path});
+  Future<ColorMode> crateApiStateColorModeDefault();
 
-  void crateApiFitCameraToAllModels();
+  Future<void> crateApiExportExportScreenshot({required String path});
 
-  void crateApiFitCameraToModel();
+  void crateApiCameraFitCameraToAllModels();
 
-  List<ElementInfo> crateApiGetAllElements();
+  void crateApiCameraFitCameraToModel();
 
-  List<ElementInfo> crateApiGetAllElementsFromAllModels();
+  List<ElementInfo> crateApiSelectionGetAllElements();
 
-  Uint8List crateApiGetCurrentFrameRgba();
+  List<ElementInfo> crateApiSelectionGetAllElementsFromAllModels();
 
-  Map<String, BigInt> crateApiGetElementCounts();
+  int crateApiSelectionGetColorMode();
 
-  GeoReference? crateApiGetGeoReference();
+  Uint8List crateApiExportGetCurrentFrameRgba();
 
-  BigInt crateApiGetGridLineCount();
+  Map<String, BigInt> crateApiSelectionGetElementCounts();
 
-  List<GridLine> crateApiGetGridLines();
+  MaterialData? crateApiPropertiesGetElementMaterial({required int elementId});
 
-  List<String> crateApiGetHiddenElementTypes();
+  List<PropertySetInfo> crateApiPropertiesGetElementProperties({required int elementId});
 
-  int crateApiGetMeasurementPointCount();
+  List<PropertySetInfo> crateApiPropertiesGetElementPropertiesAllModels({required int elementId});
 
-  MeasurementResult crateApiGetMeasurementResult();
+  String? crateApiPropertiesGetElementStorey({required int elementId});
 
-  BigInt crateApiGetModelCount();
+  TypeObjectData? crateApiPropertiesGetElementTypeInfo({required int elementId});
 
-  ModelInfo crateApiGetModelInfo();
+  Map<String, Int32List> crateApiPropertiesGetElementsByStorey();
 
-  int crateApiGetRenderMode();
+  GeoReference? crateApiSelectionGetGeoReference();
 
-  RenderStats crateApiGetRenderStats();
+  BigInt crateApiSelectionGetGridLineCount();
 
-  String crateApiGetSystemInfo();
+  List<GridLine> crateApiSelectionGetGridLines();
 
-  String crateApiGetVersion();
+  List<String> crateApiSelectionGetHiddenElementTypes();
 
-  String crateApiGetViewMode();
+  String? crateApiSelectionGetIsolatedStorey();
 
-  Future<String> crateApiInitRenderer({required int width, required int height});
+  int crateApiMeasurementGetMeasurementPointCount();
 
-  String crateApiInitialize();
+  MeasurementResult crateApiMeasurementGetMeasurementResult();
 
-  bool crateApiIsElementTypeVisible({required String elementType});
+  BigInt crateApiModelsGetModelCount();
 
-  bool crateApiIsGridVisible();
+  ModelInfo crateApiModelsGetModelInfo();
 
-  bool crateApiIsModelLoaded();
+  int crateApiLightingGetRenderMode();
 
-  bool crateApiIsRendererInitialized();
+  RenderStats crateApiExportGetRenderStats();
 
-  bool crateApiIsSectionPlaneActive();
+  List<SpatialNode> crateApiPropertiesGetSpatialTree();
 
-  bool crateApiIsWireframeSupported();
+  String crateApiSystemGetSystemInfo();
 
-  List<RegisteredModelInfo> crateApiListLoadedModels();
+  String crateApiSystemGetVersion();
 
-  String crateApiLoadAllModelsIntoRenderer();
+  String crateApiOverlayGetViewMode();
 
-  Future<ModelInfo> crateApiLoadIfcFile({required String filePath});
+  Future<String> crateApiRenderingInitRenderer({required int width, required int height});
 
-  Future<ModelInfo> crateApiLoadModel({required String modelId, required String filePath});
+  String crateApiSystemInitialize();
 
-  String crateApiLoadModelIntoRenderer();
+  bool crateApiSelectionIsElementTypeVisible({required String elementType});
 
-  void crateApiOrbitCamera({required double deltaX, required double deltaY});
+  bool crateApiSelectionIsGridVisible();
 
-  Future<ModelInfo> crateApiParseIfcContent({required String content});
+  bool crateApiModelsIsModelLoaded();
 
-  ElementInfo? crateApiPickElement({required double screenX, required double screenY});
+  bool crateApiRenderingIsRendererInitialized();
 
-  String crateApiReloadAllModelsMesh();
+  bool crateApiSectionIsSectionPlaneActive();
 
-  String crateApiReloadModelMesh();
+  bool crateApiLightingIsWireframeSupported();
 
-  void crateApiRemoveOverlay({required String id});
+  int crateApiSelectionIsolateStorey({required String storeyName});
 
-  Uint8List crateApiRenderFrame();
+  List<RegisteredModelInfo> crateApiModelsListLoadedModels();
 
-  void crateApiResetElementColors();
+  String crateApiRenderingLoadAllModelsIntoRenderer();
 
-  void crateApiSetAmbientColor({required double r, required double g, required double b});
+  Future<ModelInfo> crateApiModelsLoadIfcFile({required String filePath});
 
-  void crateApiSetElementColor({required int elementId, required int r, required int g, required int b});
+  Future<ModelInfo> crateApiModelsLoadModel({required String modelId, required String filePath});
 
-  void crateApiSetElementTypeVisible({required String elementType, required bool visible});
+  String crateApiRenderingLoadModelIntoRenderer();
 
-  void crateApiSetGridVisible({required bool visible});
+  void crateApiCameraOrbitCamera({required double deltaX, required double deltaY});
 
-  void crateApiSetLightColor({required double r, required double g, required double b});
+  Future<ModelInfo> crateApiModelsParseIfcContent({required String content});
 
-  void crateApiSetLightDirection({required double x, required double y, required double z});
+  ElementInfo? crateApiSelectionPickElement({required double screenX, required double screenY});
 
-  void crateApiSetLightIntensity({required double intensity});
+  String crateApiRenderingReloadAllModelsMesh();
 
-  void crateApiSetModelVisible({required String modelId, required bool visible});
+  String crateApiRenderingReloadModelMesh();
 
-  void crateApiSetOverlayOpacity({required String id, required double opacity});
+  void crateApiOverlayRemoveOverlay({required String id});
 
-  void crateApiSetOverlayTransform(
+  Uint8List crateApiRenderingRenderFrame();
+
+  void crateApiLightingResetElementColors();
+
+  void crateApiLightingSetAmbientColor({required double r, required double g, required double b});
+
+  void crateApiSelectionSetColorMode({required int mode});
+
+  void crateApiLightingSetElementColor({required int elementId, required int r, required int g, required int b});
+
+  void crateApiSelectionSetElementTypeVisible({required String elementType, required bool visible});
+
+  void crateApiSelectionSetGridVisible({required bool visible});
+
+  void crateApiLightingSetLightColor({required double r, required double g, required double b});
+
+  void crateApiLightingSetLightDirection({required double x, required double y, required double z});
+
+  void crateApiLightingSetLightIntensity({required double intensity});
+
+  void crateApiModelsSetModelVisible({required String modelId, required bool visible});
+
+  void crateApiOverlaySetOverlayOpacity({required String id, required double opacity});
+
+  void crateApiOverlaySetOverlayTransform(
       {required String id,
       required double positionX,
       required double positionY,
@@ -198,13 +233,13 @@ abstract class RustLibApi extends BaseApi {
       required double scaleY,
       required double rotation});
 
-  void crateApiSetOverlayVisible({required String id, required bool visible});
+  void crateApiOverlaySetOverlayVisible({required String id, required bool visible});
 
-  void crateApiSetPrimaryModel({required String modelId});
+  void crateApiModelsSetPrimaryModel({required String modelId});
 
-  void crateApiSetRenderMode({required int mode});
+  void crateApiLightingSetRenderMode({required int mode});
 
-  void crateApiSetSectionPlane(
+  void crateApiSectionSetSectionPlane(
       {required double originX,
       required double originY,
       required double originZ,
@@ -212,32 +247,34 @@ abstract class RustLibApi extends BaseApi {
       required double normalY,
       required double normalZ});
 
-  void crateApiSetSectionPlaneEnabled({required bool enabled});
+  void crateApiSectionSetSectionPlaneEnabled({required bool enabled});
 
-  void crateApiSetSectionPlaneFromAxis({required int axis, required double position});
+  void crateApiSectionSetSectionPlaneFromAxis({required int axis, required double position});
 
-  void crateApiSetSelectedElement({int? elementId});
+  void crateApiSelectionSetSelectedElement({int? elementId});
 
-  void crateApiSetViewMode({required String mode});
+  void crateApiOverlaySetViewMode({required String mode});
 
-  void crateApiStartMeasurement({required String measurementType});
+  void crateApiSelectionShowAllStoreys();
 
-  Future<String> crateApiTestAsync();
+  void crateApiMeasurementStartMeasurement({required String measurementType});
 
-  String crateApiTestErrorHandling({required bool shouldFail});
+  Future<String> crateApiSystemTestAsync();
 
-  Future<String> crateApiTestRendererInit();
+  String crateApiSystemTestErrorHandling({required bool shouldFail});
 
-  bool crateApiToggleGridVisible();
+  Future<String> crateApiRenderingTestRendererInit();
 
-  void crateApiUnloadModel();
+  bool crateApiSelectionToggleGridVisible();
 
-  void crateApiUnloadModelById({required String modelId});
+  void crateApiModelsUnloadModel();
 
-  Future<void> crateApiUploadDrawingOverlay(
+  void crateApiModelsUnloadModelById({required String modelId});
+
+  Future<void> crateApiOverlayUploadDrawingOverlay(
       {required String id, required int width, required int height, required List<int> rgbaPixels});
 
-  void crateApiZoomCamera({required double delta});
+  void crateApiCameraZoomCamera({required double delta});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -249,7 +286,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  int crateApiAddMeasurementPoint({required double x, required double y, required double z}) {
+  int crateApiMeasurementAddMeasurementPoint({required double x, required double y, required double z}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -262,19 +299,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_i_32,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiAddMeasurementPointConstMeta,
+      constMeta: kCrateApiMeasurementAddMeasurementPointConstMeta,
       argValues: [x, y, z],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiAddMeasurementPointConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiMeasurementAddMeasurementPointConstMeta => const TaskConstMeta(
         debugName: "add_measurement_point",
         argNames: ["x", "y", "z"],
       );
 
   @override
-  void crateApiClearAllModels() {
+  void crateApiModelsClearAllModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -284,19 +321,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiClearAllModelsConstMeta,
+      constMeta: kCrateApiModelsClearAllModelsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiClearAllModelsConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiModelsClearAllModelsConstMeta => const TaskConstMeta(
         debugName: "clear_all_models",
         argNames: [],
       );
 
   @override
-  void crateApiClearMeasurement() {
+  void crateApiMeasurementClearMeasurement() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -306,19 +343,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiClearMeasurementConstMeta,
+      constMeta: kCrateApiMeasurementClearMeasurementConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiClearMeasurementConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiMeasurementClearMeasurementConstMeta => const TaskConstMeta(
         debugName: "clear_measurement",
         argNames: [],
       );
 
   @override
-  void crateApiClearSectionPlane() {
+  void crateApiSectionClearSectionPlane() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -328,19 +365,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiClearSectionPlaneConstMeta,
+      constMeta: kCrateApiSectionClearSectionPlaneConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiClearSectionPlaneConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSectionClearSectionPlaneConstMeta => const TaskConstMeta(
         debugName: "clear_section_plane",
         argNames: [],
       );
 
   @override
-  void crateApiColorByType() {
+  void crateApiLightingColorByType() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -350,64 +387,64 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiColorByTypeConstMeta,
+      constMeta: kCrateApiLightingColorByTypeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiColorByTypeConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingColorByTypeConstMeta => const TaskConstMeta(
         debugName: "color_by_type",
         argNames: [],
       );
 
   @override
-  Future<void> crateApiExportScreenshot({required String path}) {
+  Future<ColorMode> crateApiStateColorModeDefault() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(path, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_color_mode,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiExportScreenshotConstMeta,
-      argValues: [path],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiExportScreenshotConstMeta => const TaskConstMeta(
-        debugName: "export_screenshot",
-        argNames: ["path"],
-      );
-
-  @override
-  void crateApiFitCameraToAllModels() {
-    return handler.executeSync(SyncTask(
-      callFfi: () {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: sse_decode_String,
-      ),
-      constMeta: kCrateApiFitCameraToAllModelsConstMeta,
+      constMeta: kCrateApiStateColorModeDefaultConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiFitCameraToAllModelsConstMeta => const TaskConstMeta(
-        debugName: "fit_camera_to_all_models",
+  TaskConstMeta get kCrateApiStateColorModeDefaultConstMeta => const TaskConstMeta(
+        debugName: "color_mode_default",
         argNames: [],
       );
 
   @override
-  void crateApiFitCameraToModel() {
+  Future<void> crateApiExportExportScreenshot({required String path}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(path, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiExportExportScreenshotConstMeta,
+      argValues: [path],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExportExportScreenshotConstMeta => const TaskConstMeta(
+        debugName: "export_screenshot",
+        argNames: ["path"],
+      );
+
+  @override
+  void crateApiCameraFitCameraToAllModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -417,41 +454,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiFitCameraToModelConstMeta,
+      constMeta: kCrateApiCameraFitCameraToAllModelsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiFitCameraToModelConstMeta => const TaskConstMeta(
-        debugName: "fit_camera_to_model",
+  TaskConstMeta get kCrateApiCameraFitCameraToAllModelsConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_all_models",
         argNames: [],
       );
 
   @override
-  List<ElementInfo> crateApiGetAllElements() {
+  void crateApiCameraFitCameraToModel() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_element_info,
+        decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetAllElementsConstMeta,
+      constMeta: kCrateApiCameraFitCameraToModelConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetAllElementsConstMeta => const TaskConstMeta(
-        debugName: "get_all_elements",
+  TaskConstMeta get kCrateApiCameraFitCameraToModelConstMeta => const TaskConstMeta(
+        debugName: "fit_camera_to_model",
         argNames: [],
       );
 
   @override
-  List<ElementInfo> crateApiGetAllElementsFromAllModels() {
+  List<ElementInfo> crateApiSelectionGetAllElements() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -461,550 +498,552 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeSuccessData: sse_decode_list_element_info,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetAllElementsFromAllModelsConstMeta,
+      constMeta: kCrateApiSelectionGetAllElementsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetAllElementsFromAllModelsConstMeta => const TaskConstMeta(
-        debugName: "get_all_elements_from_all_models",
+  TaskConstMeta get kCrateApiSelectionGetAllElementsConstMeta => const TaskConstMeta(
+        debugName: "get_all_elements",
         argNames: [],
       );
 
   @override
-  Uint8List crateApiGetCurrentFrameRgba() {
+  List<ElementInfo> crateApiSelectionGetAllElementsFromAllModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeSuccessData: sse_decode_list_element_info,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetCurrentFrameRgbaConstMeta,
+      constMeta: kCrateApiSelectionGetAllElementsFromAllModelsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetCurrentFrameRgbaConstMeta => const TaskConstMeta(
-        debugName: "get_current_frame_rgba",
+  TaskConstMeta get kCrateApiSelectionGetAllElementsFromAllModelsConstMeta => const TaskConstMeta(
+        debugName: "get_all_elements_from_all_models",
         argNames: [],
       );
 
   @override
-  Map<String, BigInt> crateApiGetElementCounts() {
+  int crateApiSelectionGetColorMode() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_Map_String_usize_None,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiGetElementCountsConstMeta,
+      constMeta: kCrateApiSelectionGetColorModeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetElementCountsConstMeta => const TaskConstMeta(
-        debugName: "get_element_counts",
+  TaskConstMeta get kCrateApiSelectionGetColorModeConstMeta => const TaskConstMeta(
+        debugName: "get_color_mode",
         argNames: [],
       );
 
   @override
-  GeoReference? crateApiGetGeoReference() {
+  Uint8List crateApiExportGetCurrentFrameRgba() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_opt_box_autoadd_geo_reference,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetGeoReferenceConstMeta,
+      constMeta: kCrateApiExportGetCurrentFrameRgbaConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetGeoReferenceConstMeta => const TaskConstMeta(
-        debugName: "get_geo_reference",
+  TaskConstMeta get kCrateApiExportGetCurrentFrameRgbaConstMeta => const TaskConstMeta(
+        debugName: "get_current_frame_rgba",
         argNames: [],
       );
 
   @override
-  BigInt crateApiGetGridLineCount() {
+  Map<String, BigInt> crateApiSelectionGetElementCounts() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_usize,
+        decodeSuccessData: sse_decode_Map_String_usize_None,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetGridLineCountConstMeta,
+      constMeta: kCrateApiSelectionGetElementCountsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetGridLineCountConstMeta => const TaskConstMeta(
-        debugName: "get_grid_line_count",
+  TaskConstMeta get kCrateApiSelectionGetElementCountsConstMeta => const TaskConstMeta(
+        debugName: "get_element_counts",
         argNames: [],
       );
 
   @override
-  List<GridLine> crateApiGetGridLines() {
+  MaterialData? crateApiPropertiesGetElementMaterial({required int elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_grid_line,
+        decodeSuccessData: sse_decode_opt_box_autoadd_material_data,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetGridLinesConstMeta,
-      argValues: [],
+      constMeta: kCrateApiPropertiesGetElementMaterialConstMeta,
+      argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetGridLinesConstMeta => const TaskConstMeta(
-        debugName: "get_grid_lines",
-        argNames: [],
+  TaskConstMeta get kCrateApiPropertiesGetElementMaterialConstMeta => const TaskConstMeta(
+        debugName: "get_element_material",
+        argNames: ["elementId"],
       );
 
   @override
-  List<String> crateApiGetHiddenElementTypes() {
+  List<PropertySetInfo> crateApiPropertiesGetElementProperties({required int elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_String,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_list_property_set_info,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetHiddenElementTypesConstMeta,
-      argValues: [],
+      constMeta: kCrateApiPropertiesGetElementPropertiesConstMeta,
+      argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetHiddenElementTypesConstMeta => const TaskConstMeta(
-        debugName: "get_hidden_element_types",
-        argNames: [],
+  TaskConstMeta get kCrateApiPropertiesGetElementPropertiesConstMeta => const TaskConstMeta(
+        debugName: "get_element_properties",
+        argNames: ["elementId"],
       );
 
   @override
-  int crateApiGetMeasurementPointCount() {
+  List<PropertySetInfo> crateApiPropertiesGetElementPropertiesAllModels({required int elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_i_32,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_list_property_set_info,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetMeasurementPointCountConstMeta,
-      argValues: [],
+      constMeta: kCrateApiPropertiesGetElementPropertiesAllModelsConstMeta,
+      argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetMeasurementPointCountConstMeta => const TaskConstMeta(
-        debugName: "get_measurement_point_count",
-        argNames: [],
+  TaskConstMeta get kCrateApiPropertiesGetElementPropertiesAllModelsConstMeta => const TaskConstMeta(
+        debugName: "get_element_properties_all_models",
+        argNames: ["elementId"],
       );
 
   @override
-  MeasurementResult crateApiGetMeasurementResult() {
+  String? crateApiPropertiesGetElementStorey({required int elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_measurement_result,
+        decodeSuccessData: sse_decode_opt_String,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetMeasurementResultConstMeta,
-      argValues: [],
+      constMeta: kCrateApiPropertiesGetElementStoreyConstMeta,
+      argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetMeasurementResultConstMeta => const TaskConstMeta(
-        debugName: "get_measurement_result",
-        argNames: [],
+  TaskConstMeta get kCrateApiPropertiesGetElementStoreyConstMeta => const TaskConstMeta(
+        debugName: "get_element_storey",
+        argNames: ["elementId"],
       );
 
   @override
-  BigInt crateApiGetModelCount() {
+  TypeObjectData? crateApiPropertiesGetElementTypeInfo({required int elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(elementId, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_usize,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_opt_box_autoadd_type_object_data,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetModelCountConstMeta,
-      argValues: [],
+      constMeta: kCrateApiPropertiesGetElementTypeInfoConstMeta,
+      argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetModelCountConstMeta => const TaskConstMeta(
-        debugName: "get_model_count",
-        argNames: [],
+  TaskConstMeta get kCrateApiPropertiesGetElementTypeInfoConstMeta => const TaskConstMeta(
+        debugName: "get_element_type_info",
+        argNames: ["elementId"],
       );
 
   @override
-  ModelInfo crateApiGetModelInfo() {
+  Map<String, Int32List> crateApiPropertiesGetElementsByStorey() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_model_info,
+        decodeSuccessData: sse_decode_Map_String_list_prim_i_32_strict_None,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetModelInfoConstMeta,
+      constMeta: kCrateApiPropertiesGetElementsByStoreyConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetModelInfoConstMeta => const TaskConstMeta(
-        debugName: "get_model_info",
+  TaskConstMeta get kCrateApiPropertiesGetElementsByStoreyConstMeta => const TaskConstMeta(
+        debugName: "get_elements_by_storey",
         argNames: [],
       );
 
   @override
-  int crateApiGetRenderMode() {
+  GeoReference? crateApiSelectionGetGeoReference() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_i_32,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_opt_box_autoadd_geo_reference,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiGetRenderModeConstMeta,
+      constMeta: kCrateApiSelectionGetGeoReferenceConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetRenderModeConstMeta => const TaskConstMeta(
-        debugName: "get_render_mode",
+  TaskConstMeta get kCrateApiSelectionGetGeoReferenceConstMeta => const TaskConstMeta(
+        debugName: "get_geo_reference",
         argNames: [],
       );
 
   @override
-  RenderStats crateApiGetRenderStats() {
+  BigInt crateApiSelectionGetGridLineCount() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_render_stats,
+        decodeSuccessData: sse_decode_usize,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetRenderStatsConstMeta,
+      constMeta: kCrateApiSelectionGetGridLineCountConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetRenderStatsConstMeta => const TaskConstMeta(
-        debugName: "get_render_stats",
+  TaskConstMeta get kCrateApiSelectionGetGridLineCountConstMeta => const TaskConstMeta(
+        debugName: "get_grid_line_count",
         argNames: [],
       );
 
   @override
-  String crateApiGetSystemInfo() {
+  List<GridLine> crateApiSelectionGetGridLines() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_list_grid_line,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiGetSystemInfoConstMeta,
+      constMeta: kCrateApiSelectionGetGridLinesConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetSystemInfoConstMeta => const TaskConstMeta(
-        debugName: "get_system_info",
+  TaskConstMeta get kCrateApiSelectionGetGridLinesConstMeta => const TaskConstMeta(
+        debugName: "get_grid_lines",
         argNames: [],
       );
 
   @override
-  String crateApiGetVersion() {
+  List<String> crateApiSelectionGetHiddenElementTypes() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
+        decodeSuccessData: sse_decode_list_String,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiGetVersionConstMeta,
+      constMeta: kCrateApiSelectionGetHiddenElementTypesConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetVersionConstMeta => const TaskConstMeta(
-        debugName: "get_version",
+  TaskConstMeta get kCrateApiSelectionGetHiddenElementTypesConstMeta => const TaskConstMeta(
+        debugName: "get_hidden_element_types",
         argNames: [],
       );
 
   @override
-  String crateApiGetViewMode() {
+  String? crateApiSelectionGetIsolatedStorey() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
+        decodeSuccessData: sse_decode_opt_String,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiGetViewModeConstMeta,
+      constMeta: kCrateApiSelectionGetIsolatedStoreyConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiGetViewModeConstMeta => const TaskConstMeta(
-        debugName: "get_view_mode",
+  TaskConstMeta get kCrateApiSelectionGetIsolatedStoreyConstMeta => const TaskConstMeta(
+        debugName: "get_isolated_storey",
         argNames: [],
       );
 
   @override
-  Future<String> crateApiInitRenderer({required int width, required int height}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+  int crateApiMeasurementGetMeasurementPointCount() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_u_32(width, serializer);
-        sse_encode_u_32(height, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26, port: port_);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiInitRendererConstMeta,
-      argValues: [width, height],
+      constMeta: kCrateApiMeasurementGetMeasurementPointCountConstMeta,
+      argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiInitRendererConstMeta => const TaskConstMeta(
-        debugName: "init_renderer",
-        argNames: ["width", "height"],
+  TaskConstMeta get kCrateApiMeasurementGetMeasurementPointCountConstMeta => const TaskConstMeta(
+        debugName: "get_measurement_point_count",
+        argNames: [],
       );
 
   @override
-  String crateApiInitialize() {
+  MeasurementResult crateApiMeasurementGetMeasurementResult() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_measurement_result,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiInitializeConstMeta,
+      constMeta: kCrateApiMeasurementGetMeasurementResultConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiInitializeConstMeta => const TaskConstMeta(
-        debugName: "initialize",
+  TaskConstMeta get kCrateApiMeasurementGetMeasurementResultConstMeta => const TaskConstMeta(
+        debugName: "get_measurement_result",
         argNames: [],
       );
 
   @override
-  bool crateApiIsElementTypeVisible({required String elementType}) {
+  BigInt crateApiModelsGetModelCount() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(elementType, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
+        decodeSuccessData: sse_decode_usize,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiIsElementTypeVisibleConstMeta,
-      argValues: [elementType],
+      constMeta: kCrateApiModelsGetModelCountConstMeta,
+      argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsElementTypeVisibleConstMeta => const TaskConstMeta(
-        debugName: "is_element_type_visible",
-        argNames: ["elementType"],
+  TaskConstMeta get kCrateApiModelsGetModelCountConstMeta => const TaskConstMeta(
+        debugName: "get_model_count",
+        argNames: [],
       );
 
   @override
-  bool crateApiIsGridVisible() {
+  ModelInfo crateApiModelsGetModelInfo() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiIsGridVisibleConstMeta,
+      constMeta: kCrateApiModelsGetModelInfoConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsGridVisibleConstMeta => const TaskConstMeta(
-        debugName: "is_grid_visible",
+  TaskConstMeta get kCrateApiModelsGetModelInfoConstMeta => const TaskConstMeta(
+        debugName: "get_model_info",
         argNames: [],
       );
 
   @override
-  bool crateApiIsModelLoaded() {
+  int crateApiLightingGetRenderMode() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_i_32,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiIsModelLoadedConstMeta,
+      constMeta: kCrateApiLightingGetRenderModeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsModelLoadedConstMeta => const TaskConstMeta(
-        debugName: "is_model_loaded",
+  TaskConstMeta get kCrateApiLightingGetRenderModeConstMeta => const TaskConstMeta(
+        debugName: "get_render_mode",
         argNames: [],
       );
 
   @override
-  bool crateApiIsRendererInitialized() {
+  RenderStats crateApiExportGetRenderStats() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_render_stats,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiIsRendererInitializedConstMeta,
+      constMeta: kCrateApiExportGetRenderStatsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsRendererInitializedConstMeta => const TaskConstMeta(
-        debugName: "is_renderer_initialized",
+  TaskConstMeta get kCrateApiExportGetRenderStatsConstMeta => const TaskConstMeta(
+        debugName: "get_render_stats",
         argNames: [],
       );
 
   @override
-  bool crateApiIsSectionPlaneActive() {
+  List<SpatialNode> crateApiPropertiesGetSpatialTree() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
-        decodeErrorData: null,
+        decodeSuccessData: sse_decode_list_spatial_node,
+        decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiIsSectionPlaneActiveConstMeta,
+      constMeta: kCrateApiPropertiesGetSpatialTreeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsSectionPlaneActiveConstMeta => const TaskConstMeta(
-        debugName: "is_section_plane_active",
+  TaskConstMeta get kCrateApiPropertiesGetSpatialTreeConstMeta => const TaskConstMeta(
+        debugName: "get_spatial_tree",
         argNames: [],
       );
 
   @override
-  bool crateApiIsWireframeSupported() {
+  String crateApiSystemGetSystemInfo() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_bool,
+        decodeSuccessData: sse_decode_String,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiIsWireframeSupportedConstMeta,
+      constMeta: kCrateApiSystemGetSystemInfoConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiIsWireframeSupportedConstMeta => const TaskConstMeta(
-        debugName: "is_wireframe_supported",
+  TaskConstMeta get kCrateApiSystemGetSystemInfoConstMeta => const TaskConstMeta(
+        debugName: "get_system_info",
         argNames: [],
       );
 
   @override
-  List<RegisteredModelInfo> crateApiListLoadedModels() {
+  String crateApiSystemGetVersion() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_registered_model_info,
+        decodeSuccessData: sse_decode_String,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiListLoadedModelsConstMeta,
+      constMeta: kCrateApiSystemGetVersionConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiListLoadedModelsConstMeta => const TaskConstMeta(
-        debugName: "list_loaded_models",
+  TaskConstMeta get kCrateApiSystemGetVersionConstMeta => const TaskConstMeta(
+        debugName: "get_version",
         argNames: [],
       );
 
   @override
-  String crateApiLoadAllModelsIntoRenderer() {
+  String crateApiOverlayGetViewMode() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -1012,297 +1051,566 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
-        decodeErrorData: sse_decode_String,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiLoadAllModelsIntoRendererConstMeta,
+      constMeta: kCrateApiOverlayGetViewModeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiLoadAllModelsIntoRendererConstMeta => const TaskConstMeta(
-        debugName: "load_all_models_into_renderer",
+  TaskConstMeta get kCrateApiOverlayGetViewModeConstMeta => const TaskConstMeta(
+        debugName: "get_view_mode",
         argNames: [],
       );
 
   @override
-  Future<ModelInfo> crateApiLoadIfcFile({required String filePath}) {
+  Future<String> crateApiRenderingInitRenderer({required int width, required int height}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(filePath, serializer);
+        sse_encode_u_32(width, serializer);
+        sse_encode_u_32(height, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_model_info,
-        decodeErrorData: sse_decode_String,
-      ),
-      constMeta: kCrateApiLoadIfcFileConstMeta,
-      argValues: [filePath],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiLoadIfcFileConstMeta => const TaskConstMeta(
-        debugName: "load_ifc_file",
-        argNames: ["filePath"],
-      );
-
-  @override
-  Future<ModelInfo> crateApiLoadModel({required String modelId, required String filePath}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(modelId, serializer);
-        sse_encode_String(filePath, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_model_info,
-        decodeErrorData: sse_decode_String,
-      ),
-      constMeta: kCrateApiLoadModelConstMeta,
-      argValues: [modelId, filePath],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiLoadModelConstMeta => const TaskConstMeta(
-        debugName: "load_model",
-        argNames: ["modelId", "filePath"],
-      );
-
-  @override
-  String crateApiLoadModelIntoRenderer() {
-    return handler.executeSync(SyncTask(
-      callFfi: () {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiLoadModelIntoRendererConstMeta,
+      constMeta: kCrateApiRenderingInitRendererConstMeta,
+      argValues: [width, height],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingInitRendererConstMeta => const TaskConstMeta(
+        debugName: "init_renderer",
+        argNames: ["width", "height"],
+      );
+
+  @override
+  String crateApiSystemInitialize() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSystemInitializeConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiLoadModelIntoRendererConstMeta => const TaskConstMeta(
-        debugName: "load_model_into_renderer",
+  TaskConstMeta get kCrateApiSystemInitializeConstMeta => const TaskConstMeta(
+        debugName: "initialize",
         argNames: [],
       );
 
   @override
-  void crateApiOrbitCamera({required double deltaX, required double deltaY}) {
+  bool crateApiSelectionIsElementTypeVisible({required String elementType}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_f_32(deltaX, serializer);
-        sse_encode_f_32(deltaY, serializer);
+        sse_encode_String(elementType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSelectionIsElementTypeVisibleConstMeta,
+      argValues: [elementType],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionIsElementTypeVisibleConstMeta => const TaskConstMeta(
+        debugName: "is_element_type_visible",
+        argNames: ["elementType"],
+      );
+
+  @override
+  bool crateApiSelectionIsGridVisible() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiOrbitCameraConstMeta,
-      argValues: [deltaX, deltaY],
+      constMeta: kCrateApiSelectionIsGridVisibleConstMeta,
+      argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiOrbitCameraConstMeta => const TaskConstMeta(
-        debugName: "orbit_camera",
-        argNames: ["deltaX", "deltaY"],
+  TaskConstMeta get kCrateApiSelectionIsGridVisibleConstMeta => const TaskConstMeta(
+        debugName: "is_grid_visible",
+        argNames: [],
       );
 
   @override
-  Future<ModelInfo> crateApiParseIfcContent({required String content}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(content, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_model_info,
-        decodeErrorData: sse_decode_String,
-      ),
-      constMeta: kCrateApiParseIfcContentConstMeta,
-      argValues: [content],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateApiParseIfcContentConstMeta => const TaskConstMeta(
-        debugName: "parse_ifc_content",
-        argNames: ["content"],
-      );
-
-  @override
-  ElementInfo? crateApiPickElement({required double screenX, required double screenY}) {
+  bool crateApiModelsIsModelLoaded() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_f_32(screenX, serializer);
-        sse_encode_f_32(screenY, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_opt_box_autoadd_element_info,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiPickElementConstMeta,
-      argValues: [screenX, screenY],
+      constMeta: kCrateApiModelsIsModelLoadedConstMeta,
+      argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiPickElementConstMeta => const TaskConstMeta(
-        debugName: "pick_element",
-        argNames: ["screenX", "screenY"],
+  TaskConstMeta get kCrateApiModelsIsModelLoadedConstMeta => const TaskConstMeta(
+        debugName: "is_model_loaded",
+        argNames: [],
       );
 
   @override
-  String crateApiReloadAllModelsMesh() {
+  bool crateApiRenderingIsRendererInitialized() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiRenderingIsRendererInitializedConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingIsRendererInitializedConstMeta => const TaskConstMeta(
+        debugName: "is_renderer_initialized",
+        argNames: [],
+      );
+
+  @override
+  bool crateApiSectionIsSectionPlaneActive() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 42)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiReloadAllModelsMeshConstMeta,
+      constMeta: kCrateApiSectionIsSectionPlaneActiveConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiReloadAllModelsMeshConstMeta => const TaskConstMeta(
-        debugName: "reload_all_models_mesh",
+  TaskConstMeta get kCrateApiSectionIsSectionPlaneActiveConstMeta => const TaskConstMeta(
+        debugName: "is_section_plane_active",
         argNames: [],
       );
 
   @override
-  String crateApiReloadModelMesh() {
+  bool crateApiLightingIsWireframeSupported() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 43)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_String,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiReloadModelMeshConstMeta,
+      constMeta: kCrateApiLightingIsWireframeSupportedConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiReloadModelMeshConstMeta => const TaskConstMeta(
-        debugName: "reload_model_mesh",
+  TaskConstMeta get kCrateApiLightingIsWireframeSupportedConstMeta => const TaskConstMeta(
+        debugName: "is_wireframe_supported",
         argNames: [],
       );
 
   @override
-  void crateApiRemoveOverlay({required String id}) {
+  int crateApiSelectionIsolateStorey({required String storeyName}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(id, serializer);
+        sse_encode_String(storeyName, serializer);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 44)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
+        decodeSuccessData: sse_decode_i_32,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiRemoveOverlayConstMeta,
-      argValues: [id],
+      constMeta: kCrateApiSelectionIsolateStoreyConstMeta,
+      argValues: [storeyName],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiRemoveOverlayConstMeta => const TaskConstMeta(
-        debugName: "remove_overlay",
-        argNames: ["id"],
+  TaskConstMeta get kCrateApiSelectionIsolateStoreyConstMeta => const TaskConstMeta(
+        debugName: "isolate_storey",
+        argNames: ["storeyName"],
       );
 
   @override
-  Uint8List crateApiRenderFrame() {
+  List<RegisteredModelInfo> crateApiModelsListLoadedModels() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_prim_u_8_strict,
-        decodeErrorData: sse_decode_String,
+        decodeSuccessData: sse_decode_list_registered_model_info,
+        decodeErrorData: null,
       ),
-      constMeta: kCrateApiRenderFrameConstMeta,
+      constMeta: kCrateApiModelsListLoadedModelsConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiRenderFrameConstMeta => const TaskConstMeta(
-        debugName: "render_frame",
+  TaskConstMeta get kCrateApiModelsListLoadedModelsConstMeta => const TaskConstMeta(
+        debugName: "list_loaded_models",
         argNames: [],
       );
 
   @override
-  void crateApiResetElementColors() {
+  String crateApiRenderingLoadAllModelsIntoRenderer() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46)!;
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
+        decodeSuccessData: sse_decode_String,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiResetElementColorsConstMeta,
+      constMeta: kCrateApiRenderingLoadAllModelsIntoRendererConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiResetElementColorsConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiRenderingLoadAllModelsIntoRendererConstMeta => const TaskConstMeta(
+        debugName: "load_all_models_into_renderer",
+        argNames: [],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsLoadIfcFile({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsLoadIfcFileConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsLoadIfcFileConstMeta => const TaskConstMeta(
+        debugName: "load_ifc_file",
+        argNames: ["filePath"],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsLoadModel({required String modelId, required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(modelId, serializer);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsLoadModelConstMeta,
+      argValues: [modelId, filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsLoadModelConstMeta => const TaskConstMeta(
+        debugName: "load_model",
+        argNames: ["modelId", "filePath"],
+      );
+
+  @override
+  String crateApiRenderingLoadModelIntoRenderer() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiRenderingLoadModelIntoRendererConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingLoadModelIntoRendererConstMeta => const TaskConstMeta(
+        debugName: "load_model_into_renderer",
+        argNames: [],
+      );
+
+  @override
+  void crateApiCameraOrbitCamera({required double deltaX, required double deltaY}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(deltaX, serializer);
+        sse_encode_f_32(deltaY, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiCameraOrbitCameraConstMeta,
+      argValues: [deltaX, deltaY],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiCameraOrbitCameraConstMeta => const TaskConstMeta(
+        debugName: "orbit_camera",
+        argNames: ["deltaX", "deltaY"],
+      );
+
+  @override
+  Future<ModelInfo> crateApiModelsParseIfcContent({required String content}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(content, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_model_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiModelsParseIfcContentConstMeta,
+      argValues: [content],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiModelsParseIfcContentConstMeta => const TaskConstMeta(
+        debugName: "parse_ifc_content",
+        argNames: ["content"],
+      );
+
+  @override
+  ElementInfo? crateApiSelectionPickElement({required double screenX, required double screenY}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_f_32(screenX, serializer);
+        sse_encode_f_32(screenY, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_opt_box_autoadd_element_info,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionPickElementConstMeta,
+      argValues: [screenX, screenY],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionPickElementConstMeta => const TaskConstMeta(
+        debugName: "pick_element",
+        argNames: ["screenX", "screenY"],
+      );
+
+  @override
+  String crateApiRenderingReloadAllModelsMesh() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiRenderingReloadAllModelsMeshConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingReloadAllModelsMeshConstMeta => const TaskConstMeta(
+        debugName: "reload_all_models_mesh",
+        argNames: [],
+      );
+
+  @override
+  String crateApiRenderingReloadModelMesh() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiRenderingReloadModelMeshConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingReloadModelMeshConstMeta => const TaskConstMeta(
+        debugName: "reload_model_mesh",
+        argNames: [],
+      );
+
+  @override
+  void crateApiOverlayRemoveOverlay({required String id}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(id, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiOverlayRemoveOverlayConstMeta,
+      argValues: [id],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiOverlayRemoveOverlayConstMeta => const TaskConstMeta(
+        debugName: "remove_overlay",
+        argNames: ["id"],
+      );
+
+  @override
+  Uint8List crateApiRenderingRenderFrame() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiRenderingRenderFrameConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiRenderingRenderFrameConstMeta => const TaskConstMeta(
+        debugName: "render_frame",
+        argNames: [],
+      );
+
+  @override
+  void crateApiLightingResetElementColors() {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiLightingResetElementColorsConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiLightingResetElementColorsConstMeta => const TaskConstMeta(
         debugName: "reset_element_colors",
         argNames: [],
       );
 
   @override
-  void crateApiSetAmbientColor({required double r, required double g, required double b}) {
+  void crateApiLightingSetAmbientColor({required double r, required double g, required double b}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(r, serializer);
         sse_encode_f_32(g, serializer);
         sse_encode_f_32(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetAmbientColorConstMeta,
+      constMeta: kCrateApiLightingSetAmbientColorConstMeta,
       argValues: [r, g, b],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetAmbientColorConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetAmbientColorConstMeta => const TaskConstMeta(
         debugName: "set_ambient_color",
         argNames: ["r", "g", "b"],
       );
 
   @override
-  void crateApiSetElementColor({required int elementId, required int r, required int g, required int b}) {
+  void crateApiSelectionSetColorMode({required int mode}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_i_32(mode, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiSelectionSetColorModeConstMeta,
+      argValues: [mode],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionSetColorModeConstMeta => const TaskConstMeta(
+        debugName: "set_color_mode",
+        argNames: ["mode"],
+      );
+
+  @override
+  void crateApiLightingSetElementColor({required int elementId, required int r, required int g, required int b}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -1310,193 +1618,193 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_8(r, serializer);
         sse_encode_u_8(g, serializer);
         sse_encode_u_8(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetElementColorConstMeta,
+      constMeta: kCrateApiLightingSetElementColorConstMeta,
       argValues: [elementId, r, g, b],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetElementColorConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetElementColorConstMeta => const TaskConstMeta(
         debugName: "set_element_color",
         argNames: ["elementId", "r", "g", "b"],
       );
 
   @override
-  void crateApiSetElementTypeVisible({required String elementType, required bool visible}) {
+  void crateApiSelectionSetElementTypeVisible({required String elementType, required bool visible}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(elementType, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetElementTypeVisibleConstMeta,
+      constMeta: kCrateApiSelectionSetElementTypeVisibleConstMeta,
       argValues: [elementType, visible],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetElementTypeVisibleConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSelectionSetElementTypeVisibleConstMeta => const TaskConstMeta(
         debugName: "set_element_type_visible",
         argNames: ["elementType", "visible"],
       );
 
   @override
-  void crateApiSetGridVisible({required bool visible}) {
+  void crateApiSelectionSetGridVisible({required bool visible}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetGridVisibleConstMeta,
+      constMeta: kCrateApiSelectionSetGridVisibleConstMeta,
       argValues: [visible],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetGridVisibleConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSelectionSetGridVisibleConstMeta => const TaskConstMeta(
         debugName: "set_grid_visible",
         argNames: ["visible"],
       );
 
   @override
-  void crateApiSetLightColor({required double r, required double g, required double b}) {
+  void crateApiLightingSetLightColor({required double r, required double g, required double b}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(r, serializer);
         sse_encode_f_32(g, serializer);
         sse_encode_f_32(b, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetLightColorConstMeta,
+      constMeta: kCrateApiLightingSetLightColorConstMeta,
       argValues: [r, g, b],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetLightColorConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetLightColorConstMeta => const TaskConstMeta(
         debugName: "set_light_color",
         argNames: ["r", "g", "b"],
       );
 
   @override
-  void crateApiSetLightDirection({required double x, required double y, required double z}) {
+  void crateApiLightingSetLightDirection({required double x, required double y, required double z}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(x, serializer);
         sse_encode_f_32(y, serializer);
         sse_encode_f_32(z, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetLightDirectionConstMeta,
+      constMeta: kCrateApiLightingSetLightDirectionConstMeta,
       argValues: [x, y, z],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetLightDirectionConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetLightDirectionConstMeta => const TaskConstMeta(
         debugName: "set_light_direction",
         argNames: ["x", "y", "z"],
       );
 
   @override
-  void crateApiSetLightIntensity({required double intensity}) {
+  void crateApiLightingSetLightIntensity({required double intensity}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(intensity, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetLightIntensityConstMeta,
+      constMeta: kCrateApiLightingSetLightIntensityConstMeta,
       argValues: [intensity],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetLightIntensityConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetLightIntensityConstMeta => const TaskConstMeta(
         debugName: "set_light_intensity",
         argNames: ["intensity"],
       );
 
   @override
-  void crateApiSetModelVisible({required String modelId, required bool visible}) {
+  void crateApiModelsSetModelVisible({required String modelId, required bool visible}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetModelVisibleConstMeta,
+      constMeta: kCrateApiModelsSetModelVisibleConstMeta,
       argValues: [modelId, visible],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetModelVisibleConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiModelsSetModelVisibleConstMeta => const TaskConstMeta(
         debugName: "set_model_visible",
         argNames: ["modelId", "visible"],
       );
 
   @override
-  void crateApiSetOverlayOpacity({required String id, required double opacity}) {
+  void crateApiOverlaySetOverlayOpacity({required String id, required double opacity}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(id, serializer);
         sse_encode_f_32(opacity, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetOverlayOpacityConstMeta,
+      constMeta: kCrateApiOverlaySetOverlayOpacityConstMeta,
       argValues: [id, opacity],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetOverlayOpacityConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiOverlaySetOverlayOpacityConstMeta => const TaskConstMeta(
         debugName: "set_overlay_opacity",
         argNames: ["id", "opacity"],
       );
 
   @override
-  void crateApiSetOverlayTransform(
+  void crateApiOverlaySetOverlayTransform(
       {required String id,
       required double positionX,
       required double positionY,
@@ -1514,95 +1822,95 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(scaleX, serializer);
         sse_encode_f_32(scaleY, serializer);
         sse_encode_f_32(rotation, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetOverlayTransformConstMeta,
+      constMeta: kCrateApiOverlaySetOverlayTransformConstMeta,
       argValues: [id, positionX, positionY, positionZ, scaleX, scaleY, rotation],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetOverlayTransformConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiOverlaySetOverlayTransformConstMeta => const TaskConstMeta(
         debugName: "set_overlay_transform",
         argNames: ["id", "positionX", "positionY", "positionZ", "scaleX", "scaleY", "rotation"],
       );
 
   @override
-  void crateApiSetOverlayVisible({required String id, required bool visible}) {
+  void crateApiOverlaySetOverlayVisible({required String id, required bool visible}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(id, serializer);
         sse_encode_bool(visible, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetOverlayVisibleConstMeta,
+      constMeta: kCrateApiOverlaySetOverlayVisibleConstMeta,
       argValues: [id, visible],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetOverlayVisibleConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiOverlaySetOverlayVisibleConstMeta => const TaskConstMeta(
         debugName: "set_overlay_visible",
         argNames: ["id", "visible"],
       );
 
   @override
-  void crateApiSetPrimaryModel({required String modelId}) {
+  void crateApiModelsSetPrimaryModel({required String modelId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetPrimaryModelConstMeta,
+      constMeta: kCrateApiModelsSetPrimaryModelConstMeta,
       argValues: [modelId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetPrimaryModelConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiModelsSetPrimaryModelConstMeta => const TaskConstMeta(
         debugName: "set_primary_model",
         argNames: ["modelId"],
       );
 
   @override
-  void crateApiSetRenderMode({required int mode}) {
+  void crateApiLightingSetRenderMode({required int mode}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(mode, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetRenderModeConstMeta,
+      constMeta: kCrateApiLightingSetRenderModeConstMeta,
       argValues: [mode],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetRenderModeConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiLightingSetRenderModeConstMeta => const TaskConstMeta(
         debugName: "set_render_mode",
         argNames: ["mode"],
       );
 
   @override
-  void crateApiSetSectionPlane(
+  void crateApiSectionSetSectionPlane(
       {required double originX,
       required double originY,
       required double originZ,
@@ -1618,275 +1926,297 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_f_32(normalX, serializer);
         sse_encode_f_32(normalY, serializer);
         sse_encode_f_32(normalZ, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetSectionPlaneConstMeta,
+      constMeta: kCrateApiSectionSetSectionPlaneConstMeta,
       argValues: [originX, originY, originZ, normalX, normalY, normalZ],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetSectionPlaneConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSectionSetSectionPlaneConstMeta => const TaskConstMeta(
         debugName: "set_section_plane",
         argNames: ["originX", "originY", "originZ", "normalX", "normalY", "normalZ"],
       );
 
   @override
-  void crateApiSetSectionPlaneEnabled({required bool enabled}) {
+  void crateApiSectionSetSectionPlaneEnabled({required bool enabled}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(enabled, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetSectionPlaneEnabledConstMeta,
+      constMeta: kCrateApiSectionSetSectionPlaneEnabledConstMeta,
       argValues: [enabled],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetSectionPlaneEnabledConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSectionSetSectionPlaneEnabledConstMeta => const TaskConstMeta(
         debugName: "set_section_plane_enabled",
         argNames: ["enabled"],
       );
 
   @override
-  void crateApiSetSectionPlaneFromAxis({required int axis, required double position}) {
+  void crateApiSectionSetSectionPlaneFromAxis({required int axis, required double position}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_i_32(axis, serializer);
         sse_encode_f_32(position, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetSectionPlaneFromAxisConstMeta,
+      constMeta: kCrateApiSectionSetSectionPlaneFromAxisConstMeta,
       argValues: [axis, position],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetSectionPlaneFromAxisConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSectionSetSectionPlaneFromAxisConstMeta => const TaskConstMeta(
         debugName: "set_section_plane_from_axis",
         argNames: ["axis", "position"],
       );
 
   @override
-  void crateApiSetSelectedElement({int? elementId}) {
+  void crateApiSelectionSetSelectedElement({int? elementId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_opt_box_autoadd_i_32(elementId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 75)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetSelectedElementConstMeta,
+      constMeta: kCrateApiSelectionSetSelectedElementConstMeta,
       argValues: [elementId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetSelectedElementConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSelectionSetSelectedElementConstMeta => const TaskConstMeta(
         debugName: "set_selected_element",
         argNames: ["elementId"],
       );
 
   @override
-  void crateApiSetViewMode({required String mode}) {
+  void crateApiOverlaySetViewMode({required String mode}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(mode, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 76)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiSetViewModeConstMeta,
+      constMeta: kCrateApiOverlaySetViewModeConstMeta,
       argValues: [mode],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiSetViewModeConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiOverlaySetViewModeConstMeta => const TaskConstMeta(
         debugName: "set_view_mode",
         argNames: ["mode"],
       );
 
   @override
-  void crateApiStartMeasurement({required String measurementType}) {
+  void crateApiSelectionShowAllStoreys() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(measurementType, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 77)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiStartMeasurementConstMeta,
+      constMeta: kCrateApiSelectionShowAllStoreysConstMeta,
+      argValues: [],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSelectionShowAllStoreysConstMeta => const TaskConstMeta(
+        debugName: "show_all_storeys",
+        argNames: [],
+      );
+
+  @override
+  void crateApiMeasurementStartMeasurement({required String measurementType}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(measurementType, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 78)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateApiMeasurementStartMeasurementConstMeta,
       argValues: [measurementType],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiStartMeasurementConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiMeasurementStartMeasurementConstMeta => const TaskConstMeta(
         debugName: "start_measurement",
         argNames: ["measurementType"],
       );
 
   @override
-  Future<String> crateApiTestAsync() {
+  Future<String> crateApiSystemTestAsync() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 79, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiTestAsyncConstMeta,
+      constMeta: kCrateApiSystemTestAsyncConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiTestAsyncConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSystemTestAsyncConstMeta => const TaskConstMeta(
         debugName: "test_async",
         argNames: [],
       );
 
   @override
-  String crateApiTestErrorHandling({required bool shouldFail}) {
+  String crateApiSystemTestErrorHandling({required bool shouldFail}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_bool(shouldFail, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiTestErrorHandlingConstMeta,
+      constMeta: kCrateApiSystemTestErrorHandlingConstMeta,
       argValues: [shouldFail],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiTestErrorHandlingConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSystemTestErrorHandlingConstMeta => const TaskConstMeta(
         debugName: "test_error_handling",
         argNames: ["shouldFail"],
       );
 
   @override
-  Future<String> crateApiTestRendererInit() {
+  Future<String> crateApiRenderingTestRendererInit() {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiTestRendererInitConstMeta,
+      constMeta: kCrateApiRenderingTestRendererInitConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiTestRendererInitConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiRenderingTestRendererInitConstMeta => const TaskConstMeta(
         debugName: "test_renderer_init",
         argNames: [],
       );
 
   @override
-  bool crateApiToggleGridVisible() {
+  bool crateApiSelectionToggleGridVisible() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
         decodeErrorData: null,
       ),
-      constMeta: kCrateApiToggleGridVisibleConstMeta,
+      constMeta: kCrateApiSelectionToggleGridVisibleConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiToggleGridVisibleConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiSelectionToggleGridVisibleConstMeta => const TaskConstMeta(
         debugName: "toggle_grid_visible",
         argNames: [],
       );
 
   @override
-  void crateApiUnloadModel() {
+  void crateApiModelsUnloadModel() {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiUnloadModelConstMeta,
+      constMeta: kCrateApiModelsUnloadModelConstMeta,
       argValues: [],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiUnloadModelConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiModelsUnloadModelConstMeta => const TaskConstMeta(
         debugName: "unload_model",
         argNames: [],
       );
 
   @override
-  void crateApiUnloadModelById({required String modelId}) {
+  void crateApiModelsUnloadModelById({required String modelId}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(modelId, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiUnloadModelByIdConstMeta,
+      constMeta: kCrateApiModelsUnloadModelByIdConstMeta,
       argValues: [modelId],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiUnloadModelByIdConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiModelsUnloadModelByIdConstMeta => const TaskConstMeta(
         debugName: "unload_model_by_id",
         argNames: ["modelId"],
       );
 
   @override
-  Future<void> crateApiUploadDrawingOverlay(
+  Future<void> crateApiOverlayUploadDrawingOverlay(
       {required String id, required int width, required int height, required List<int> rgbaPixels}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -1895,45 +2225,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(width, serializer);
         sse_encode_u_32(height, serializer);
         sse_encode_list_prim_u_8_loose(rgbaPixels, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiUploadDrawingOverlayConstMeta,
+      constMeta: kCrateApiOverlayUploadDrawingOverlayConstMeta,
       argValues: [id, width, height, rgbaPixels],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiUploadDrawingOverlayConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiOverlayUploadDrawingOverlayConstMeta => const TaskConstMeta(
         debugName: "upload_drawing_overlay",
         argNames: ["id", "width", "height", "rgbaPixels"],
       );
 
   @override
-  void crateApiZoomCamera({required double delta}) {
+  void crateApiCameraZoomCamera({required double delta}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_f_32(delta, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
         decodeErrorData: sse_decode_String,
       ),
-      constMeta: kCrateApiZoomCameraConstMeta,
+      constMeta: kCrateApiCameraZoomCameraConstMeta,
       argValues: [delta],
       apiImpl: this,
     ));
   }
 
-  TaskConstMeta get kCrateApiZoomCameraConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateApiCameraZoomCameraConstMeta => const TaskConstMeta(
         debugName: "zoom_camera",
         argNames: ["delta"],
       );
+
+  @protected
+  Map<String, Int32List> dco_decode_Map_String_list_prim_i_32_strict_None(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return Map.fromEntries(dco_decode_list_record_string_list_prim_i_32_strict(raw).map((e) => MapEntry(e.$1, e.$2)));
+  }
 
   @protected
   Map<String, BigInt> dco_decode_Map_String_usize_None(dynamic raw) {
@@ -1971,6 +2307,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
   GeoReference dco_decode_box_autoadd_geo_reference(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_geo_reference(raw);
@@ -1980,6 +2322,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  MaterialData dco_decode_box_autoadd_material_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_material_data(raw);
+  }
+
+  @protected
+  TypeObjectData dco_decode_box_autoadd_type_object_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_type_object_data(raw);
+  }
+
+  @protected
+  ColorMode dco_decode_color_mode(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ColorMode.values[raw as int];
   }
 
   @protected
@@ -2069,6 +2429,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MaterialLayerData> dco_decode_list_material_layer_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_material_layer_data).toList();
+  }
+
+  @protected
   List<MeasurementPoint> dco_decode_list_measurement_point(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_measurement_point).toList();
@@ -2078,6 +2444,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Float32List dco_decode_list_prim_f_32_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Float32List;
+  }
+
+  @protected
+  Int32List dco_decode_list_prim_i_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Int32List;
   }
 
   @protected
@@ -2093,6 +2465,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PropertyInfo> dco_decode_list_property_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_property_info).toList();
+  }
+
+  @protected
+  List<PropertySetInfo> dco_decode_list_property_set_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_property_set_info).toList();
+  }
+
+  @protected
+  List<(String, Int32List)> dco_decode_list_record_string_list_prim_i_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_record_string_list_prim_i_32_strict).toList();
+  }
+
+  @protected
   List<(String, BigInt)> dco_decode_list_record_string_usize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_record_string_usize).toList();
@@ -2102,6 +2492,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RegisteredModelInfo> dco_decode_list_registered_model_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_registered_model_info).toList();
+  }
+
+  @protected
+  List<SpatialNode> dco_decode_list_spatial_node(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_spatial_node).toList();
+  }
+
+  @protected
+  MaterialData dco_decode_material_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return MaterialData(
+      name: dco_decode_String(arr[0]),
+      category: dco_decode_opt_String(arr[1]),
+      layers: dco_decode_list_material_layer_data(arr[2]),
+    );
+  }
+
+  @protected
+  MaterialLayerData dco_decode_material_layer_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MaterialLayerData(
+      materialName: dco_decode_String(arr[0]),
+      thickness: dco_decode_opt_box_autoadd_f_64(arr[1]),
+    );
   }
 
   @protected
@@ -2172,6 +2591,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_f_64(raw);
+  }
+
+  @protected
   GeoReference? dco_decode_opt_box_autoadd_geo_reference(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_geo_reference(raw);
@@ -2181,6 +2606,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
+  }
+
+  @protected
+  MaterialData? dco_decode_opt_box_autoadd_material_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_material_data(raw);
+  }
+
+  @protected
+  TypeObjectData? dco_decode_opt_box_autoadd_type_object_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_type_object_data(raw);
+  }
+
+  @protected
+  PropertyInfo dco_decode_property_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PropertyInfo(
+      name: dco_decode_String(arr[0]),
+      value: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  PropertySetInfo dco_decode_property_set_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PropertySetInfo(
+      name: dco_decode_String(arr[0]),
+      properties: dco_decode_list_property_info(arr[1]),
+    );
+  }
+
+  @protected
+  (String, Int32List) dco_decode_record_string_list_prim_i_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_String(arr[0]),
+      dco_decode_list_prim_i_32_strict(arr[1]),
+    );
   }
 
   @protected
@@ -2226,6 +2698,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SpatialNode dco_decode_spatial_node(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return SpatialNode(
+      id: dco_decode_i_32(arr[0]),
+      name: dco_decode_String(arr[1]),
+      nodeType: dco_decode_String(arr[2]),
+      parentId: dco_decode_opt_box_autoadd_i_32(arr[3]),
+      elementIds: dco_decode_list_prim_i_32_strict(arr[4]),
+    );
+  }
+
+  @protected
+  TypeObjectData dco_decode_type_object_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return TypeObjectData(
+      typeName: dco_decode_String(arr[0]),
+      ifcType: dco_decode_String(arr[1]),
+      propertySets: dco_decode_list_property_set_info(arr[2]),
+    );
+  }
+
+  @protected
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -2247,6 +2745,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt dco_decode_usize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeU64(raw);
+  }
+
+  @protected
+  Map<String, Int32List> sse_decode_Map_String_list_prim_i_32_strict_None(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_record_string_list_prim_i_32_strict(deserializer);
+    return Map.fromEntries(inner.map((e) => MapEntry(e.$1, e.$2)));
   }
 
   @protected
@@ -2284,6 +2789,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_f_64(deserializer));
+  }
+
+  @protected
   GeoReference sse_decode_box_autoadd_geo_reference(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_geo_reference(deserializer));
@@ -2293,6 +2804,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  MaterialData sse_decode_box_autoadd_material_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_material_data(deserializer));
+  }
+
+  @protected
+  TypeObjectData sse_decode_box_autoadd_type_object_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_type_object_data(deserializer));
+  }
+
+  @protected
+  ColorMode sse_decode_color_mode(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return ColorMode.values[inner];
   }
 
   @protected
@@ -2405,6 +2935,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MaterialLayerData> sse_decode_list_material_layer_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MaterialLayerData>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_material_layer_data(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<MeasurementPoint> sse_decode_list_measurement_point(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2424,6 +2966,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getInt32List(len_);
+  }
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -2435,6 +2984,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<PropertyInfo> sse_decode_list_property_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PropertyInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_property_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<PropertySetInfo> sse_decode_list_property_set_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PropertySetInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_property_set_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<(String, Int32List)> sse_decode_list_record_string_list_prim_i_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <(String, Int32List)>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_record_string_list_prim_i_32_strict(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -2459,6 +3044,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_registered_model_info(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  List<SpatialNode> sse_decode_list_spatial_node(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SpatialNode>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_spatial_node(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  MaterialData sse_decode_material_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_category = sse_decode_opt_String(deserializer);
+    var var_layers = sse_decode_list_material_layer_data(deserializer);
+    return MaterialData(name: var_name, category: var_category, layers: var_layers);
+  }
+
+  @protected
+  MaterialLayerData sse_decode_material_layer_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_materialName = sse_decode_String(deserializer);
+    var var_thickness = sse_decode_opt_box_autoadd_f_64(deserializer);
+    return MaterialLayerData(materialName: var_materialName, thickness: var_thickness);
   }
 
   @protected
@@ -2537,6 +3151,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_f_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   GeoReference? sse_decode_opt_box_autoadd_geo_reference(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2556,6 +3181,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  MaterialData? sse_decode_opt_box_autoadd_material_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_material_data(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  TypeObjectData? sse_decode_opt_box_autoadd_type_object_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_type_object_data(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  PropertyInfo sse_decode_property_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_value = sse_decode_String(deserializer);
+    return PropertyInfo(name: var_name, value: var_value);
+  }
+
+  @protected
+  PropertySetInfo sse_decode_property_set_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_properties = sse_decode_list_property_info(deserializer);
+    return PropertySetInfo(name: var_name, properties: var_properties);
+  }
+
+  @protected
+  (String, Int32List) sse_decode_record_string_list_prim_i_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_String(deserializer);
+    var var_field1 = sse_decode_list_prim_i_32_strict(deserializer);
+    return (var_field0, var_field1);
   }
 
   @protected
@@ -2601,6 +3272,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SpatialNode sse_decode_spatial_node(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_i_32(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_nodeType = sse_decode_String(deserializer);
+    var var_parentId = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_elementIds = sse_decode_list_prim_i_32_strict(deserializer);
+    return SpatialNode(
+        id: var_id, name: var_name, nodeType: var_nodeType, parentId: var_parentId, elementIds: var_elementIds);
+  }
+
+  @protected
+  TypeObjectData sse_decode_type_object_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_typeName = sse_decode_String(deserializer);
+    var var_ifcType = sse_decode_String(deserializer);
+    var var_propertySets = sse_decode_list_property_set_info(deserializer);
+    return TypeObjectData(typeName: var_typeName, ifcType: var_ifcType, propertySets: var_propertySets);
+  }
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
@@ -2621,6 +3313,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  void sse_encode_Map_String_list_prim_i_32_strict_None(Map<String, Int32List> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_record_string_list_prim_i_32_strict(self.entries.map((e) => (e.key, e.value)).toList(), serializer);
   }
 
   @protected
@@ -2655,6 +3353,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_geo_reference(GeoReference self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_geo_reference(self, serializer);
@@ -2664,6 +3368,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_material_data(MaterialData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_material_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_type_object_data(TypeObjectData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_type_object_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_color_mode(ColorMode self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -2750,6 +3472,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_material_layer_data(List<MaterialLayerData> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_material_layer_data(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_measurement_point(List<MeasurementPoint> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -2766,6 +3497,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_prim_i_32_strict(Int32List self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putInt32List(self);
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -2777,6 +3515,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_property_info(List<PropertyInfo> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_property_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_property_set_info(List<PropertySetInfo> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_property_set_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_record_string_list_prim_i_32_strict(List<(String, Int32List)> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_record_string_list_prim_i_32_strict(item, serializer);
+    }
   }
 
   @protected
@@ -2795,6 +3560,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     for (final item in self) {
       sse_encode_registered_model_info(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_spatial_node(List<SpatialNode> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_spatial_node(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_material_data(MaterialData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_opt_String(self.category, serializer);
+    sse_encode_list_material_layer_data(self.layers, serializer);
+  }
+
+  @protected
+  void sse_encode_material_layer_data(MaterialLayerData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.materialName, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.thickness, serializer);
   }
 
   @protected
@@ -2857,6 +3646,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_f_64(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_geo_reference(GeoReference? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2874,6 +3673,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_i_32(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_material_data(MaterialData? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_material_data(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_type_object_data(TypeObjectData? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_type_object_data(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_property_info(PropertyInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.value, serializer);
+  }
+
+  @protected
+  void sse_encode_property_set_info(PropertySetInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_list_property_info(self.properties, serializer);
+  }
+
+  @protected
+  void sse_encode_record_string_list_prim_i_32_strict((String, Int32List) self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.$1, serializer);
+    sse_encode_list_prim_i_32_strict(self.$2, serializer);
   }
 
   @protected
@@ -2902,6 +3742,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.triangleCount, serializer);
     sse_encode_u_32(self.vertexCount, serializer);
     sse_encode_u_32(self.elementCount, serializer);
+  }
+
+  @protected
+  void sse_encode_spatial_node(SpatialNode self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.nodeType, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.parentId, serializer);
+    sse_encode_list_prim_i_32_strict(self.elementIds, serializer);
+  }
+
+  @protected
+  void sse_encode_type_object_data(TypeObjectData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.typeName, serializer);
+    sse_encode_String(self.ifcType, serializer);
+    sse_encode_list_property_set_info(self.propertySets, serializer);
   }
 
   @protected

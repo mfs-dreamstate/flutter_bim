@@ -49,10 +49,18 @@ impl IfcFile {
 
     /// Parse IFC file from string
     pub fn parse(input: &str) -> Result<Self, String> {
-        // Normalize line endings (handle both Windows \r\n and Unix \n)
-        let normalized = input.replace("\r\n", "\n");
+        // Only allocate a normalized copy if the file actually contains \r
+        // This avoids doubling memory for Unix-line-ending files
+        let has_cr = input.contains('\r');
+        let normalized;
+        let parse_input = if has_cr {
+            normalized = input.replace("\r\n", "\n");
+            normalized.as_str()
+        } else {
+            input
+        };
 
-        match parse_ifc_file(&normalized) {
+        match parse_ifc_file(parse_input) {
             Ok((_, ifc_file)) => Ok(ifc_file),
             Err(e) => Err(format!("Failed to parse IFC file: {:?}", e)),
         }
@@ -99,11 +107,16 @@ fn parse_ifc_file(input: &str) -> ParseResult<IfcFile> {
     let (input, entities) = parse_data_section(input)?;
     let (input, _) = parse_iso_footer(input)?;
 
+    let mut entity_map = HashMap::with_capacity(entities.len());
+    for e in entities {
+        entity_map.insert(e.id, e);
+    }
+
     Ok((
         input,
         IfcFile {
             header,
-            entities: entities.into_iter().map(|e| (e.id, e)).collect(),
+            entities: entity_map,
         },
     ))
 }
@@ -150,11 +163,13 @@ fn parse_data_section(input: &str) -> ParseResult<Vec<IfcEntity>> {
     Ok((input, entities))
 }
 
-/// Parse a single entity instance: #123=IFCWALL(...);
+/// Parse a single entity instance: #123=IFCWALL(...); or #123 = IFCWALL(...);
 fn parse_entity_instance(input: &str) -> ParseResult<IfcEntity> {
     let (input, _) = multispace0(input)?;
     let (input, id) = parse_entity_id(input)?;
+    let (input, _) = multispace0(input)?;
     let (input, _) = char('=')(input)?;
+    let (input, _) = multispace0(input)?;
     let (input, entity_type) = parse_entity_type(input)?;
     let (input, attributes) = parse_attribute_list(input)?;
     let (input, _) = char(';')(input)?;
@@ -295,11 +310,12 @@ fn parse_float(input: &str) -> ParseResult<f64> {
         opt(tuple((one_of("eE"), opt(one_of("+-")), digit1))),
     )))(input)?;
 
-    // Trailing dot like "1200." needs to parse as float
-    let num_clean = if num_str.ends_with('.') {
-        format!("{}0", num_str)
+    // Trailing dot like "1200." needs to parse as float — use Cow to avoid allocation
+    use std::borrow::Cow;
+    let num_clean: Cow<str> = if num_str.ends_with('.') {
+        Cow::Owned(format!("{}0", num_str))
     } else {
-        num_str.to_string()
+        Cow::Borrowed(num_str)
     };
 
     let mut value = num_clean.parse::<f64>().map_err(|_| {

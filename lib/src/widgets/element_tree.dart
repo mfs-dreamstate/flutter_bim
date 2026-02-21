@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import '../core/bridge/api.dart' as rust;
+import '../core/bridge/api/properties.dart' as rust_properties;
+import '../core/bridge/api/selection.dart' as rust_selection;
 import '../core/bridge/bim/model.dart';
 import '../core/constants/bim_element_types.dart';
 import 'properties_panel.dart';
+
+/// Grouping mode for the element tree
+enum ElementGrouping { byType, byStorey }
 
 /// Element Tree View showing hierarchical list of model elements
 class ElementTreeDrawer extends StatefulWidget {
@@ -21,10 +26,13 @@ class ElementTreeDrawer extends StatefulWidget {
 
 class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
   Map<String, List<ElementInfo>> _elementsByType = {};
-  Map<String, bool> _expandedTypes = {};
+  Map<String, List<ElementInfo>> _elementsByStorey = {};
+  Map<String, bool> _expandedGroups = {};
   String _searchQuery = '';
   bool _isLoading = true;
   String? _error;
+  ElementGrouping _grouping = ElementGrouping.byType;
+  String? _isolatedStorey;
 
   @override
   void initState() {
@@ -38,28 +46,61 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
       _error = null;
     });
 
+    // Yield one frame so the loading indicator actually renders
+    // before the sync FFI call blocks the UI thread
+    await Future.delayed(Duration.zero);
+
     try {
       final elements = rust.getAllElementsFromAllModels();
 
       // Group elements by type
-      final grouped = <String, List<ElementInfo>>{};
+      final groupedByType = <String, List<ElementInfo>>{};
       for (final element in elements) {
         final type = element.elementType;
-        grouped.putIfAbsent(type, () => []);
-        grouped[type]!.add(element);
+        groupedByType.putIfAbsent(type, () => []);
+        groupedByType[type]!.add(element);
       }
 
       // Sort elements within each type by name
-      for (final list in grouped.values) {
+      for (final list in groupedByType.values) {
         list.sort((a, b) => a.name.compareTo(b.name));
       }
 
+      // Group elements by storey
+      final groupedByStorey = <String, List<ElementInfo>>{};
+      try {
+        final storeyMap = rust_properties.getElementsByStorey();
+        // Build element lookup by id
+        final elementById = <int, ElementInfo>{};
+        for (final element in elements) {
+          elementById[element.id] = element;
+        }
+        for (final entry in storeyMap.entries) {
+          final storeyName = entry.key;
+          final elementIds = entry.value;
+          final storeyElements = <ElementInfo>[];
+          for (final id in elementIds) {
+            if (elementById.containsKey(id)) {
+              storeyElements.add(elementById[id]!);
+            }
+          }
+          if (storeyElements.isNotEmpty) {
+            storeyElements.sort((a, b) => a.name.compareTo(b.name));
+            groupedByStorey[storeyName] = storeyElements;
+          }
+        }
+      } catch (e) {
+        debugPrint('[ELEMENT_TREE] Error loading storey data: $e');
+      }
+
       setState(() {
-        _elementsByType = grouped;
+        _elementsByType = groupedByType;
+        _elementsByStorey = groupedByStorey;
         _isLoading = false;
-        // Expand first type by default if any
-        if (grouped.isNotEmpty && _expandedTypes.isEmpty) {
-          _expandedTypes[grouped.keys.first] = true;
+        // Expand first group by default if any
+        final currentGroups = _currentGroups;
+        if (currentGroups.isNotEmpty && _expandedGroups.isEmpty) {
+          _expandedGroups[currentGroups.keys.first] = true;
         }
       });
     } catch (e) {
@@ -70,8 +111,12 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
     }
   }
 
-  List<ElementInfo> _getFilteredElements(String type) {
-    final elements = _elementsByType[type] ?? [];
+  Map<String, List<ElementInfo>> get _currentGroups {
+    return _grouping == ElementGrouping.byType ? _elementsByType : _elementsByStorey;
+  }
+
+  List<ElementInfo> _getFilteredElements(String groupKey) {
+    final elements = _currentGroups[groupKey] ?? [];
     if (_searchQuery.isEmpty) return elements;
 
     final query = _searchQuery.toLowerCase();
@@ -84,11 +129,29 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
 
   int _getTotalFilteredCount() {
     if (_searchQuery.isEmpty) {
-      return _elementsByType.values.fold(0, (sum, list) => sum + list.length);
+      return _currentGroups.values.fold(0, (sum, list) => sum + list.length);
     }
-    return _elementsByType.keys
-        .map((type) => _getFilteredElements(type).length)
+    return _currentGroups.keys
+        .map((key) => _getFilteredElements(key).length)
         .fold(0, (sum, count) => sum + count);
+  }
+
+  void _toggleStoreyIsolation(String storeyName) {
+    try {
+      if (_isolatedStorey == storeyName) {
+        // Un-isolate
+        rust_selection.showAllStoreys();
+        rust.reloadAllModelsMesh();
+        setState(() => _isolatedStorey = null);
+      } else {
+        // Isolate this storey
+        rust_selection.isolateStorey(storeyName: storeyName);
+        rust.reloadAllModelsMesh();
+        setState(() => _isolatedStorey = storeyName);
+      }
+    } catch (e) {
+      debugPrint('[ELEMENT_TREE] Error toggling storey isolation: $e');
+    }
   }
 
   void _selectElement(ElementInfo element) {
@@ -157,6 +220,56 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
             ),
           ),
 
+          // Grouping toggle + Search
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SegmentedButton<ElementGrouping>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ElementGrouping.byType,
+                        label: Text('By Type'),
+                        icon: Icon(Icons.category, size: 16),
+                      ),
+                      ButtonSegment(
+                        value: ElementGrouping.byStorey,
+                        label: Text('By Storey'),
+                        icon: Icon(Icons.layers, size: 16),
+                      ),
+                    ],
+                    selected: {_grouping},
+                    onSelectionChanged: (selection) {
+                      // Clear storey isolation when switching modes
+                      if (_isolatedStorey != null) {
+                        try {
+                          rust_selection.showAllStoreys();
+                          rust.reloadAllModelsMesh();
+                        } catch (_) {}
+                      }
+                      setState(() {
+                        _grouping = selection.first;
+                        _expandedGroups.clear();
+                        _isolatedStorey = null;
+                        final groups = _currentGroups;
+                        if (groups.isNotEmpty) {
+                          _expandedGroups[groups.keys.first] = true;
+                        }
+                      });
+                    },
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      textStyle: WidgetStateProperty.all(
+                        const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // Search bar
           Padding(
             padding: const EdgeInsets.all(12),
@@ -188,6 +301,49 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
           ),
 
           const Divider(height: 1),
+
+          // Storey isolation banner
+          if (_isolatedStorey != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: colorScheme.tertiaryContainer,
+              child: Row(
+                children: [
+                  Icon(Icons.filter_alt, size: 16, color: colorScheme.onTertiaryContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Showing: $_isolatedStorey',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onTertiaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      try {
+                        rust_selection.showAllStoreys();
+                        rust.reloadAllModelsMesh();
+                        setState(() => _isolatedStorey = null);
+                      } catch (e) {
+                        debugPrint('[ELEMENT_TREE] Error showing all storeys: $e');
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Show All',
+                      style: TextStyle(color: colorScheme.onTertiaryContainer),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Content
           Expanded(
@@ -242,7 +398,8 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
       );
     }
 
-    if (_elementsByType.isEmpty) {
+    final groups = _currentGroups;
+    if (groups.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -261,7 +418,9 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Load a model to see elements',
+              _grouping == ElementGrouping.byStorey
+                  ? 'No storey assignments found'
+                  : 'Load a model to see elements',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -271,28 +430,42 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
       );
     }
 
-    // Sort types alphabetically
-    final sortedTypes = _elementsByType.keys.toList()..sort();
+    // Sort groups: for storeys, sort by name; for types, alphabetically
+    final sortedKeys = groups.keys.toList()..sort((a, b) {
+      // Push "Unassigned" to the end
+      if (a == 'Unassigned') return 1;
+      if (b == 'Unassigned') return -1;
+      return a.compareTo(b);
+    });
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: sortedTypes.length,
+      itemCount: sortedKeys.length,
       itemBuilder: (context, index) {
-        final type = sortedTypes[index];
-        final elements = _getFilteredElements(type);
+        final key = sortedKeys[index];
+        final elements = _getFilteredElements(key);
 
         if (elements.isEmpty && _searchQuery.isNotEmpty) {
           return const SizedBox.shrink();
         }
 
-        return _ElementTypeSection(
-          type: type,
+        final isStoreyMode = _grouping == ElementGrouping.byStorey;
+        return _ElementGroupSection(
+          groupName: key,
+          groupIcon: isStoreyMode
+              ? (key == 'Unassigned' ? Icons.help_outline : Icons.layers)
+              : null,
           elements: elements,
-          isExpanded: _expandedTypes[type] ?? false,
+          isExpanded: _expandedGroups[key] ?? false,
           selectedElementId: widget.selectedElementId,
+          showTypeInList: isStoreyMode,
+          isIsolated: _isolatedStorey == key,
+          onToggleIsolate: isStoreyMode && key != 'Unassigned'
+              ? () => _toggleStoreyIsolation(key)
+              : null,
           onToggleExpand: () {
             setState(() {
-              _expandedTypes[type] = !(_expandedTypes[type] ?? false);
+              _expandedGroups[key] = !(_expandedGroups[key] ?? false);
             });
           },
           onElementTap: _selectElement,
@@ -302,19 +475,27 @@ class _ElementTreeDrawerState extends State<ElementTreeDrawer> {
   }
 }
 
-class _ElementTypeSection extends StatelessWidget {
-  final String type;
+class _ElementGroupSection extends StatelessWidget {
+  final String groupName;
+  final IconData? groupIcon;
   final List<ElementInfo> elements;
   final bool isExpanded;
   final int? selectedElementId;
+  final bool showTypeInList;
+  final bool isIsolated;
+  final VoidCallback? onToggleIsolate;
   final VoidCallback onToggleExpand;
   final Function(ElementInfo) onElementTap;
 
-  const _ElementTypeSection({
-    required this.type,
+  const _ElementGroupSection({
+    required this.groupName,
+    this.groupIcon,
     required this.elements,
     required this.isExpanded,
     required this.selectedElementId,
+    this.showTypeInList = false,
+    this.isIsolated = false,
+    this.onToggleIsolate,
     required this.onToggleExpand,
     required this.onElementTap,
   });
@@ -322,11 +503,13 @@ class _ElementTypeSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final typeColor = BimElementVisuals.colorFor(type);
+    final typeColor = groupIcon != null
+        ? colorScheme.primary
+        : BimElementVisuals.colorFor(groupName);
 
     return Column(
       children: [
-        // Type header
+        // Group header
         InkWell(
           onTap: onToggleExpand,
           child: Padding(
@@ -347,10 +530,14 @@ class _ElementTypeSection extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(BimElementVisuals.iconFor(type), size: 16, color: typeColor),
+                      Icon(
+                        groupIcon ?? BimElementVisuals.iconFor(groupName),
+                        size: 16,
+                        color: typeColor,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        type,
+                        groupName,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: typeColor,
@@ -360,6 +547,22 @@ class _ElementTypeSection extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                if (onToggleIsolate != null)
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: IconButton(
+                      icon: Icon(
+                        isIsolated ? Icons.visibility : Icons.visibility_outlined,
+                        size: 16,
+                        color: isIsolated ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                      ),
+                      padding: EdgeInsets.zero,
+                      onPressed: onToggleIsolate,
+                      tooltip: isIsolated ? 'Show all storeys' : 'Isolate storey',
+                    ),
+                  ),
+                const SizedBox(width: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -383,6 +586,7 @@ class _ElementTypeSection extends StatelessWidget {
           ...elements.map((element) => _ElementListTile(
             element: element,
             isSelected: element.id == selectedElementId,
+            showType: showTypeInList,
             onTap: () => onElementTap(element),
           )),
 
@@ -396,11 +600,13 @@ class _ElementTypeSection extends StatelessWidget {
 class _ElementListTile extends StatelessWidget {
   final ElementInfo element;
   final bool isSelected;
+  final bool showType;
   final VoidCallback onTap;
 
   const _ElementListTile({
     required this.element,
     required this.isSelected,
+    this.showType = false,
     required this.onTap,
   });
 
@@ -442,12 +648,33 @@ class _ElementListTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    '#${element.id}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontFamily: 'monospace',
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '#${element.id}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      if (showType) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: BimElementVisuals.colorFor(element.elementType).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            element.elementType,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: BimElementVisuals.colorFor(element.elementType),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

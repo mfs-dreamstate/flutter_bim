@@ -2,7 +2,7 @@
 //!
 //! Manages offscreen rendering and frame generation.
 
-use super::{camera::Camera, pipeline::{RenderPipeline, RenderMode, MSAA_SAMPLE_COUNT}, vertex::Vertex};
+use super::{camera::{Camera, Frustum}, pipeline::{RenderPipeline, RenderMode, MSAA_SAMPLE_COUNT}, vertex::{InstanceData, Vertex, generate_unit_box}};
 use bytemuck;
 use glam::Mat4;
 
@@ -109,6 +109,15 @@ impl SectionPlaneUniform {
     }
 }
 
+/// Per-element draw range for frustum culling
+#[derive(Debug, Clone, Copy)]
+pub struct ElementDrawRange {
+    pub index_start: u32,
+    pub index_count: u32,
+    pub aabb_min: [f32; 3],
+    pub aabb_max: [f32; 3],
+}
+
 /// Scene renderer for offscreen rendering
 pub struct SceneRenderer {
     pub width: u32,
@@ -123,6 +132,10 @@ pub struct SceneRenderer {
     pub msaa_texture: Option<wgpu::Texture>,    // MSAA render target
     pub color_texture: Option<wgpu::Texture>,   // Resolve target (for reading)
     pub depth_texture: Option<wgpu::Texture>,
+    // Cached texture views (immutable after init, avoids re-creation each frame)
+    pub color_view: Option<wgpu::TextureView>,
+    pub depth_view: Option<wgpu::TextureView>,
+    pub msaa_view: Option<wgpu::TextureView>,
     pub vertex_buffer: Option<wgpu::Buffer>,
     pub index_buffer: Option<wgpu::Buffer>,
     pub num_indices: u32,
@@ -130,6 +143,17 @@ pub struct SceneRenderer {
     // Persistent read buffer to avoid allocation each frame
     pub read_buffer: Option<wgpu::Buffer>,
     pub padded_bytes_per_row: u32,
+    // Persistent pixel buffer to avoid allocation each frame
+    pub pixel_buffer: Vec<u8>,
+    // Per-element draw ranges for frustum culling (non-instanced fallback)
+    pub element_draw_ranges: Vec<ElementDrawRange>,
+    // Instanced rendering
+    pub unit_box_vertex_buffer: Option<wgpu::Buffer>,
+    pub unit_box_index_buffer: Option<wgpu::Buffer>,
+    pub unit_box_index_count: u32,
+    pub instances: Vec<InstanceData>,
+    pub visible_instances: Vec<InstanceData>,
+    pub instance_buffer: Option<wgpu::Buffer>,
 }
 
 impl SceneRenderer {
@@ -147,12 +171,23 @@ impl SceneRenderer {
             msaa_texture: None,
             color_texture: None,
             depth_texture: None,
+            color_view: None,
+            depth_view: None,
+            msaa_view: None,
             vertex_buffer: None,
             index_buffer: None,
             num_indices: 0,
             render_mode: RenderMode::default(),
             read_buffer: None,
             padded_bytes_per_row: 0,
+            pixel_buffer: Vec::new(),
+            element_draw_ranges: Vec::new(),
+            unit_box_vertex_buffer: None,
+            unit_box_index_buffer: None,
+            unit_box_index_count: 0,
+            instances: Vec::new(),
+            visible_instances: Vec::new(),
+            instance_buffer: None,
         }
     }
 
@@ -288,6 +323,25 @@ impl SceneRenderer {
             mapped_at_creation: false,
         });
 
+        // Upload shared unit box for instanced rendering (24 verts, 36 indices)
+        let (box_verts, box_indices) = generate_unit_box();
+        let unit_box_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Unit Box Vertex Buffer"),
+            contents: bytemuck::cast_slice(&box_verts),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let unit_box_index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Unit Box Index Buffer"),
+            contents: bytemuck::cast_slice(&box_indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        let unit_box_index_count = box_indices.len() as u32;
+
+        // Cache texture views (immutable after creation)
+        let color_view = color_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let msaa_view = msaa_texture.as_ref().map(|t| t.create_view(&wgpu::TextureViewDescriptor::default()));
+
         self.pipeline = Some(pipeline);
         self.camera_buffer = Some(camera_buffer);
         self.light_buffer = Some(light_buffer);
@@ -296,11 +350,25 @@ impl SceneRenderer {
         self.msaa_texture = msaa_texture;
         self.color_texture = Some(color_texture);
         self.depth_texture = Some(depth_texture);
+        self.color_view = Some(color_view);
+        self.depth_view = Some(depth_view);
+        self.msaa_view = msaa_view;
         self.read_buffer = Some(read_buffer);
         self.padded_bytes_per_row = padded_bytes_per_row;
+        self.unit_box_vertex_buffer = Some(unit_box_vertex_buffer);
+        self.unit_box_index_buffer = Some(unit_box_index_buffer);
+        self.unit_box_index_count = unit_box_index_count;
+        // Pre-allocate pixel buffer for frame readback (reused every frame)
+        self.pixel_buffer = vec![0u8; (self.width * self.height * 4) as usize];
     }
 
     /// Upload mesh data to GPU from flat arrays (from ModelMesh)
+    ///
+    /// Writes packed 20-byte vertices directly into a mapped GPU buffer:
+    ///   - position: 3×f32 (12 bytes)
+    ///   - normal: Snorm8x4 (4 bytes, packed from f32)
+    ///   - color: Unorm8x4 (4 bytes, packed from f32)
+    /// No intermediate Vec<Vertex> allocation.
     pub fn upload_mesh_from_arrays(
         &mut self,
         device: &wgpu::Device,
@@ -310,20 +378,97 @@ impl SceneRenderer {
         indices: &[u32],
     ) {
         let vertex_count = vertices.len() / 3;
-        let mut vertex_data = Vec::with_capacity(vertex_count);
-
-        for i in 0..vertex_count {
-            let pos_idx = i * 3;
-            let col_idx = i * 4;
-
-            vertex_data.push(Vertex::new(
-                [vertices[pos_idx], vertices[pos_idx + 1], vertices[pos_idx + 2]],
-                [normals[pos_idx], normals[pos_idx + 1], normals[pos_idx + 2]],
-                [colors[col_idx], colors[col_idx + 1], colors[col_idx + 2], colors[col_idx + 3]],
-            ));
+        if vertex_count == 0 {
+            self.num_indices = 0;
+            return;
         }
 
-        self.upload_mesh(device, &vertex_data, indices);
+        let vertex_size = std::mem::size_of::<Vertex>() as u64; // 20 bytes
+        let buffer_size = vertex_count as u64 * vertex_size;
+
+        // Align to COPY_BUFFER_ALIGNMENT (required for mapped_at_creation)
+        let align = wgpu::COPY_BUFFER_ALIGNMENT;
+        let aligned_size = ((buffer_size + align - 1) / align * align).max(align);
+
+        // Create vertex buffer mapped for direct writing
+        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Vertex Buffer"),
+            size: aligned_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: true,
+        });
+
+        // Write packed vertex data directly into GPU buffer memory
+        {
+            let mut mapped = vertex_buffer.slice(..).get_mapped_range_mut();
+
+            for i in 0..vertex_count {
+                let p = i * 3;  // position/normal source index
+                let c = i * 4;  // color source index
+                let d = i * 20; // destination byte offset (20 bytes per vertex)
+
+                // Position: 3×f32 = 12 bytes
+                let pos_bytes: &[u8] = bytemuck::cast_slice(&vertices[p..p + 3]);
+                mapped[d..d + 12].copy_from_slice(pos_bytes);
+
+                // Normal: pack f32 → Snorm8 (i8), 4 bytes
+                mapped[d + 12] = (normals[p]     * 127.0) as i8 as u8;
+                mapped[d + 13] = (normals[p + 1] * 127.0) as i8 as u8;
+                mapped[d + 14] = (normals[p + 2] * 127.0) as i8 as u8;
+                mapped[d + 15] = 0; // padding
+
+                // Color: pack f32 → Unorm8 (u8), 4 bytes
+                mapped[d + 16] = (colors[c]     * 255.0) as u8;
+                mapped[d + 17] = (colors[c + 1] * 255.0) as u8;
+                mapped[d + 18] = (colors[c + 2] * 255.0) as u8;
+                mapped[d + 19] = (colors[c + 3] * 255.0) as u8;
+            }
+        }
+        vertex_buffer.unmap();
+
+        // Index buffer — create_buffer_init is already efficient (mapped_at_creation internally)
+        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        self.vertex_buffer = Some(vertex_buffer);
+        self.index_buffer = Some(index_buffer);
+        self.num_indices = indices.len() as u32;
+    }
+
+    /// Set per-element draw ranges for frustum culling.
+    ///
+    /// `triangle_starts` and `triangle_counts` come from ElementInfo.
+    /// Each element's triangles are contiguous in the index buffer.
+    pub fn set_element_draw_ranges(&mut self, ranges: Vec<ElementDrawRange>) {
+        self.element_draw_ranges = ranges;
+    }
+
+    /// Set per-instance data for GPU instancing.
+    /// Replaces the non-instanced mesh path for BIM models.
+    pub fn set_instances(&mut self, device: &wgpu::Device, instances: Vec<InstanceData>) {
+        if instances.is_empty() {
+            self.instances = Vec::new();
+            self.visible_instances = Vec::new();
+            self.instance_buffer = None;
+            return;
+        }
+
+        let buffer_size = (instances.len() * std::mem::size_of::<InstanceData>()) as u64;
+        let align = wgpu::COPY_BUFFER_ALIGNMENT;
+        let aligned_size = ((buffer_size + align - 1) / align * align).max(align);
+
+        self.instance_buffer = Some(device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Instance Buffer"),
+            size: aligned_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        }));
+
+        self.visible_instances = Vec::with_capacity(instances.len());
+        self.instances = instances;
     }
 
     /// Update light uniform buffer with current settings
@@ -389,8 +534,10 @@ impl SceneRenderer {
     }
 
     /// Render a frame and return pixel data
+    ///
+    /// Reuses `self.pixel_buffer` to avoid allocating a new Vec<u8> each frame.
     pub fn render_frame(
-        &self,
+        &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         camera: &Camera,
@@ -404,17 +551,40 @@ impl SceneRenderer {
             bytemuck::cast_slice(&[camera_uniform]),
         );
 
-        // Create texture views
-        let color_view = self
-            .color_texture
-            .as_ref()
-            .unwrap()
-            .create_view(&wgpu::TextureViewDescriptor::default());
-        let depth_view = self
-            .depth_texture
-            .as_ref()
-            .unwrap()
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        // Compute frustum once for the frame (reused for both instance culling and draw ranges)
+        let frustum = Frustum::from_view_projection(&camera.view_projection_matrix());
+
+        // Prepare instanced rendering: frustum cull and write visible instances
+        let visible_instance_count = if !self.instances.is_empty() {
+            self.visible_instances.clear();
+            for inst in &self.instances {
+                let min = [
+                    inst.position[0] - inst.scale[0],
+                    inst.position[1] - inst.scale[1],
+                    inst.position[2] - inst.scale[2],
+                ];
+                let max = [
+                    inst.position[0] + inst.scale[0],
+                    inst.position[1] + inst.scale[1],
+                    inst.position[2] + inst.scale[2],
+                ];
+                if frustum.intersects_aabb(min, max) {
+                    self.visible_instances.push(*inst);
+                }
+            }
+            if let Some(buf) = &self.instance_buffer {
+                if !self.visible_instances.is_empty() {
+                    queue.write_buffer(buf, 0, bytemuck::cast_slice(&self.visible_instances));
+                }
+            }
+            self.visible_instances.len() as u32
+        } else {
+            0
+        };
+
+        // Use cached texture views (created once during init)
+        let color_view = self.color_view.as_ref().unwrap();
+        let depth_view = self.depth_view.as_ref().unwrap();
 
         // Create command encoder
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -424,18 +594,18 @@ impl SceneRenderer {
         // Render pass (with or without MSAA)
         {
             // Determine render target and resolve target based on MSAA
-            let (render_view, resolve_target) = if let Some(msaa_tex) = &self.msaa_texture {
-                let msaa_view = msaa_tex.create_view(&wgpu::TextureViewDescriptor::default());
-                (msaa_view, Some(color_view))
-            } else {
-                (color_view, None)
-            };
+            let (render_view, resolve_target): (&wgpu::TextureView, Option<&wgpu::TextureView>) =
+                if self.msaa_view.is_some() {
+                    (self.msaa_view.as_ref().unwrap(), Some(color_view))
+                } else {
+                    (color_view, None)
+                };
 
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &render_view,
-                    resolve_target: resolve_target.as_ref(),
+                    view: render_view,
+                    resolve_target,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
                             // Nice soft blue-gray background
@@ -448,7 +618,7 @@ impl SceneRenderer {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &depth_view,
+                    view: depth_view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,
@@ -459,18 +629,45 @@ impl SceneRenderer {
                 occlusion_query_set: None,
             });
 
-            if let (Some(pipeline), Some(vb), Some(ib), Some(bg)) = (
+            if visible_instance_count > 0 {
+                // INSTANCED PATH — single draw call for all visible BIM elements
+                if let (Some(pipeline), Some(unit_vb), Some(unit_ib), Some(inst_buf), Some(bg)) = (
+                    &self.pipeline,
+                    &self.unit_box_vertex_buffer,
+                    &self.unit_box_index_buffer,
+                    &self.instance_buffer,
+                    &self.bind_group,
+                ) {
+                    render_pass.set_pipeline(pipeline.get_instanced_pipeline(self.render_mode));
+                    render_pass.set_bind_group(0, bg, &[]);
+                    render_pass.set_vertex_buffer(0, unit_vb.slice(..));
+                    render_pass.set_vertex_buffer(1, inst_buf.slice(..));
+                    render_pass.set_index_buffer(unit_ib.slice(..), wgpu::IndexFormat::Uint32);
+                    render_pass.draw_indexed(0..self.unit_box_index_count, 0, 0..visible_instance_count);
+                }
+            } else if let (Some(pipeline), Some(vb), Some(ib), Some(bg)) = (
                 &self.pipeline,
                 &self.vertex_buffer,
                 &self.index_buffer,
                 &self.bind_group,
             ) {
-                // Use the appropriate pipeline based on render mode
+                // NON-INSTANCED FALLBACK (test cube or legacy path)
                 render_pass.set_pipeline(pipeline.get_pipeline(self.render_mode));
                 render_pass.set_bind_group(0, bg, &[]);
                 render_pass.set_vertex_buffer(0, vb.slice(..));
                 render_pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+
+                if self.element_draw_ranges.is_empty() {
+                    render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+                } else {
+                    for range in &self.element_draw_ranges {
+                        if frustum.intersects_aabb(range.aabb_min, range.aabb_max) {
+                            let start = range.index_start;
+                            let end = start + range.index_count;
+                            render_pass.draw_indexed(start..end, 0, 0..1);
+                        }
+                    }
+                }
             }
         }
 
@@ -505,30 +702,33 @@ impl SceneRenderer {
         // Submit and wait
         queue.submit(std::iter::once(encoder.finish()));
 
-        // Read pixels from persistent buffer
+        // Map read buffer — no channel needed, poll(Wait) guarantees completion
         let buffer_slice = read_buffer.slice(..);
-        let (sender, receiver) = std::sync::mpsc::channel();
-        buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-            sender.send(result).unwrap();
-        });
+        buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
         device.poll(wgpu::Maintain::Wait);
-        receiver.recv().unwrap().unwrap();
 
         let data = buffer_slice.get_mapped_range();
 
-        // Remove padding and return pixel data
-        let mut pixels = Vec::with_capacity((self.width * self.height * 4) as usize);
-        for y in 0..self.height {
-            let start = (y * padded_bytes_per_row) as usize;
-            let end = start + (self.width * bytes_per_pixel) as usize;
-            pixels.extend_from_slice(&data[start..end]);
+        // Reuse persistent pixel buffer — avoids allocation each frame
+        let unpadded_row = (self.width * bytes_per_pixel) as usize;
+        let expected_size = unpadded_row * self.height as usize;
+        self.pixel_buffer.resize(expected_size, 0);
+
+        for y in 0..self.height as usize {
+            let src_start = y * padded_bytes_per_row as usize;
+            let dst_start = y * unpadded_row;
+            self.pixel_buffer[dst_start..dst_start + unpadded_row]
+                .copy_from_slice(&data[src_start..src_start + unpadded_row]);
         }
 
         // Must drop the mapped range before unmapping
         drop(data);
         read_buffer.unmap();
 
-        pixels
+        // Zero-copy swap: take the filled buffer and pre-allocate for next frame
+        let result = std::mem::take(&mut self.pixel_buffer);
+        self.pixel_buffer = Vec::with_capacity(expected_size);
+        result
     }
 }
 

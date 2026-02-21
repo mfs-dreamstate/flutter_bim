@@ -154,27 +154,13 @@ impl DrawingOverlay {
             ]
         };
 
+        let color = [1.0, 1.0, 1.0, self.opacity];
+        let normal = [0.0, 0.0, 1.0];
         let vertices = vec![
-            Vertex {
-                position: transform_point(-half_w, -half_h),
-                color: [1.0, 1.0, 1.0, self.opacity],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: transform_point(half_w, -half_h),
-                color: [1.0, 1.0, 1.0, self.opacity],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: transform_point(half_w, half_h),
-                color: [1.0, 1.0, 1.0, self.opacity],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: transform_point(-half_w, half_h),
-                color: [1.0, 1.0, 1.0, self.opacity],
-                normal: [0.0, 0.0, 1.0],
-            },
+            Vertex::new(transform_point(-half_w, -half_h), normal, color),
+            Vertex::new(transform_point(half_w, -half_h), normal, color),
+            Vertex::new(transform_point(half_w, half_h), normal, color),
+            Vertex::new(transform_point(-half_w, half_h), normal, color),
         ];
 
         let indices = vec![0, 1, 2, 0, 2, 3];

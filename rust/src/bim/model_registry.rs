@@ -3,7 +3,7 @@
 //! Manages multiple BIM models for federated model support.
 //! Enables loading, unloading, and visibility control of multiple IFC files.
 
-use super::model::{BimModel, ModelInfo};
+use super::model::{BimModel, ElementInfo, ModelInfo, ModelMesh};
 use super::geometry::BoundingBox;
 use std::collections::HashMap;
 
@@ -23,21 +23,59 @@ pub struct RegisteredModel {
     pub visible: bool,
     /// Transform matrix (4x4, column-major) for model positioning
     pub transform: [f32; 16],
-    /// Cached bounding box
+    /// Cached bounding box (computed once from mesh)
     pub bounds: Option<BoundingBox>,
+    /// Cached element info list (computed once on load, avoids mesh regeneration)
+    pub cached_elements: Vec<ElementInfo>,
+    /// Cached mesh data (computed once on load)
+    pub cached_mesh: Option<ModelMesh>,
 }
 
 impl RegisteredModel {
-    /// Create a new registered model with default settings
-    pub fn new(model: BimModel, name: String, file_path: Option<String>) -> Self {
+    /// Create a new registered model with default settings.
+    /// Generates and caches mesh data immediately to avoid repeated regeneration.
+    pub fn new(mut model: BimModel, name: String, file_path: Option<String>) -> Self {
+        let mesh = model.generate_meshes();
+        let bounds = mesh.bounds;
+        let cached_elements = mesh.elements.clone();
+        // Free entity map memory after mesh generation
+        model.clear_entity_map();
         Self {
             model,
             name,
             file_path,
             visible: true,
             transform: Self::identity_matrix(),
-            bounds: None,
+            bounds,
+            cached_elements,
+            cached_mesh: Some(mesh),
         }
+    }
+
+    /// Invalidate cached mesh data (call after visibility/selection changes)
+    pub fn invalidate_cache(&mut self) {
+        self.cached_mesh = None;
+    }
+
+    /// Get or regenerate the cached mesh
+    pub fn get_mesh(&mut self) -> &ModelMesh {
+        if self.cached_mesh.is_none() {
+            let mesh = self.model.generate_meshes();
+            self.bounds = mesh.bounds;
+            self.cached_elements = mesh.elements.clone();
+            self.cached_mesh = Some(mesh);
+        }
+        self.cached_mesh.as_ref().unwrap()
+    }
+
+    /// Get cached mesh without regenerating (returns None if invalidated)
+    pub fn cached_mesh(&self) -> Option<&ModelMesh> {
+        self.cached_mesh.as_ref()
+    }
+
+    /// Get cached elements (always available, even if mesh is invalidated)
+    pub fn elements(&self) -> &[ElementInfo] {
+        &self.cached_elements
     }
 
     /// Identity transform matrix

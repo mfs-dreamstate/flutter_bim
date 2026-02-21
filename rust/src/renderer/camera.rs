@@ -164,6 +164,60 @@ impl Camera {
     }
 }
 
+/// Frustum extracted from a view-projection matrix for culling.
+///
+/// Uses the Gribb-Hartmann method: each plane [a, b, c, d] represents
+/// the half-space ax + by + cz + d >= 0.
+pub struct Frustum {
+    planes: [[f32; 4]; 6],
+}
+
+impl Frustum {
+    /// Extract 6 frustum planes from a view-projection matrix.
+    pub fn from_view_projection(vp: &Mat4) -> Self {
+        let m = vp.to_cols_array_2d(); // m[col][row]
+        let mut planes = [[0.0f32; 4]; 6];
+
+        for c in 0..4 {
+            planes[0][c] = m[c][3] + m[c][0]; // Left
+            planes[1][c] = m[c][3] - m[c][0]; // Right
+            planes[2][c] = m[c][3] + m[c][1]; // Bottom
+            planes[3][c] = m[c][3] - m[c][1]; // Top
+            planes[4][c] = m[c][2];            // Near (z in [0,1])
+            planes[5][c] = m[c][3] - m[c][2]; // Far
+        }
+
+        // Normalize each plane
+        for plane in &mut planes {
+            let len = (plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]).sqrt();
+            if len > 0.0001 {
+                for v in plane.iter_mut() {
+                    *v /= len;
+                }
+            }
+        }
+
+        Frustum { planes }
+    }
+
+    /// Test if an AABB is at least partially inside the frustum.
+    /// Uses the p-vertex (positive vertex) optimization for fast rejection.
+    pub fn intersects_aabb(&self, min: [f32; 3], max: [f32; 3]) -> bool {
+        for plane in &self.planes {
+            // p-vertex: the AABB corner most in the direction of the plane normal
+            let px = if plane[0] >= 0.0 { max[0] } else { min[0] };
+            let py = if plane[1] >= 0.0 { max[1] } else { min[1] };
+            let pz = if plane[2] >= 0.0 { max[2] } else { min[2] };
+
+            // If p-vertex is behind the plane → AABB is fully outside this plane
+            if plane[0] * px + plane[1] * py + plane[2] * pz + plane[3] < 0.0 {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 /// Ray-AABB intersection test
 /// Returns the distance to intersection, or None if no hit
 pub fn ray_aabb_intersect(

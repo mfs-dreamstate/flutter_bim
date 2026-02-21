@@ -23,6 +23,8 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
+.claude/settings.local.json
+rust/.cargo/config.toml
 
 # Rust
 target/

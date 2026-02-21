@@ -304,7 +304,7 @@ The viewer has a working Rust/wgpu 4x MSAA offscreen renderer with frustum culli
 ### 7.1 Platform Support
 - [x] Android (ARM64) — working
 - [x] Android (x86_64 emulator) — working
-- [ ] iOS (ARM64) — Rust cross-compilation + CocoaPods integration
+- [x] iOS (ARM64) — Rust cross-compilation + static library linking via `-force_load`
 - [ ] iOS Simulator (x86_64 / ARM64)
 - [ ] Web (WebGPU/WebGL via wasm) — future
 

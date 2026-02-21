@@ -743,6 +743,16 @@ impl SceneRenderer {
                     binding: 0,
                     resource: shadow.uniform_buffer.as_entire_binding(),
                 },
+                // Section planes for clipping in shadow pass
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: section_plane_buffer.as_entire_binding(),
+                },
+                // Section box for clipping in shadow pass
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: section_box_buffer.as_entire_binding(),
+                },
             ],
         });
 

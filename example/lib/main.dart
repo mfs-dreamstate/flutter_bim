@@ -1,5 +1,8 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show ExternalLibrary;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bim/flutter_bim.dart' as bim;
 import 'package:flutter_bim/src/core/bridge/api.dart' as rust;
@@ -110,7 +113,13 @@ class _HomePageState extends State<HomePage> {
     try {
       // Initialize Rust bridge
       debugPrint('[BIM] Initializing Rust bridge...');
-      await bim.RustLib.init();
+      // On iOS, the static library is linked into the executable
+      // so we need to use DynamicLibrary.process()
+      await bim.RustLib.init(
+        externalLibrary: defaultTargetPlatform == TargetPlatform.iOS
+            ? ExternalLibrary.process(iKnowHowToUseIt: true)
+            : null,
+      );
       debugPrint('[BIM] Rust bridge initialized successfully');
 
       setState(() {

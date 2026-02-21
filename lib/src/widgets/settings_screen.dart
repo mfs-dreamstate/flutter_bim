@@ -1,8 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/bridge/api.dart' as rust;
+import '../core/bridge/api/properties.dart' as properties;
+import '../core/bridge/api/section.dart' as section;
+import '../core/bridge/api/system.dart' as system;
 import '../core/providers/accessibility_state.dart';
 
 /// Settings and tools screen
@@ -17,11 +19,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   rust.RenderStats? _stats;
   bool _loadingStats = false;
   bool _exportingScreenshot = false;
+  int _unitSystem = 0; // 0=SI, 1=Imperial
+  bool _sectionBoxActive = false;
 
   @override
   void initState() {
     super.initState();
     _loadStats();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    try {
+      _unitSystem = properties.getUnitSystem();
+      _sectionBoxActive = section.isSectionBoxActive();
+    } catch (e) {
+      debugPrint('[SETTINGS] loadSettings: $e');
+    }
   }
 
   Future<void> _loadStats() async {
@@ -111,10 +125,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  void _setUnitSystem(int system) {
+    try {
+      properties.setUnitSystem(system: system);
+      setState(() => _unitSystem = system);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(system == 0 ? 'Switched to SI (metric)' : 'Switched to Imperial')),
+        );
+      }
+    } catch (e) {
+      debugPrint('[SETTINGS] setUnitSystem failed: $e');
+    }
+  }
+
+  void _toggleSectionBox() {
+    try {
+      if (_sectionBoxActive) {
+        section.clearSectionBox();
+      } else {
+        section.setSectionBoxFromModel(padding: 0.1);
+      }
+      setState(() => _sectionBoxActive = !_sectionBoxActive);
+    } catch (e) {
+      debugPrint('[SETTINGS] sectionBox failed: $e');
+    }
+  }
+
+  void _compactMemory() {
+    try {
+      system.compactMemory();
+      if (mounted) {
+        final summary = system.getMemorySummary();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Memory compacted. $summary')),
+        );
+      }
+    } catch (e) {
+      debugPrint('[SETTINGS] compactMemory failed: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -163,6 +218,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const Divider(),
 
+          // Units Section
+          _buildSection(
+            title: 'Units',
+            icon: Icons.straighten,
+            children: [
+              RadioListTile<int>(
+                title: const Text('SI (Metric)'),
+                subtitle: Text(
+                    'm, m\u{b2}, m\u{b3}',
+                    style: theme.textTheme.bodySmall),
+                value: 0,
+                groupValue: _unitSystem,
+                onChanged: (v) => _setUnitSystem(v!),
+              ),
+              RadioListTile<int>(
+                title: const Text('Imperial'),
+                subtitle: Text(
+                    'ft, ft\u{b2}, ft\u{b3}',
+                    style: theme.textTheme.bodySmall),
+                value: 1,
+                groupValue: _unitSystem,
+                onChanged: (v) => _setUnitSystem(v!),
+              ),
+            ],
+          ),
+
+          const Divider(),
+
+          // Section Box
+          _buildSection(
+            title: 'Section Box',
+            icon: Icons.crop,
+            children: [
+              SwitchListTile(
+                secondary: const Icon(Icons.crop),
+                title: const Text('Section Box'),
+                subtitle: const Text('Clip model to bounding box (6 planes)'),
+                value: _sectionBoxActive,
+                onChanged: (_) => _toggleSectionBox(),
+              ),
+            ],
+          ),
+
+          const Divider(),
+
           // Export Section
           _buildSection(
             title: 'Export',
@@ -204,6 +304,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: const Text('Restore default colors'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: _resetColors,
+              ),
+            ],
+          ),
+
+          const Divider(),
+
+          // Memory Section
+          _buildSection(
+            title: 'Memory',
+            icon: Icons.memory,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.cleaning_services),
+                title: const Text('Compact Memory'),
+                subtitle: const Text('Free unused memory'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: _compactMemory,
               ),
             ],
           ),

@@ -10,6 +10,12 @@ import '../measurement_tools.dart';
 import '../section_plane_tools.dart';
 import '../drawing_overlay_manager.dart';
 import '../settings_screen.dart';
+import '../viewpoint_manager.dart';
+import '../clash_detection_panel.dart';
+import '../model_comparison_panel.dart';
+import '../export_dialog.dart';
+import '../camera_modes.dart';
+import '../selection_actions.dart';
 import 'lighting_settings_sheet.dart';
 
 /// AppBar actions for the viewer: visibility, fit, grid, wireframe, tools.
@@ -20,7 +26,6 @@ class ViewerToolbar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rendererState = ref.watch(rendererStateProvider);
     final modelState = ref.watch(modelStateProvider);
     final visibilityState = ref.watch(visibilityStateProvider);
     final modelService = ref.read(modelServiceProvider);
@@ -78,6 +83,7 @@ class ViewerToolbar extends ConsumerWidget {
           onSelected: (action) => _handleOverflowAction(context, ref, action),
           itemBuilder: (context) => [
             if (modelState.modelLoaded) ...[
+              // --- View ---
               PopupMenuItem<String>(
                 value: 'visibility',
                 child: _menuRow(Icons.visibility, 'Element Visibility'),
@@ -97,7 +103,12 @@ class ViewerToolbar extends ConsumerWidget {
                 value: 'color_mode',
                 child: _menuRow(Icons.palette, 'Color Mode'),
               ),
+              PopupMenuItem<String>(
+                value: 'camera_modes',
+                child: _menuRow(Icons.videocam, 'Camera Modes'),
+              ),
               const PopupMenuDivider(),
+              // --- Tools ---
               PopupMenuItem<String>(
                 value: 'measure',
                 child: _menuRow(Icons.straighten, 'Measurement'),
@@ -107,8 +118,31 @@ class ViewerToolbar extends ConsumerWidget {
                 child: _menuRow(Icons.cut, 'Section Plane'),
               ),
               PopupMenuItem<String>(
+                value: 'selection_actions',
+                child: _menuRow(Icons.select_all, 'Selection & Filters'),
+              ),
+              PopupMenuItem<String>(
+                value: 'clash',
+                child: _menuRow(Icons.warning_amber, 'Clash Detection'),
+              ),
+              const PopupMenuDivider(),
+              // --- Collaboration ---
+              PopupMenuItem<String>(
+                value: 'viewpoints',
+                child: _menuRow(Icons.camera_alt, 'Saved Viewpoints'),
+              ),
+              if (modelState.modelCount >= 2)
+                PopupMenuItem<String>(
+                  value: 'comparison',
+                  child: _menuRow(Icons.compare_arrows, 'Model Comparison'),
+                ),
+              PopupMenuItem<String>(
                 value: 'drawing',
                 child: _menuRow(Icons.draw, 'Drawing Overlay'),
+              ),
+              PopupMenuItem<String>(
+                value: 'export',
+                child: _menuRow(Icons.save_alt, 'Export'),
               ),
               const PopupMenuDivider(),
             ],
@@ -153,6 +187,8 @@ class ViewerToolbar extends ConsumerWidget {
         _showRenderModeMenu(context, ref, rendererState);
       case 'color_mode':
         _showColorModeMenu(context, ref);
+      case 'camera_modes':
+        showCameraModesPanel(context);
       case 'measure':
         showMeasurementTools(
           context,
@@ -164,8 +200,18 @@ class ViewerToolbar extends ConsumerWidget {
           context,
           onPlaneChanged: () => debugPrint('[SECTION] Changed'),
         );
+      case 'selection_actions':
+        showSelectionActionsPanel(context);
+      case 'clash':
+        showClashDetectionPanel(context);
+      case 'viewpoints':
+        showViewpointManager(context);
+      case 'comparison':
+        showModelComparisonPanel(context);
       case 'drawing':
         showDrawingOverlayManager(context);
+      case 'export':
+        showExportDialog(context);
       case 'lighting':
         showLightingSettings(context);
       case 'restart':
@@ -258,6 +304,7 @@ class ViewerToolbar extends ConsumerWidget {
         _colorModeItem(context, 1, 'By Type', Icons.category, currentMode),
         _colorModeItem(context, 2, 'By Storey', Icons.layers, currentMode),
         _colorModeItem(context, 3, 'By Material', Icons.texture, currentMode),
+        _colorModeItem(context, 5, 'Grayscale', Icons.monochrome_photos, currentMode),
       ],
     ).then((mode) {
       if (mode != null) {

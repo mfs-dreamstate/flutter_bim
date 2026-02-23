@@ -115,8 +115,21 @@ class _ViewportWidgetState extends ConsumerState<ViewportWidget> {
     });
   }
 
-  /// Fetch scene bounds and update level cut range
+  /// Fetch scene bounds and update level cut range.
+  /// Uses the effective (percentile-based) height range so the slider
+  /// maps tightly to the actual building rather than outlier geometry.
   void _updateSceneBounds() {
+    try {
+      final range = rust.getEffectiveHeightRange();
+      if (range.length >= 2) {
+        setState(() {
+          _boundsMinY = range[0].toDouble();
+          _boundsMaxY = range[1].toDouble();
+        });
+        return;
+      }
+    } catch (_) {}
+    // Fallback to raw scene bounds
     try {
       final bounds = rust.getSceneBounds();
       if (bounds.length >= 6) {

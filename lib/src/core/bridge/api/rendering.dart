@@ -31,6 +31,11 @@ void setInteractionActive({required bool active}) =>
 /// Returns (min_x, min_y, min_z, max_x, max_y, max_z) or error if no geometry.
 Float32List getSceneBounds() => RustLib.instance.api.crateApiRenderingGetSceneBounds();
 
+/// Get the effective height range (Y axis) where most geometry lives.
+/// Returns [minY, maxY] using percentile-based outlier exclusion.
+/// Better than full scene bounds for level-cut sliders.
+Float32List getEffectiveHeightRange() => RustLib.instance.api.crateApiRenderingGetEffectiveHeightRange();
+
 /// Load the currently loaded BIM model into the renderer (primary model)
 String loadModelIntoRenderer() => RustLib.instance.api.crateApiRenderingLoadModelIntoRenderer();
 

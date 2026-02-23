@@ -121,6 +121,39 @@ impl Renderer {
         Some((min, max))
     }
 
+    /// Get the effective Y (height) range where most geometry lives.
+    /// Uses element centroids at the 2nd and 98th percentile to exclude outliers,
+    /// then adds 5% padding on each side.
+    pub fn get_effective_height_range(&self) -> Option<(f32, f32)> {
+        let scene = self.scene.as_ref()?;
+        if scene.element_draw_ranges.is_empty() {
+            return None;
+        }
+        // Collect Y centroids of all elements
+        let mut y_centers: Vec<f32> = scene
+            .element_draw_ranges
+            .iter()
+            .map(|r| (r.aabb_min[1] + r.aabb_max[1]) * 0.5)
+            .collect();
+        y_centers.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+        let n = y_centers.len();
+        if n == 0 {
+            return None;
+        }
+
+        // 2nd and 98th percentile indices
+        let lo = (n as f32 * 0.02) as usize;
+        let hi = ((n as f32 * 0.98) as usize).min(n - 1);
+        let min_y = y_centers[lo];
+        let max_y = y_centers[hi];
+
+        // Add 5% padding on each side
+        let range = (max_y - min_y).max(1.0);
+        let padding = range * 0.05;
+        Some((min_y - padding, max_y + padding))
+    }
+
     /// Get frame dimensions
     pub fn get_dimensions(&self) -> Option<(u32, u32)> {
         self.scene.as_ref().map(|s| (s.width, s.height))

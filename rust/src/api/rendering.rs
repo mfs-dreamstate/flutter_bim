@@ -120,6 +120,20 @@ pub fn get_scene_bounds() -> Result<Vec<f32>, String> {
     })
 }
 
+/// Get the effective height range (Y axis) where most geometry lives.
+/// Returns [minY, maxY] using percentile-based outlier exclusion.
+/// Better than full scene bounds for level-cut sliders.
+#[frb(sync)]
+pub fn get_effective_height_range() -> Result<Vec<f32>, String> {
+    with_state(|s| {
+        let r = s.renderer.as_ref().ok_or("Renderer not initialized")?;
+        let (min_y, max_y) = r
+            .get_effective_height_range()
+            .ok_or("No geometry loaded")?;
+        Ok(vec![min_y, max_y])
+    })
+}
+
 /// Load the currently loaded BIM model into the renderer (primary model)
 #[frb(sync)]
 pub fn load_model_into_renderer() -> Result<String, String> {
